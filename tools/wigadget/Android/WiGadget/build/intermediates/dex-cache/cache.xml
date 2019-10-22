@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="/Users/WUJINZHOU/Mega/Programming/Java/Android_Studio/WiGadget/app/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.3/jars/libs/internal_impl-21.0.3.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="01ec05bfbafcc07646ba813000bf2ef11742dd03">
+        <dex dex="/Users/WUJINZHOU/Mega/Programming/Java/Android_Studio/WiGadget/app/build/intermediates/pre-dexed/debug/internal_impl-21.0.3-56d864dc91253a73fc9430f0d4a58b77989262bb.jar" />
+    </item>
+    <item
+        jar="/Users/WUJINZHOU/Mega/Programming/Java/Android_Studio/WiGadget/app/libs/androidplot-core-0.6.1.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="3db0daea52375b26bfa61c59b8df93950bdefbbc">
+        <dex dex="/Users/WUJINZHOU/Mega/Programming/Java/Android_Studio/WiGadget/app/build/intermediates/pre-dexed/debug/androidplot-core-0.6.1-11d44a66eb81ac94dc1006cc6d76431c7dddb574.jar" />
+    </item>
+    <item
+        jar="/Users/WUJINZHOU/Mega/Programming/Java/Android_Studio/WiGadget/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/21.0.3/jars/classes.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="81d42bf983a8741f4888a6e333e454e4a5e0eeb7">
+        <dex dex="/Users/WUJINZHOU/Mega/Programming/Java/Android_Studio/WiGadget/app/build/intermediates/pre-dexed/debug/classes-6cf20f80cc02d565a10f3730353f5181817a5195.jar" />
+    </item>
+    <item
+        jar="/Users/WUJINZHOU/Mega/Programming/Java/Android_Studio/WiGadget/app/libs/commons-codec-1.6-repack.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="a42ebfad39f2287abc34adaae0633f867e1d65e0">
+        <dex dex="/Users/WUJINZHOU/Mega/Programming/Java/Android_Studio/WiGadget/app/build/intermediates/pre-dexed/debug/commons-codec-1.6-repack-9017459ec2448317eca71b280e4199394f09b398.jar" />
+    </item>
+    <item
+        jar="/Users/WUJINZHOU/Mega/Programming/Java/Android_Studio/WiGadget/app/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.3/jars/classes.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="2c91c949a45a21cdecf26e03951e46c7beec9ad8">
+        <dex dex="/Users/WUJINZHOU/Mega/Programming/Java/Android_Studio/WiGadget/app/build/intermediates/pre-dexed/debug/classes-41fbb662baea75c50164b7114ba050f49713a164.jar" />
+    </item>
+    <item
+        jar="/Users/WUJINZHOU/Mega/Programming/Java/Android_Studio/WiGadget/app/libs/firebase-client-android-2.2.4.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="ebf4e7781b5fa09a256dcc00e82f0a97d7a23d50">
+        <dex dex="/Users/WUJINZHOU/Mega/Programming/Java/Android_Studio/WiGadget/app/build/intermediates/pre-dexed/debug/firebase-client-android-2.2.4-1cf4013aadb75032a6e70b76e14f3096de5522f9.jar" />
+    </item>
+    <item
+        jar="/Users/WUJINZHOU/Library/Android/sdk/extras/android/m2repository/com/android/support/support-annotations/21.0.3/support-annotations-21.0.3.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="4b74cefe1f0c1b819e7260c8627a14674e37fd35">
+        <dex dex="/Users/WUJINZHOU/Mega/Programming/Java/Android_Studio/WiGadget/app/build/intermediates/pre-dexed/debug/support-annotations-21.0.3-3753a08e2977461103295ffba186504c104159ef.jar" />
+    </item>
+
+</items>

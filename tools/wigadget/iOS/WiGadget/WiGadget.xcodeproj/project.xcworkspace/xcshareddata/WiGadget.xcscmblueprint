@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "028CC75F2DB85A39579D6B83820C834B908DA723",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "02adf5fe-d9db-4368-aa7a-e3d91ea887ce++505" : 0,
+    "028CC75F2DB85A39579D6B83820C834B908DA723" : 9223372036854775807
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "B152F20E-B611-4502-BF05-5E99353FEEF4",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "02adf5fe-d9db-4368-aa7a-e3d91ea887ce++505" : "WiGadget",
+    "028CC75F2DB85A39579D6B83820C834B908DA723" : "wigadget-ios\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "WiGadget",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "WiGadget.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/bitbucket.org\/wujinzhou\/wigadget-ios.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "028CC75F2DB85A39579D6B83820C834B908DA723"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/subversion.assembla.com\/svn\/wigadget-ios",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Subversion",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "02adf5fe-d9db-4368-aa7a-e3d91ea887ce++505"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "IsLib": "N",
+  "OutLib": "shell.a",
+
+  "DisableOnNoSecure": "Y",
+  
+  "BuildModeDep": [
+    "Ram",
+    "All"
+  ],
+
+  "SecureDep": [
+    "Secure"
+  ],
+
+  "extraIncludes": [
+  ],
+
+  "extraCCFlags": [
+  ],
+  
+  "excludePath": [
+  ],
+
+  "excludeSource": [
+  ],
+
+  "ARMCC-v5": {
+    "CCFlags": [
+      "--gnu"
+	]
+  }  
+}

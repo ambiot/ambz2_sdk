@@ -1,0 +1,38 @@
+{
+  "IsLib": "N",
+  "OutLib": "rtl8710c_hal_ram_s.a",
+
+  "DisableOnNoSecure": "N",
+
+  "SecureDep": [
+  	"Secure",
+  	"Ignore"
+  ],
+  
+  "ChipVersionDep": [
+    "Cut-A",
+    "Cut-B",
+    "Cut-C",
+    "Cut-D"
+  ],
+
+  "BuildModeDep": [
+    "Ram",
+    "Boot",
+    "All"
+  ],
+
+
+  "extraIncludes": [
+  ],
+
+  "extraCCFlags": [
+  ],
+  
+  "excludePath": [
+    "test"
+  ],
+
+  "excludeSource": [
+  ]
+}

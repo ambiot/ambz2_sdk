@@ -1,0 +1,244 @@
+04-13-2015
+create new project
+add list drawer ui
+
+04-16-2015
+add DeviceList class
+	+json array 
+	+add device, remove device, save changes
+
+add popup dialog menu and ImageListAdapter for myDevice fragment
+	+display option menu to "Rename Device" & "Remove Device" (UI only)
+
+04-17-2015
+update DeviceList class: map device from JSONArray to DeviceIcon ArrayList to display on UI
+	+getDeviceIcon() function
+	+getDeviceMac() function
+	+getDeviceDescription()
+
+rename ImageItem class to DeviceIcon class, and
+	+ add attribute and getter/setter function of "mac"
+
+add package jdb curve25519 to project
+
+add Apache Commons Codec library commons-codec-1.9 to project 
+
+add Apache Commons Codec library commons-io-2.4 to project
+
+04-17-2015
+removed <android:layout_margin="5dp"> attribute in fragment_my_device.xml to fix the empty
+gridview field problem when swipe-down
+
+04-21-2015
+increased api level to api-21 
+added test data to test MyDeviceFragment & FindDeviceFragment
+
+changed all serviceInfo.getAttributes().get(KEY).toString() functions
+
+04-22-2015:
+add tcpClient & tcpController class 
+add NsdHelper 
+
+*note : this version is not working: nsd could not resolve txtRecord 
+
+04-23-2015:
+removed android nsd, added JmDNS library, use JmDNS to discovery and resolve network service, now mDNS resolving runs as a AsyncTask
+changed build minSdkVersion from 21 to 16
+add Constants class, migrating all constant values to one place
+
+04-27-2015:
+moved nsd discovery to MainActivity
+add a trackingList in DeviceList
+
+04-27-2015
+removed TcpController class
+renamed TcpClient to TcpHelper, and reconstructed class functions
+
+04-28-2015
+changed commons-codec-1.9 to commons-codec-1.6-repack to resolve class name confilics 
+removed commons-io-2.4
+add android:configChanges="screenSize|orientation" in manifest 
+
+04-29-2015
+changed tcpThread class
+changed tcp waiting time
+move pairing function to another thread, now paring runs outside the UI thread
+added a progress dialog when device pairing 
+
+05-05-2015
+update UI: checking if the device is online every 1s in MyDeviceFragment : 1 if the device's control type is cloud, it will always be online. 2 if the device's control type is local, it will be online only if its mac,ip,port are all same in trackingList.
+
+device will be added into trackingList if 1. the device is not added yet AND 2. its already in saved list AND 3.the conltorl type is local control 
+
+related function update: when repairing device (that ip or port changed): remove the device (with old ip or port) from DeviceList first and add the device (with new ip or port)
+
+Changed the condition to add a device to tempList: 1) if the mac is not already in tempList AND 2) the mac is not found in saved list or the mac is found in the saved list but device's port or ip has changed
+
+05-06-2015 
+added AES128 class
+added HTSensorActivity class
+
+05-08-2015
+Major update: 
+
+changes in DeviceList: 
+added a new list: transientList
+added trackingListFindDeviceOnline()
+trackingListAddDevice->trackingListUpdate , tempListAddDevice->tempListUpdate
+removeDevice() -> add  transientListRemoveDevice(mac) &  trackingListRemoveDevice(mac)
+removed ip & port field in JSONArray, for local link, ip and port will be retrieved from txtRecord
+
+changes in FindDeviceFragment:
+in pairing():
+added mDeviceList.transientListAddDevice
+removed mDeviceList.tempListRemoveDevice
+
+changes in NsdHelper:
+in doInBackground():
+turn on/off of mDNS discovery periodically
+
+changes in TcpThread:
+in run():
+add a Thread.sleep()
+
+05-11-2015.a:
+updated: functions in trackingListFindDeviceOnline()
+removed device list length check in both MyDeviceFragment & FindDeviceFragment - > UI is forced to update periodically
+-- local link done
+
+05-11-2015.b:
+updated pairing() function, add support of pairing cloud controlled device
+renamed all "firebaseAccount" to "firebaseAppId"
+in FidDeviceFragment: + add getFirebaseAppId() function
+add activity class : RegisterFirebaseAccountActivity
+
+05-13-2015:
+updated UI and function for cloud device pairing (need test):
+    if device is a cloud controlled device:
+        --> a pop up EditText dialog will prompt to user to enter the firebase app id
+        if user doesn't have a firebase account:
+            --> RegisterFirebaseAccountActivity will start and open firebase registration page
+        --> start pairing process (3-handshake-pairing)
+    else start pairing process directly (2-handshake-pairing)
+
+investigate the JmDNS crash problem:
+--> on/off mdns discovery service frequently can increase the change of crush
+    --> the cause of crush is related to listener socket binding
+        --> solution not found yet, debugging ...
+
+05-15-2015.a:
+important update:
+JmDNS crash problem solved:
+    +JmDNS discovery service is turned on once and continuously checking txtRecord change
+    +JmDNS txtRecord update bug is solved by replacing "jmdns.jar" library to "javax" source code package
+
+
+05-18-2015:
+Fixed a bug:
+    jmdns registers on IPv4 interface, but broadcasts IPv6 query
+update JmDNS functions:
+    added a multicast lock
+    passed ip and host name to jmdns constructor
+co-respond update of user permissions:
+    add permission "android.permission.ACCESS_WIFI_STATE"
+    add permission "android.permission.CHANGE_WIFI_MULTICAST_STATE"
+
+Update on UI:
+    switch to "my device" UI once pairing is done
+    checking device availability before start connection
+
+05-20-2015:
+Add cloud control -> receive data from firebase
+
+Update on UI & function:
+Check firebase app Id before pairing: firebase app id -> generate app URL -> use "GET" method check http response:
+if response=200, process pairing, otherwise terminate pairing.
+
+05-21-2015.a:
+add a function to hang-up tcp thread:
+    tcp thread will stop polling command when pairing/local transaction is done
+add json parser to parse data get form local control
+    get temperature and humidity data form json data
+changes on functions:
+    HTSensorActivity --> handle onDestroy(), moved amebaLocalLink() off UI-thread
+    FindDeviceFragment--> in pairing() function: hang() tcpThread
+    MyDeviceFragment--> startAmebaActivity(): checking if cloud control (firebase app URL) is available before start activity
+
+05-22-2015:
+UI update:
+    add 2 types of icons for cloud devices -> now total 4 types of icons can be shown on UI : cloud-online, cloud-offline, local-online, local-offline
+    limit description for saved devices to two-lines
+
+Function update:
+    renamed TcpThread -> to TcpClient : echo() function in tcp is no more an async tack -> stability is improved on Sony c2105
+    updated testConnection() method for local device, ping device with a predefined time-out, ping result is returned within 5s
+    handel firebase empty data exception
+
+05-28-2015:
+UI & Function update:
+    added Androidplot library
+        plot sensor readings in HTSensorActivity with anddroidplot APIs
+Find an issue : map object returned from firebase failed to be casted into double data type, see to-do tag in HTSensorActivity
+
+05-29-2015:
+Function update:
+    ameba-side will now push sensor readings as string type to firebase, app casts the map object returned from firebase into string type and parse it into double
+    updated the method to set graph upper and lower boundaries in HTSensorActivity
+UI update:
+    display real values on navigation drawer instead of using the hardcoded numbers
+    add an database icon on prompt firebase app id layout
+
+
+06-04-2015:
+Function Update:
+    Remove device: added an unpairing process before remove device from UI
+UI Update:
+    Remove device: added a prompt to force remove device from UI once unpairing is failed
+    add an icon for rename-device-dialog
+
+06-08-2015:
+Function & UI Update:
+    added preference settings to H&T Sensor activity
+
+06-09-2015:
+Function update:
+    H&T Sensor activity applies settings form shared preference
+UI update:
+    H&T sensor activity displays description as title on action bar
+
+06-10-2015:
+Function update:
+    Added play alarm function for cloud link in HTSensorActivity
+    Added "double click to quit" feature no MainActivity
+
+06-16-2015:
+    UI update:
+    Overwrite onCreate() method for About/MyDevice/FindDevice Fragment to set corresponding title on action bar
+
+06-17-2015:
+    Changed error code numbers in Constants class:
+    err_unknown_error = -9 --> err_unknown_error = -10
+    err_firebase_app_url_cannot_be_verified = -10 --> err_firebase_app_url_cannot_be_verified = -9
+
+
+06-30-2015:
+    Renamed project from "AmebaZeroconf" to "WiGadget" updated package name & app name
+    Changed app launcher icon
+
+07-16-2015:
+    Fixed a bug in HTSensorActivity class that can cause alarm sound keep playing in background when cloud-control is used
+    Changed animation of "finding device" in FindDevice fragment
+
+08-04-2015:
+    Fixed bugs reported by QC:
+    1. Turn displayed device status to be "online" when reconnected to Ameba via local link
+    2. Toggle device icon to be "online" after local/cloud link ie reachable
+
+08-05-2015:
+    updated UI & icons
+
+08-06-2015:
+    Fixed a bug that can cause app hang during unpairing process: Added a connection checking before sending unpairing request to Ameba
+
+08-21-2015:
+    updated ConnectionChecker class, user can use both "xxx" or "xxx.firebaseio.com" as firebase app id

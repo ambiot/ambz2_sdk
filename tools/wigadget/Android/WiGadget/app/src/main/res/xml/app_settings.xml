@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="Settings for H&amp;T">
+
+    <ListPreference android:title="Get local-link data"
+        android:summary="Select H&amp;T data update frequency (for local link only)"
+        android:key="data_update_frequency"
+        android:defaultValue="2000"
+        android:entries="@array/ht_data_update_frequency_name"
+        android:entryValues="@array/ht_data_update_frequency_value"/>
+
+    <CheckBoxPreference android:title="H&amp;T Alarm"
+        android:summary="Enable or disable alarm sound for H&amp;T sensor"
+        android:key="ht_alarm_options"
+        android:defaultValue="false"/>
+
+    <EditTextPreference android:title="Temperature Threshold"
+        android:dependency="ht_alarm_options"
+        android:key="temperature_threshold"
+        android:defaultValue="100"/>
+
+    <EditTextPreference android:title="Humidity Threshold"
+        android:dependency="ht_alarm_options"
+        android:key="humidity_threshold"
+        android:defaultValue="100"/>
+
+    <ListPreference android:title="Alert Sound"
+        android:dependency="ht_alarm_options"
+        android:key="alarm_sound"
+        android:defaultValue="sound_ding"
+        android:entries="@array/ht_alarm_sound_name"
+        android:entryValues="@array/ht_alarm_sound_value"/>
+
+    </PreferenceCategory>
+
+
+</PreferenceScreen>

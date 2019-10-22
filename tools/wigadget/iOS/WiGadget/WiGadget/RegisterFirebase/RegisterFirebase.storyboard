@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="8191" systemVersion="14F27" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="8154"/>
+    </dependencies>
+    <scenes>
+        <!--Register FirebaseVC-->
+        <scene sceneID="gmB-Ud-I9T">
+            <objects>
+                <viewController id="NiA-ye-nfI" customClass="RegisterFirebaseVC" customModule="WiGadget" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="BKX-LI-n23"/>
+                        <viewControllerLayoutGuide type="bottom" id="hM5-7X-GTR"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="Fgq-Mw-ORg">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <webView contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="mj4-u1-W3P">
+                                <rect key="frame" x="0.0" y="64" width="600" height="492"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                            </webView>
+                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Krq-ft-Kqb">
+                                <rect key="frame" x="0.0" y="556" width="600" height="44"/>
+                                <items>
+                                    <barButtonItem width="42" style="plain" systemItem="fixedSpace" id="Biv-6l-jwL"/>
+                                    <barButtonItem systemItem="stop" id="7wv-9V-lka">
+                                        <connections>
+                                            <action selector="stop:" destination="NiA-ye-nfI" id="Bgm-r6-5dY"/>
+                                        </connections>
+                                    </barButtonItem>
+                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="gty-YR-VwV"/>
+                                    <barButtonItem systemItem="refresh" id="Puz-ok-mts">
+                                        <connections>
+                                            <action selector="reload:" destination="NiA-ye-nfI" id="5MM-oY-2bt"/>
+                                        </connections>
+                                    </barButtonItem>
+                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="rEM-eB-7hP"/>
+                                    <barButtonItem systemItem="rewind" id="NMH-bO-Q1B">
+                                        <connections>
+                                            <action selector="goBack:" destination="NiA-ye-nfI" id="bb0-Fu-moU"/>
+                                        </connections>
+                                    </barButtonItem>
+                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="3n1-bd-pmB"/>
+                                    <barButtonItem systemItem="fastForward" id="cw8-Vi-8XM">
+                                        <connections>
+                                            <action selector="goForward:" destination="NiA-ye-nfI" id="YMO-AO-FBe"/>
+                                        </connections>
+                                    </barButtonItem>
+                                    <barButtonItem width="42" style="plain" systemItem="fixedSpace" id="nzn-dS-96D"/>
+                                </items>
+                            </toolbar>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="mj4-u1-W3P" firstAttribute="leading" secondItem="Krq-ft-Kqb" secondAttribute="leading" id="R4b-aU-Blm"/>
+                            <constraint firstItem="mj4-u1-W3P" firstAttribute="trailing" secondItem="Krq-ft-Kqb" secondAttribute="trailing" id="Y6U-7U-kJe"/>
+                            <constraint firstItem="mj4-u1-W3P" firstAttribute="bottom" secondItem="Krq-ft-Kqb" secondAttribute="top" id="bp6-uJ-itU"/>
+                            <constraint firstItem="mj4-u1-W3P" firstAttribute="top" secondItem="BKX-LI-n23" secondAttribute="bottom" id="cLp-Rr-kaN"/>
+                            <constraint firstItem="Krq-ft-Kqb" firstAttribute="leading" secondItem="Fgq-Mw-ORg" secondAttribute="leading" id="dwQ-7n-6ye"/>
+                            <constraint firstAttribute="trailing" secondItem="Krq-ft-Kqb" secondAttribute="trailing" id="lYw-FR-Qnb"/>
+                            <constraint firstItem="hM5-7X-GTR" firstAttribute="top" secondItem="Krq-ft-Kqb" secondAttribute="bottom" symbolic="YES" id="wGW-Ww-oij"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" id="Uyw-59-xbQ">
+                        <barButtonItem key="leftBarButtonItem" systemItem="done" id="aT3-mR-b7v">
+                            <connections>
+                                <action selector="closeVC:" destination="NiA-ye-nfI" id="4hr-Hw-m7D"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
+                    <connections>
+                        <outlet property="webView" destination="mj4-u1-W3P" id="Bd6-nD-oBa"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="hhJ-fe-lS4" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1659" y="319"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="5fg-Eh-PhP">
+            <objects>
+                <navigationController storyboardIdentifier="regi-firebase-story-board" automaticallyAdjustsScrollViewInsets="NO" id="vpi-Ug-14d" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="eLr-Z6-B1g">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="NiA-ye-nfI" kind="relationship" relationship="rootViewController" id="xAk-hj-fUQ"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Sig-kk-8Yk" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="847" y="319"/>
+        </scene>
+    </scenes>
+</document>

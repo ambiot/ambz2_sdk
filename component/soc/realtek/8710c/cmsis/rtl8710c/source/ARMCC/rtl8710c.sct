@@ -1,0 +1,316 @@
+; *************************************************************
+; *** Scatter-Loading Description File for RTL8195BHP       ***
+; *************************************************************
+LR_ITCM 0x00000000 0x001FF000  {    ; load region size_region
+  _ITCM_ROM 0x00000000 0x00008000  {  ; load address = execution address
+   startup_rtl8195bhp.o (.rom.vectors, +First)
+   *(InRoot$$Sections)
+
+	startup_rtl8195bhp.o (+RO)
+  }
+
+  _ITCM_RAM 0x00200000 0x00020000  {  ; ITCM for Text & RO Data
+  	* (.itcm.ram)
+  }
+}
+
+LR_ROM 0x10000000 0x000B0000  {    ; load region size_region
+  _ROM_CODE 0x10000000 0x000AF000  {  ; Text & RO data
+	rtl8195bhp_vectors.o (+RO)
+	startup.o (+RO)
+	system_rtl8195bhp.o (+RO)
+	rtl8195bhp_misc.o (+RO)
+   
+	*(.rom.hal_uart.rodata)
+	*(.rom.hal_timer.rodata)
+	*(.rom.hal_timer_ba.rodata)
+	*(.rom.hal_pwm.rodata)
+	*(.rom.hal_gpio.text)
+	*(.rom.hal_gpio.rodata)
+	*(.rom.hal_icc.text)
+	*(.rom.hal_icc.rodata)
+	*(.rom.hal_efuse.text)
+	*(.rom.hal_efuse.rodata)
+	*(.rom.hal_gdma.text)
+	*(.rom.hal_gdma.rodata)
+	*(.rom.hal_spic.text)
+	*(.rom.hal_spic.rodata)
+	*(.rom.hal_flash.text)
+	*(.rom.hal_flash.rodata)
+	*(.rom.hal_ssi.text)
+	*(.rom.hal_ssi.rodata)
+	*(.rom.hal_sgpio.text)
+	*(.rom.hal_sgpio.rodata)
+	*(.rom.hal_i2s.text)
+	*(.rom.hal_i2s.rodata)	
+	*(.rom.hal_pcm.text)
+	*(.rom.hal_pcm.rodata)			
+	*(.rom.hal_adc.text)
+	*(.rom.hal_adc.rodata)
+	*(.rom.hal_i2c.text)
+	*(.rom.hal_i2c.rodata)
+	*(.rom.hal_sdioh.rodata)
+	rtl8195bhp_uart.o (+RO)
+	rtl8195bhp_timer.o (+RO)
+	rtl8195bhp_pwm.o (+RO)
+	rtl8195bhp_gpio.o (+RO)
+	rtl8195bhp_icc.o (+RO)
+	rtl8195bhp_efuse.o (+RO)
+	rtl8195bhp_gdma.o (+RO)
+	rtl8195bhp_sgpio.o (+RO)
+	rtl8195bhp_i2s.o (+RO)
+	rtl8195bhp_pcm.o (+RO)
+	rtl8195bhp_sdio_host.o (+RO)
+	rtl8195bhp_adc.o (+RO)
+	rtl8195bhp_i2c.o (+RO)
+	rtl8195blp_pinmux.o (+RO)
+	
+	
+	strproc.o (+RO)
+	memcmp.o (+RO)
+	memcpy.o (+RO)
+	memmove.o (+RO)
+	memset.o (+RO)
+	strtod.o (+RO)
+	strtol.o (+RO)
+	strtoul.o (+RO)
+	strtoull.o (+RO)
+	strtoll.o (+RO)
+	div_u64.o (+RO)
+	utility.o (+RO)
+
+	xprintf.o (+RO)
+	rtl_printf.o (+RO)
+	shell.o (+RO)
+	cmd_shell_rom.o (+RO)
+	consol_cmds.o (+RO)
+	log_buf.o (+RO)
+	stdio_port.o (+RO)
+
+	libshutdown.o (+RO)
+	libshutdown2.o (+RO)
+	rtexit.o (+RO)
+	rtexit2.o (+RO)
+	llmul.o (+RO)
+	llsdiv.o (+RO)
+	lludiv.o (+RO)
+	exit.o (+RO)
+	aeabi_sdiv.o (+RO)
+	heapauxi.o (+RO)
+	d2f.o (+RO)
+	daddsub.o (+RO)
+	ddiv.o (+RO)
+	dfixl.o (+RO)
+	dfixui.o (+RO)
+	dflti.o (+RO)
+	dmul.o (+RO)
+	fdiv.o (+RO)
+	dcmpin.o (+RO)
+	cmpret.o (+RO)
+	dnan2.o (+RO)
+	sys_exit.o (+RO)
+	retnan.o (+RO)
+	use_no_semi.o (+RO)
+	dlef.o (+RO)
+	faddsub.o (+RO)
+	fmul.o (+RO)
+	faddsub.o (+RO)
+	usenofp.o (+RO)
+  }
+
+  _ROM_DATA 0x20179200 0x100  {
+    system_rtl8195bhp.o (+RW)
+    * (.rom.hal_uart.data)
+	* (.rom.hal_timer.data)
+	* (.rom.hal_pwm.data)
+	* (.rom.hal_gpio.data)
+	* (.rom.hal_icc.data)
+	* (.rom.hal_efuse.data)
+	* (.rom.hal_sgpio.data)
+	* (.rom.hal_i2s.data)
+	* (.rom.hal_pcm.data)	
+	* (.rom.hal_sdioh.data)
+	* (.rom.hal_adc.data)
+	* (.rom.hal_i2c.data)
+	* (.xprintf.data)
+
+    rtl8195bhp_gdma.o (+RW)
+  }
+
+  _STUB_TMR 0x100AF000 FIXED {  ; load address = execution address
+		*.o (.rom.hal_timer.stubs)
+  }
+
+  _STUB_PWM AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.hal_pwm.stubs)
+  }
+
+  _STUB_UART AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.hal_uart.stubs)
+  }
+
+  _STUB_GPIO AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.hal_gpio.stubs)
+  }
+
+  _STUB_ICC AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.hal_icc.stubs)
+  }
+
+  _STUB_EFUSE AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.hal_efuse.stubs)
+  }
+
+  _STUB_SDIOH AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.hal_sdioh.stubs)
+  }
+
+  _STUB_GDMA AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.hal_gdma.stubs)
+  }
+
+  _STUB_SPIC AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.hal_spic.stubs)
+  }
+
+  _STUB_FLASH AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.hal_flash.stubs)
+  }
+
+  _STUB_SSI AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.hal_ssi.stubs)
+  }
+
+  _STUB_ADC AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.hal_adc.stubs)
+  }
+  
+  _STUB_I2C AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.hal_i2c.stubs)
+  }
+  
+  _STUB_PINMUX AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.hal_pinmux.stubs)
+  }
+  
+  _STUB_SGPIO AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.hal_sgpio.stubs)
+  }  
+
+  _STUB_I2S AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.hal_i2s.stubs)
+  }  
+  
+  _STUB_PCM AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.hal_pcm.stubs)
+  }    
+
+  _STUB_MISC AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.hal_misc.stubs)
+  }    
+    
+  _STUB_SHELL AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.shellcmd.stubs)
+  }
+
+  _STUB_PRINTFNS AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.printf.stubs)
+  }
+
+  _STUB_STRPROC AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.strproc.stubs)
+  }
+
+  _STUB_UTILITY AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.utility.stubs)
+  }
+
+  _STUB_INT_VECTOR AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		*.o (.rom.hal_vector.stubs)
+  }
+
+  _STUB_WLAN AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		* (.rom.wlan.stubs)
+  }
+
+  _STUB_APPLE AlignExpr(+0, 0x80) FIXED {  ; load address = execution address
+		* (.rom.apple.stubs)
+  }  
+}
+
+LR_DTCM 0x20000000 0x00018000  {    ; load region size_region
+
+  _DTCM_RAM 0x20000000 UNINIT {
+    * (.rom_temp.bss)
+  	* (.dtcm.ram)
+    startup_rtl8195bhp.o (HEAP)
+  }
+  
+  _STACK 0x2000F000 0x00001000  {
+    startup_rtl8195bhp.o (STACK)
+  }
+
+  _DTCM_ROM 0x20010000 0x00008000  {  ; DTCM RO data
+  	* (.dtcm.rom)
+  }
+}
+
+LR_RAM 0x20100000 0x0017A000  {    ; load region size_region
+  
+  _RAM_CODE 0x20101000 FIXED {
+   .ANY (+RO)
+  }
+  
+  _DATA +0 FIXED {
+   .ANY (+RW)
+  }
+
+  _BSS +0 UNINIT FIXED {
+    RTX_Conf_CM.o (+ZI)
+      .ANY (+ZI)
+  }
+
+  _ROM_BSS 0x20179300 FIXED UNINIT {
+	startup.o (.sysstart.bss)
+	system_rtl8195bhp.o (.sysstart.bss)
+	rtl8195bhp_misc.o (.sys_misc.bss)
+	diag.o (.diag.bss)
+	rtl8195bhp_uart.o (.rom.hal_uart.bss)
+	rtl8195bhp_timer.o (.rom.hal_timer.bss)
+	rtl8195bhp_pwm.o (.rom.hal_pwm.bss)
+	rtl8195bhp_gpio.o (.rom.hal_gpio.bss)
+	rtl8195bhp_icc.o (.rom.hal_icc.bss)
+	rtl8195bhp_efuse.o (.rom.hal_efuse.bss)
+	rtl8195bhp_sdio_host.o (.rom.hal_sdioh.bss)
+	rtl8195bhp_gdma.o (.rom.hal_gdma.bss)
+	rtl8195bhp_spic.o (.rom.hal_spic.bss)
+	rtl8195bhp_flash.o (.rom.hal_flash.bss)
+	rtl8195bhp_ssi.o (.rom.hal_ssi.bss)
+	rtl8195bhp_sgpio.o (.rom.hal_sgpio.bss)
+	rtl8195bhp_i2s.o (.rom.hal_i2s.bss)	
+	rtl8195bhp_pcm.o (.rom.hal_pcm.bss)	
+	rtl8195bhp_adc.o (.rom.hal_adc.bss)
+	rtl8195bhp_i2c.o (.rom.hal_i2c.bss)
+	xprintf.o (.xprintf.bss)
+  	stdio_port.o (.stdioport.bss)
+
+    rtl8195bhp_gdma.o (+ZI)
+	rtl8195blp_pinmux.o (+ZI)
+  }
+
+  _RAM_FUNC_TBL 0x20179D00 FIXED 0xF0 {
+    ram_start.o (.start.ram.data*)
+  }
+
+  _RAM_IMG_SIGN 0x20179DF0 FIXED 0x10  {
+    ram_start.o (.start.ram.sign*)
+  }
+
+  _RAM_VECTOR 0x20179E00 FIXED {  ; RW data
+	rtl8195bhp_vectors.o (.ram_vector_table)
+  }
+
+  _RAM_IRQ_TABL +0 FIXED {  ; RW data
+	rtl8195bhp_vectors.o (.ram_user_irq_table)
+  }
+}

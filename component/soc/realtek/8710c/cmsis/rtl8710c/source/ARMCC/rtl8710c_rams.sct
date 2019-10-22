@@ -1,0 +1,40 @@
+; *************************************************************
+; *** Scatter-Loading Description File for RTL8195BHP       ***
+; *************************************************************
+
+LR_DTCM 0x20000000 0x00008000  {    ; load region size_region
+
+  _DTCM_RAM 0x20000000 UNINIT {
+  	* (.dtcm.ram)
+  }
+  
+  _STACK 0x20007000 UNINIT 0x00001000  {
+  	* (.stack)
+  }
+}
+
+LR_RAM 0x20160000 0x0001A000  {    ; load region size_region
+  EXEC_NSCR 0x20160000 0x1000  {
+    *(Veneer$$CMSE)
+  }
+
+  _RAM_CODE 0x20170000 FIXED {
+    .ANY (+RO)
+  }
+  
+  _DATA +0 FIXED {
+    .ANY (+RW)
+  }
+
+  _BSS +0 UNINIT FIXED {
+    .ANY (+ZI)
+  }
+  
+  _RAM_FUNC_TBL 0x20179D00 FIXED 0xF0 {
+    ram_start.o (.start.ram.data*)
+  }
+
+  _RAM_IMG_SIGN 0x20179DF0 FIXED 0x10  {
+    ram_start.o (.start.ram.sign*)
+  } 
+}

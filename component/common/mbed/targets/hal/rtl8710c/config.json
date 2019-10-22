@@ -1,0 +1,49 @@
+{
+  "IsLib": "N",
+  "OutLib": "rtl8710c_mbed_hal.a",
+
+  "TargetDep": [
+    "rtl8710c"
+  ],
+
+  "SecureDep": [
+  	"NonSecure",
+  	"Ignore"
+  ],
+  
+  "ChipVersionDep": [
+    "Cut-A",
+    "Cut-B",
+    "Cut-C",
+    "Cut-D"
+  ],
+
+  "BuildModeDep": [
+    "Ram",
+    "All"
+  ],
+
+
+  "extraIncludes": [
+  ],
+
+  "extraCCFlags": [
+  ],
+  
+  "excludePath": [
+  ],
+
+  "excludeSource": [
+  ],
+
+  "BuildNonSecureDep": {
+    "excludeSource": [
+    ]
+  },
+
+  "ARMCC-v5": {
+    "CCFlags": [
+      "--gnu"
+	]
+  }  
+}

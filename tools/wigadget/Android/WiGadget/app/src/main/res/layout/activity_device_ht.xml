@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Temperature"
+        android:id="@+id/textViewTemperatureTitle"
+        android:textSize="25sp"
+        android:gravity="center"
+        android:layout_gravity="center_horizontal"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="25dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="......"
+        android:id="@+id/textViewTemperature"
+        android:textSize="18sp"
+        android:gravity="center"
+        android:layout_gravity="center_horizontal"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="68dp" />
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Humidity"
+        android:id="@+id/textViewHumidityTitle"
+        android:textSize="25sp"
+        android:gravity="center"
+        android:layout_gravity="center_horizontal"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="111dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="......"
+        android:id="@+id/textViewHumidity"
+        android:textSize="18sp"
+        android:gravity="center"
+        android:layout_gravity="center_horizontal"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="154dp" />
+
+    <com.androidplot.xy.XYPlot
+        android:id="@+id/mySimpleXYPlot"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_marginTop="197dp"
+        androidPlot.rangeLabel="Reading"
+        androidPlot.domainLabel="Time"
+        androidPlot.plotLabelTextSize="13dp"
+        androidPlot.rangeLabelTextSize="13dp"
+        androidPlot.domainLabelTextSize="13dp"
+        androidPlot.graphWidget.rangeLabelPaint.textSize="13dp"
+        androidPlot.graphWidget.rangeOriginLabelPaint.textSize="13dp"
+        androidPlot.graphWidget.domainLabelPaint.textSize="13dp"
+        androidPlot.graphWidget.domainOriginLabelPaint.textSize="13dp"
+        androidPlot.legendWidget.textPaint.textSize="10dp"
+        androidPlot.legendWidget.iconSizeMetrics.heightMetric.value="10dp"
+        androidPlot.legendWidget.iconSizeMetrics.widthMetric.value="10dp"
+        androidPlot.legendWidget.heightMetric.value="20dp"
+        androidPlot.graphWidget.marginBottom="25dp"
+        androidPlot.legendWidget.positionMetrics.anchor="right_bottom"/>
+
+</RelativeLayout>

@@ -1,0 +1,8 @@
+sleep 10 sec. to wait for UART console
+start i2c example - SHTC1
+SHTC1_Init
+SHTC1 init ok, id=0x87
+temp=26.160507, humidity=40.524292, error=0
+temp=26.125793, humidity=40.444946, error=0
+temp=26.109772, humidity=40.370178, error=0
+...

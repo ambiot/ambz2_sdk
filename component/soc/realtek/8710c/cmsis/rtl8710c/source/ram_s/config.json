@@ -1,0 +1,92 @@
+{
+  "IsLib": "N",
+  "OutLib": "cmsis_8710c.a",
+
+  "SecureDep": [
+ 	"Secure",
+ 	"Ignore"
+  ],
+
+  "ChipVersionDep": [
+    "Cut-A",
+    "Cut-B",
+    "Cut-C",
+    "Cut-D"
+  ],
+
+  "BuildModeDep": [
+    "Ram",
+    "All"
+  ],
+
+  "extraIncludes": [
+  ],
+
+  "extraCCFlags": [
+  ],
+  
+  "excludePath": [
+  ],
+
+  "excludeSource": [
+  ],
+
+  "BuildSecureDep": {
+    "excludeSource": [
+      "app_start.c"
+    ]
+  },
+
+  "ASDK": {
+    "CCFlags": [
+	],
+
+    "excludePath": [
+      "IAR",
+      "ARMCC"
+    ],
+
+    "excludeSource": [
+    ]
+  },
+
+  "GCC-ARM": {
+    "CCFlags": [
+	],
+
+    "excludePath": [
+      "IAR",
+      "ARMCC"
+    ],
+
+    "excludeSource": [
+    ]
+  },
+  
+  "ARMCC-v5": {
+    "CCFlags": [
+      "--gnu"
+	],
+
+    "excludePath": [
+      "IAR",
+      "GCC"
+    ],
+
+    "excludeSource": [
+    ]
+  },
+  
+  "ARMCC-v6": {
+    "CCFlags": [
+      "-O0"
+	],
+
+    "excludePath": [
+    ],
+
+    "excludeSource": [
+    ]
+  }
+  
+}

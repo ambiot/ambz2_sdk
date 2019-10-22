@@ -1,0 +1,34 @@
+{
+  "IsLib": "N",
+  "OutLib": "shell.a",
+
+  "BuildModeDep": [
+    "Ram",
+    "Boot",
+    "All"
+  ],
+
+  "SecureDep": [
+    "NonSecure",
+    "Ignore"
+  ],
+
+  "extraIncludes": [
+  ],
+
+  "extraCCFlags": [
+  ],
+  
+  "excludePath": [
+  ],
+
+  "excludeSource": [
+    "shell_example.c"
+  ],
+
+  "ARMCC-v5": {
+    "CCFlags": [
+      "--gnu"
+	]
+  }  
+}
