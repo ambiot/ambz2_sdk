@@ -30,6 +30,7 @@
 #include "platform_conf.h"
 #endif
 #include "basic_types.h"
+#include "ctype.h"
 
 /* for GNU C++ */
 #if defined(__GNUC__)
@@ -328,16 +329,15 @@ unsigned long long __wrap_strtoull(const char *nptr, char **endptr, int base)
 	return strtoull(nptr, endptr, base);
 }
 
-#include "platform_opts.h"
 int __wrap_atoi(const char *num)
 {
-#if !CONFIG_MIIO
+#if 0
 	return atoi(num);
 #else
 	int c;
 	long total;
 	int sign; 
-	char *nptr = num;
+	char *nptr = (char *)num;
 
 	/* skip whitespace */
 	while ( isspace((int)(unsigned char)*nptr) )

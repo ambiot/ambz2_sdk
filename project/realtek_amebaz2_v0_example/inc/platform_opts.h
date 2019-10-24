@@ -106,6 +106,7 @@
 #undef CONFIG_USE_MBEDTLS
 #define CONFIG_USE_MBEDTLS 0
 #endif
+#define CONFIG_SSL_CLIENT_PRIVATE_IN_TZ 1
 
 /* For Simple Link */
 #define CONFIG_INCLUDE_SIMPLE_CONFIG		1

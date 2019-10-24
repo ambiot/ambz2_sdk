@@ -133,6 +133,40 @@ int wext_set_mfp_support(const char *ifname, __u8 value)
 	return ret;
 }
 
+#ifdef CONFIG_SAE_SUPPORT
+int wext_set_group_id(const char *ifname, __u8 value)
+{
+	int ret = 0;
+	struct iwreq iwr;
+
+	memset(&iwr, 0, sizeof(iwr));
+	iwr.u.param.value = value;
+
+	if (iw_ioctl(ifname, SIOCSIWGRPID, &iwr) < 0) {
+		RTW_API_INFO("\n\rWEXT: SIOCSIWGRPID(value 0x%x) failed)", value);
+	}
+
+	return ret;
+}
+#endif
+
+#ifdef CONFIG_PMKSA_CACHING
+int wext_set_pmk_cache_enable(const char *ifname, __u8 value)
+{
+	int ret = 0;
+	struct iwreq iwr;
+
+	memset(&iwr, 0, sizeof(iwr));
+	iwr.u.param.value = value;
+
+	if (iw_ioctl(ifname, SIOCSIWPMKSA, &iwr) < 0) {
+		RTW_API_INFO("\n\rWEXT: SIOCSIWPMKSA(value 0x%x) failed)", value);
+	}
+
+	return ret;
+}
+#endif
+
 int wext_set_key_ext(const char *ifname, __u16 alg, const __u8 *addr, int key_idx, int set_tx, const __u8 *seq, __u16 seq_len, __u8 *key, __u16 key_len)
 {
 	struct iwreq iwr;

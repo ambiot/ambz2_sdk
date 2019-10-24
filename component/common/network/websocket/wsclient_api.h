@@ -22,10 +22,11 @@ int ws_set_fun_ops(wsclient_context *wsclient);
 **					port:websocket server's port, if not given, default 80 for "ws", 443 for "wss"
 **					origin: the address or url of your self
 **					buf_len: the length of tx/rx/received buffer. It determine the maximum bytes of data send and receive.
+**					max_queue_size: max size of queue to buffer messages which are going to send to webserver.
 ** Return         : Created: websocket client context structure
 **					Failed:  NULL
 **************************************************************************************************/
-wsclient_context *create_wsclient(char *url, int port,char *path, char* origin, int buf_len);
+wsclient_context *create_wsclient(char *url, int port,char *path, char* origin, int buf_len, int max_queue_size);
 
 /*************************************************************************************************
 ** Function Name  : ws_connect_url

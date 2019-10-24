@@ -190,12 +190,15 @@ int32_t sys_update_ota_set_boot_fw_idx(uint32_t boot_idx)
 	uint32_t fw1_sn;
 	uint32_t fw2_sn;
 	cur_idx = get_cur_fw_idx();
-	if(cur_idx == boot_idx){
+	if(cur_idx == boot_idx) {
 		return 0;
 	}
+	if(boot_idx != 1 && boot_idx != 2) {
+		return -1;
+	}
+		
 	get_fw_info(&targetFWaddr, &currentFWaddr, &fw1_sn, &fw2_sn);
-
-	pbuf = malloc(FLASH_SECTOR_SIZE);
+	pbuf = rtw_zmalloc(FLASH_SECTOR_SIZE);
 	if(!pbuf){
 		printf("\n\rAllocate buf fail");
 		return -1;
@@ -204,15 +207,14 @@ int32_t sys_update_ota_set_boot_fw_idx(uint32_t boot_idx)
 	// need to enter critical section to prevent executing the XIP code at first sector after we erase it.
 	rtw_enter_critical(NULL, NULL);
 	device_mutex_lock(RT_DEV_LOCK_FLASH);
-	flash_stream_read(&flash, targetFWaddr, FLASH_SECTOR_SIZE, pbuf);
+	flash_stream_read(&flash, currentFWaddr, FLASH_SECTOR_SIZE, pbuf);
 	// NOT the first byte of ota signature to make it invalid
 	pbuf[0] = ~(pbuf[0]);
-	flash_erase_sector(&flash, targetFWaddr);
-	flash_burst_write(&flash, targetFWaddr, FLASH_SECTOR_SIZE, pbuf);
+	flash_erase_sector(&flash, currentFWaddr);
+	flash_burst_write(&flash, currentFWaddr, FLASH_SECTOR_SIZE, pbuf);
 	device_mutex_unlock(RT_DEV_LOCK_FLASH);
 	rtw_exit_critical(NULL, NULL);
-	free(pbuf);
-
+	rtw_free(pbuf);
 	return 0; 
 }
 

@@ -5,7 +5,7 @@
  *
  * @author
  * @version V1.0.0
- * @date     2017-12-11
+ * @date     2019-08-23
  ******************************************************************************
  * @attention
  *
@@ -27,10 +27,6 @@
 #ifndef MBED_CRYPTO_API_H
 #define MBED_CRYPTO_API_H
 
-#if (defined(CONFIG_PLATFORM_8195BHP) && (CONFIG_PLATFORM_8195BHP == 1)) \
-    || (defined(CONFIG_PLATFORM_8710C) && (CONFIG_PLATFORM_8710C == 1))
-///@name AmebaPro/AmebaZ2 Only 
-///@{
 #include "device.h"
 #include "basic_types.h"
 
@@ -57,13 +53,24 @@ extern "C" {
  * _ERRNO_CRYPTO_CHACHA_MSGLEN_NOT_16Byte_Aligned	        -15
  * _ERRNO_CRYPTO_DES_MSGLEN_NOT_8Byte_Aligned	            -16
  * _ERRNO_CRYPTO_HASH_FINAL_NO_UPDATE		                -17
- * _ERRNO_CRYPTO_CACHE_HANDLE			                    -18
- * _ERRNO_CRYPTO_CIPHER_DECRYPT_MSGLEN_NOT_8Byte_Aligned	-19
- * _ERRNO_CRYPTO_MIX_MODE_HASH_PAD_NULL_POINTER             -20
- * _ERRNO_CRYPTO_MIX_MODE_TAG_NULL_POINTER					-21
- * _ERRNO_CRYPTO_MIX_MODE_ENC_PAD_NULL_POINTER              -22
+ * _ERRNO_CRYPTO_HASH_SEQUENTIAL_HASH_WORNG_LENGTH          -18
+ * _ERRNO_CRYPTO_CACHE_HANDLE                               -19
+ * _ERRNO_CRYPTO_CIPHER_DECRYPT_MSGLEN_NOT_8Byte_Aligned    -20
+ * _ERRNO_CRYPTO_MIX_MODE_HASH_PAD_NULL_POINTER             -21
+ * _ERRNO_CRYPTO_MIX_MODE_TAG_NULL_POINTER                  -22
+ * _ERRNO_CRYPTO_MIX_MODE_ENC_PAD_NULL_POINTER              -23
+ * _ERRNO_CRYPTO_XIP_FLASH_REMAP_FAIL                       -24
  *
+ * _ERRNO_CRYPTO_RNG_RANDOM_SEED_FAIL                       -30
  **************************************************************/
+
+/** @addtogroup crypto CRYPTO
+ *  @ingroup    hal
+ *  @brief      crypto functions
+ *  @{
+ */
+
+#define _ERRNO_CRYPTO_RNG_RANDOM_SEED_FAIL                  -30
 
 /**
  * @brief Define SHA2 different type
@@ -77,19 +84,14 @@ typedef enum _SHA2_TYPE_ {
 		MBED_SHA2_512 	= 512/8
 } SHA2_TYPE;
 
-/** @addtogroup crypto CRYPTO
- *  @ingroup    hal
- *  @brief      crypto functions
- *  @{
- */
-
 /// Crypto doesn't support this feature.
 #define _ERRNO_CRYPTO_NOT_SUPPORT_THIS_FEATURE      -30
+#define _ERRNO_CRYPTO_XIP_FLASH_REMAP_FAIL          -24
 
 ///@name Ameba Common
 ///@{
 
-// Ameba_pro/Ameba_zii mbed api
+// Ameba_zii mbed api
 //Crypto engine init/deinit
 /**
  * @brief  Initializes the CRYPTO, including clock/function/interrupt/CRYPTO Engine registers.
@@ -485,171 +487,6 @@ int crypto_hmac_sha2_256_update(const uint8_t *message, const uint32_t msglen);
  */
 int crypto_hmac_sha2_256_final(uint8_t *pDigest);
 
-#if (defined(CONFIG_PLATFORM_8195BHP) && (CONFIG_PLATFORM_8195BHP == 1))
-
-// DES-CBC
-/**
- * @brief  Initializes the DES-CBC function with a secret key.
- * @param  key: secret key buffer.
- * @param  keylen: length of the key.
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_des_cbc_init(const uint8_t *key, const uint32_t keylen);
-
-/**
- * @brief  DES-CBC buffer encryption.
- * @param  message:  input buffer(Plaintext).
- * @param  msglen:   input buffer length.
- * @param  iv:  buffer holding the initial vector data.
- * @param  ivlen:  length of the initial vector.
- * @param  pResult:  the result buffer of DES-CBC encrypt function(Ciphertext).
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_des_cbc_encrypt(
-    const uint8_t *message, const uint32_t msglen,
-    const uint8_t *iv, const uint32_t ivlen,
-    uint8_t *pResult);
-
-/**
- * @brief  DES-CBC buffer decryption.
- * @param  message:  input buffer(Ciphertext).
- * @param  msglen:   input buffer length.
- * @param  iv:  buffer holding the initial vector data.
- * @param  ivlen:  length of the initial vector.
- * @param  pResult:  the result buffer of DES-CBC decrypt function(Plaintext).
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_des_cbc_decrypt(
-    const uint8_t *message, const uint32_t msglen,
-    const uint8_t *iv, const uint32_t ivlen,
-    uint8_t *pResult);
-
-
-// DES-ECB
-/**
- * @brief  Initializes the DES-ECB function with a secret key.
- * @param  key: secret key buffer.
- * @param  keylen: length of the key.
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_des_ecb_init(const uint8_t *key, const uint32_t keylen);
-
-/**
- * @brief  DES-ECB buffer encryption.
- * @param  message:  input buffer(Plaintext).
- * @param  msglen:   input buffer length.
- * @param  iv:  buffer holding the initial vector data.
- * @param  ivlen:  length of the initial vector.
- * @param  pResult:  the result buffer of DES-ECB encrypt function(Ciphertext).
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_des_ecb_encrypt(
-    const uint8_t *message, const uint32_t msglen,
-    const uint8_t *iv, const uint32_t ivlen,
-    uint8_t *pResult);
-
-/**
- * @brief  DES-ECB buffer decryption.
- * @param  message:  input buffer(Ciphertext).
- * @param  msglen:   input buffer length.
- * @param  iv:  buffer holding the initial vector data.
- * @param  ivlen:  length of the initial vector.
- * @param  pResult:  the result buffer of DES-ECB decrypt function(Plaintext).
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_des_ecb_decrypt(
-    const uint8_t *message, const uint32_t msglen,
-    const uint8_t *iv, const uint32_t ivlen,
-    uint8_t *pResult);
-
-// 3DES-CBC
-/**
- * @brief  Initializes the 3DES-CBC function with a secret key.
- * @param  key: secret key buffer.
- * @param  keylen: length of the key.
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_3des_cbc_init(const uint8_t *key, const uint32_t keylen);
-
-/**
- * @brief  3DES-CBC buffer encryption.
- * @param  message:  input buffer(Plaintext).
- * @param  msglen:   input buffer length.
- * @param  iv:  buffer holding the initial vector data.
- * @param  ivlen:  length of the initial vector.
- * @param  pResult:  the result buffer of 3DES-CBC encrypt function(Ciphertext).
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_3des_cbc_encrypt(
-    const uint8_t *message, const uint32_t msglen,
-    const uint8_t *iv, const uint32_t ivlen,
-    uint8_t *pResult);
-
-/**
- * @brief  3DES-CBC buffer decryption.
- * @param  message:  input buffer(Ciphertext).
- * @param  msglen:   input buffer length.
- * @param  iv:  buffer holding the initial vector data.
- * @param  ivlen:  length of the initial vector.
- * @param  pResult:  the result buffer of 3DES-CBC decrypt function(Plaintext).
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_3des_cbc_decrypt(
-    const uint8_t *message, const uint32_t msglen,
-    const uint8_t *iv, const uint32_t ivlen,
-    uint8_t *pResult);
-
-// 3DES-ECB
-/**
- * @brief  Initializes the 3DES-ECB function with a secret key.
- * @param  key: secret key buffer.
- * @param  keylen: length of the key.
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_3des_ecb_init(const uint8_t *key, const uint32_t keylen);
-
-/**
- * @brief  3DES-ECB buffer encryption.
- * @param  message:  input buffer(Plaintext).
- * @param  msglen:   input buffer length.
- * @param  iv:  buffer holding the initial vector data.
- * @param  ivlen:  length of the initial vector.
- * @param  pResult:  the result buffer of 3DES-ECB encrypt function(Ciphertext).
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_3des_ecb_encrypt(
-    const uint8_t *message, const uint32_t msglen,
-    const uint8_t *iv, const uint32_t ivlen,
-    uint8_t *pResult);
-
-/**
- * @brief  3DES-ECB buffer decryption.
- * @param  message:  input buffer(Ciphertext).
- * @param  msglen:   input buffer length.
- * @param  iv:  buffer holding the initial vector data.
- * @param  ivlen:  length of the initial vector.
- * @param  pResult:  the result buffer of 3DES-ECB decrypt function(Plaintext).
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_3des_ecb_decrypt(
-    const uint8_t *message, const uint32_t msglen,
-    const uint8_t *iv, const uint32_t ivlen,
-    uint8_t *pResult);
-
-#endif //#if (defined(CONFIG_PLATFORM_8195BHP) && (CONFIG_PLATFORM_8195BHP == 1))
-
 // AES-CBC
 /**
  * @brief  Initializes the AES-CBC function with a secret key.
@@ -850,178 +687,6 @@ int crypto_aes_ofb_decrypt(
     const uint8_t *iv, const uint32_t ivlen,
     uint8_t *pResult);
 
-// AES-GCM
-/**
- * @brief  Initializes the AES-GCM function with a secret key.
- * @param  key: secret key buffer.
- * @param  keylen: length of the key.
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_aes_gcm_init(const uint8_t *key, const uint32_t keylen);
-
-/**
- * @brief  AES-GCM buffer encryption.
- * @param  message:  input buffer(Plaintext).
- * @param  msglen:   input buffer length.
- * @param  iv:  buffer holding the initial vector data.
- * @param  aad:  additional data buffer.
- * @param  aadlen:  length of additional data.
- * @param  pResult:  the result buffer of AES-GCM encrypt function(Ciphertext).
- * @param  pTag:  buffer for holding the tag(Authentication code).
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_aes_gcm_encrypt(
-    const uint8_t *message, const uint32_t msglen,
-    const uint8_t *iv,
-    const uint8_t *aad, const uint32_t aadlen,
-    uint8_t *pResult, uint8_t *pTag);
-
-/**
- * @brief  AES-GCM buffer decryption.
- * @param  message:  input buffer(Ciphertext).
- * @param  msglen:   input buffer length.
- * @param  iv:  buffer holding the initial vector data.
- * @param  aad:  additional data buffer.
- * @param  aadlen:  length of additional data.
- * @param  pResult:  the result buffer of AES-GCM decrypt function(Plaintext).
- * @param  pTag:  buffer for holding the tag(Authentication code).
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_aes_gcm_decrypt(
-    const uint8_t *message, const uint32_t msglen,
-    const uint8_t *iv,
-    const uint8_t *aad, const uint32_t aadlen,
-    uint8_t *pResult, uint8_t *pTag);
-
-#if (defined(CONFIG_PLATFORM_8195BHP) && (CONFIG_PLATFORM_8195BHP == 1))
-
-// CHACHA20
-/**
- * @brief  Initializes the Chacha20 function with a secret key.
- * @param  key: secret key buffer.
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_chacha_init(const uint8_t *key);
-
-/**
- * @brief  Chacha20 buffer encryption.
- * @param  message:  input buffer(Plaintext).
- * @param  msglen:   input buffer length.
- * @param  iv:  buffer holding the initial vector data.
- * @param  count:  initial counter value.
- * @param  pResult:  the result buffer of Chacha20 encrypt function(Ciphertext).
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_chacha_encrypt(
-    const uint8_t *message, const uint32_t msglen,
-    const uint8_t *iv, const uint32_t count,
-    uint8_t *pResult);
-
-/**
- * @brief  Chacha20 buffer decryption.
- * @param  message:  input buffer(Ciphertext).
- * @param  msglen:   input buffer length.
- * @param  iv:  buffer holding the initial vector data.
- * @param  count:  initial counter value.
- * @param  pResult:  the result buffer of Chacha20 decrypt function(Plaintext).
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_chacha_decrypt(
-    const uint8_t *message, const uint32_t msglen,
-    const uint8_t *iv, const uint32_t count,
-    uint8_t *pResult);
-
-// POLY1305
-/**
- * @brief  Poly1305 message digest algorithm.
- * @param  message:  input buffer(Plaintext).
- * @param  msglen:   input buffer length.
- * @param  key:  secret key buffer.
- * @param  pDigest:  the result buffer of Poly1305 function.
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_poly1305(
-    const uint8_t *message, const uint32_t msglen,
-    const uint8_t *key,
-    uint8_t *pDigest);
-
-/**
- * @brief  Initializes the Poly1305 function with a secret key.
- * @param  key:  secret key buffer.
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_poly1305_init(const uint8_t *key);
-
-/**
- * @brief  Poly1305 process buffer.
- * @param  message:  input buffer(Plaintext).
- * @param  msglen:   input buffer length.
- * @param  pDigest:  the result buffer of Poly1305 function.
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_poly1305_process(
-    const uint8_t *message, const uint32_t msglen,
-	uint8_t *pDigest);
-
-// CHACHA+POLY1305
-/**
- * @brief  Initializes the Chacha20_Poly1305 function with a secret key.
- * @param  key: secret key buffer.
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_chacha_poly1305_init(const uint8_t *key);
-
-/**
- * @brief  Chacha20_Poly1305 buffer encryption.
- * @param  message:  input buffer(Plaintext).
- * @param  msglen:   input buffer length.
- * @param  nonce:  numbers used once buffer.
- * @param  aad:  additional data buffer.
- * @param  aadlen:  length of additional data.
- * @param  pResult:  the result buffer of Chacha20_Poly1305 encrypt function(Ciphertext).
- * @param  pTag:  buffer for holding the tag(Authentication code).
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_chacha_poly1305_encrypt(
-    const uint8_t *message, const uint32_t msglen,
-    const uint8_t *nonce,
-    const uint8_t *aad, const uint32_t aadlen,
-    uint8_t *pResult, uint8_t *pTag);
-
-/**
- * @brief  Chacha20_Poly1305 buffer decryption.
- * @param  message:  input buffer(Ciphertext).
- * @param  msglen:   input buffer length.
- * @param  nonce:  numbers used once buffer.
- * @param  aad:  additional data buffer.
- * @param  aadlen:  length of additional data.
- * @param  pResult:  the result buffer of Chacha20_Poly1305 decrypt function(Plaintext).
- * @param  pTag:  buffer for holding the tag(Authentication code).
- * @retval 0: SUCCESS
- * @retval < 0: FAIL(Refer to ERRNO)
- */
-int crypto_chacha_poly1305_decrypt(
-    const uint8_t *message, const uint32_t msglen,
-    const uint8_t *nonce,
-    const uint8_t *aad, const uint32_t aadlen,
-    uint8_t *pResult, uint8_t *pTag);
-
-#endif //#if (defined(CONFIG_PLATFORM_8195BHP) && (CONFIG_PLATFORM_8195BHP == 1))
-
-#if (defined(CONFIG_PLATFORM_8710C) && (CONFIG_PLATFORM_8710C == 1))
-#define _ERRNO_CRYPTO_XIP_FLASH_REMAP_FAIL          -24
-#define _ERRNO_CRYPTO_RNG_RANDOM_SEED_FAIL          -30
 //AES-GHASH
 /**
  *  @brief AES-GHASH message digest algorithm.
@@ -1146,7 +811,51 @@ int crypto_aes_gctr_decrypt(
     const uint8_t *message, const uint32_t msglen,
     const uint8_t *iv, uint8_t *pResult);
 
-#endif //#if (defined(CONFIG_PLATFORM_8710C) && (CONFIG_PLATFORM_8710C == 1))
+// AES-GCM
+/**
+ * @brief  Initializes the AES-GCM function with a secret key.
+ * @param  key: secret key buffer.
+ * @param  keylen: length of the key.
+ * @retval 0: SUCCESS
+ * @retval < 0: FAIL(Refer to ERRNO)
+ */
+int crypto_aes_gcm_init(const uint8_t *key, const uint32_t keylen);
+
+/**
+ * @brief  AES-GCM buffer encryption.
+ * @param  message:  input buffer(Plaintext).
+ * @param  msglen:   input buffer length.
+ * @param  iv:  buffer holding the initial vector data.
+ * @param  aad:  additional data buffer.
+ * @param  aadlen:  length of additional data.
+ * @param  pResult:  the result buffer of AES-GCM encrypt function(Ciphertext).
+ * @param  pTag:  buffer for holding the tag(Authentication code).
+ * @retval 0: SUCCESS
+ * @retval < 0: FAIL(Refer to ERRNO)
+ */
+int crypto_aes_gcm_encrypt(
+    const uint8_t *message, const uint32_t msglen,
+    const uint8_t *iv,
+    const uint8_t *aad, const uint32_t aadlen,
+    uint8_t *pResult, uint8_t *pTag);
+
+/**
+ * @brief  AES-GCM buffer decryption.
+ * @param  message:  input buffer(Ciphertext).
+ * @param  msglen:   input buffer length.
+ * @param  iv:  buffer holding the initial vector data.
+ * @param  aad:  additional data buffer.
+ * @param  aadlen:  length of additional data.
+ * @param  pResult:  the result buffer of AES-GCM decrypt function(Plaintext).
+ * @param  pTag:  buffer for holding the tag(Authentication code).
+ * @retval 0: SUCCESS
+ * @retval < 0: FAIL(Refer to ERRNO)
+ */
+int crypto_aes_gcm_decrypt(
+    const uint8_t *message, const uint32_t msglen,
+    const uint8_t *iv,
+    const uint8_t *aad, const uint32_t aadlen,
+    uint8_t *pResult, uint8_t *pTag);
 
 // crc
 /**
@@ -1203,8 +912,6 @@ int crypto_crc_cmd(const uint8_t *message, const uint32_t msglen, uint32_t *pCrc
  */
 int crypto_crc_dma(const uint8_t *message, const uint32_t msglen, uint32_t *pCrc);
 
-#if (defined(CONFIG_PLATFORM_8710C) && (CONFIG_PLATFORM_8710C == 1))
-
 #if defined(CONFIG_BUILD_SECURE)
 int NS_ENTRY crypto_random_generate_nsc (uint8_t *rn_buf, uint32_t rn_size);
 #elif defined(CONFIG_BUILD_NONSECURE)
@@ -1252,8 +959,8 @@ int crypto_hkdf_derive(const uint8_t *salt, size_t salt_len, const uint8_t *ikm,
  */
 int crypto_random_seed (uint8_t *seed_buf, uint32_t seed_size);
 
-#endif  // end of else of "#if !defined(CONFIG_BUILD_NONSECURE)"
-#endif //#if (defined(CONFIG_PLATFORM_8710C) && (CONFIG_PLATFORM_8710C == 1))
+#endif   // end of "#if !defined(CONFIG_BUILD_NONSECURE)"
+
 
 ///@}
 
@@ -1290,36 +997,6 @@ int crypto_random_seed (uint8_t *seed_buf, uint32_t seed_size);
 #define rtl_crypto_hmac_sha1_init           crypto_hmac_sha1_init
 /// Redefine Ameba1 crypto hmac_sha1 hash process function.
 #define rtl_crypto_hmac_sha1_process        crypto_hmac_sha1_process
-
-#if (defined(CONFIG_PLATFORM_8195BHP) && (CONFIG_PLATFORM_8195BHP == 1))
-
-/// Redefine Ameba1 crypto des_cbc cipher initialize function.
-#define rtl_crypto_des_cbc_init             crypto_des_cbc_init
-/// Redefine Ameba1 crypto des_cbc cipher encrypt function.
-#define rtl_crypto_des_cbc_encrypt          crypto_des_cbc_encrypt
-/// Redefine Ameba1 crypto des_cbc cipher decrypt function.
-#define rtl_crypto_des_cbc_decrypt          crypto_des_cbc_decrypt
-/// Redefine Ameba1 crypto des_ecb cipher initialize function.
-#define rtl_crypto_des_ecb_init             crypto_des_ecb_init
-/// Redefine Ameba1 crypto des_ecb cipher encrypt function.
-#define rtl_crypto_des_ecb_encrypt          crypto_des_ecb_encrypt
-/// Redefine Ameba1 crypto des_ecb cipher decrypt function.
-#define rtl_crypto_des_ecb_decrypt          crypto_des_ecb_decrypt
-/// Redefine Ameba1 crypto 3des_cbc cipher initialize function.
-#define rtl_crypto_3des_cbc_init            crypto_3des_cbc_init
-/// Redefine Ameba1 crypto 3des_cbc cipher encrypt function.
-#define rtl_crypto_3des_cbc_encrypt         crypto_3des_cbc_encrypt
-/// Redefine Ameba1 crypto 3des_cbc cipher decrypt function.
-#define rtl_crypto_3des_cbc_decrypt         crypto_3des_cbc_decrypt
-/// Redefine Ameba1 crypto 3des_ecb cipher initialize function.
-#define rtl_crypto_3des_ecb_init            crypto_3des_ecb_init
-/// Redefine Ameba1 crypto 3des_ecb cipher encrypt function.
-#define rtl_crypto_3des_ecb_encrypt         crypto_3des_ecb_encrypt
-/// Redefine Ameba1 crypto 3des_ecb cipher decrypt function.
-#define rtl_crypto_3des_ecb_decrypt         crypto_3des_ecb_decrypt
-
-#endif
-
 /// Redefine Ameba1 crypto aes_cbc cipher initialize function.
 #define rtl_crypto_aes_cbc_init             crypto_aes_cbc_init
 /// Redefine Ameba1 crypto aes_cbc cipher encrypt function.
@@ -1460,6 +1137,5 @@ __STATIC_INLINE int rtl_crypto_hmac_sha2_process(const uint8_t *message, const u
 #ifdef  __cplusplus
 }
 #endif
-///@}
-#endif  // end of "#if defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8710C)"
+
 #endif

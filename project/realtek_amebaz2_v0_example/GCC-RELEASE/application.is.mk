@@ -68,6 +68,7 @@ INCLUDES += -I../../../component/common/api/at_cmd
 INCLUDES += -I../../../component/common/api/platform
 INCLUDES += -I../../../component/common/api/wifi
 INCLUDES += -I../../../component/common/api/wifi/rtw_wpa_supplicant/src
+INCLUDES += -I../../../component/common/api/wifi/rtw_wpa_supplicant/src/crypto
 INCLUDES += -I../../../component/common/api/network/include
 INCLUDES += -I../../../component/common/application
 INCLUDES += -I../../../component/common/application/mqtt/MQTTClient
@@ -92,6 +93,7 @@ INCLUDES += -I../../../component/common/network/ssl/mbedtls-2.4.0/include
 INCLUDES += -I../../../component/common/network/ssl/ssl_ram_map/rom
 INCLUDES += -I../../../component/common/drivers/wlan/realtek/include
 INCLUDES += -I../../../component/common/drivers/wlan/realtek/src/osdep
+INCLUDES += -I../../../component/common/drivers/wlan/realtek/src/core/option
 INCLUDES += -I../../../component/common/test
 
 INCLUDES += -I../../../component/soc/realtek/8710c/cmsis/rtl8710c/include
@@ -468,6 +470,13 @@ LFLAGS += -Wl,-wrap,memmove -Wl,-wrap,memset
 LFLAGS += -Wl,-wrap,printf  -Wl,-wrap,sprintf
 LFLAGS += -Wl,-wrap,puts  -Wl,-wrap,putc -Wl,-wrap,putchar
 LFLAGS += -Wl,-wrap,snprintf  -Wl,-wrap,vsnprintf
+LFLAGS += -Wl,-wrap,aesccmp_construct_mic_iv
+LFLAGS += -Wl,-wrap,aesccmp_construct_mic_header1
+LFLAGS += -Wl,-wrap,aesccmp_construct_ctr_preload
+LFLAGS += -Wl,-wrap,rom_psk_CalcGTK
+LFLAGS += -Wl,-wrap,rom_psk_CalcPTK
+LFLAGS += -Wl,-wrap,aes_80211_encrypt
+LFLAGS += -Wl,-wrap,aes_80211_decrypt
 
 LIBFLAGS =
 LIBFLAGS += -L$(AMEBAZ2_ROMSYMDIR)
@@ -596,7 +605,7 @@ flash:
 	fi
 	chmod +rx $(AMEBAZ2_GCCTOOLDIR)/flashloader.sh
 	$(AMEBAZ2_GCCTOOLDIR)/flashloader.sh application_is/Debug/bin/flash_is.bin
-	$(GDB) -x $(AMEBAZ2_GCCTOOLDIR)/rtl_gdb_flashloader_jlink.txt
+	$(GDB) -x $(AMEBAZ2_GCCTOOLDIR)/rtl_gdb_flashloader.txt
 
 .PHONY: debug
 debug:
@@ -608,7 +617,7 @@ debug:
 	fi
 	chmod +rx $(AMEBAZ2_GCCTOOLDIR)/debug.sh
 	$(AMEBAZ2_GCCTOOLDIR)/debug.sh $(BIN_DIR)/$(TARGET).axf
-	$(GDB) -x $(AMEBAZ2_GCCTOOLDIR)/rtl_gdb_debug_jlink.txt
+	$(GDB) -x $(AMEBAZ2_GCCTOOLDIR)/rtl_gdb_debug.txt
 
 .PHONY: setup
 setup:

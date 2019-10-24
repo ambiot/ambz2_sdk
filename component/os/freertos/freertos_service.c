@@ -303,9 +303,7 @@ static void _freertos_exit_critical_mutex(_mutex *pmutex, _irqL *pirqL)
 
 #if defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8710C)
 #include "timer_api.h"
-#if defined(CONFIG_PLATFORM_8195BHP)
 static gtimer_t tmp_timer_obj;
-#endif
 #endif
 static void _freertos_cpu_lock(void)
 {
@@ -313,18 +311,17 @@ static void _freertos_cpu_lock(void)
 	__disable_irq();
 	icache_disable();
 	dcache_disable();
-#if defined(CONFIG_PLATFORM_8195BHP)
+
 	gtimer_init(&tmp_timer_obj, 0xff);
 	gtimer_reload(&tmp_timer_obj, 400*1000 );	// 4s
 	gtimer_start(&tmp_timer_obj);
-#endif
+
 #endif
 }
 
 static void _freertos_cpu_unlock(void)
 {
 #if defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8710C)
-#if defined(CONFIG_PLATFORM_8195BHP)	
 	int duration = (int)gtimer_read_us(&tmp_timer_obj)/1000;
 	
 	gtimer_deinit(&tmp_timer_obj);
@@ -333,7 +330,6 @@ static void _freertos_cpu_unlock(void)
 	for(int i=0;i<duration;i++)
 		xTaskIncrementTick();
 	
-#endif
 	dcache_enable();
 	icache_enable();	
 	icache_invalidate();

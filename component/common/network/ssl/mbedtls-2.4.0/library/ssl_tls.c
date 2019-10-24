@@ -36,6 +36,19 @@
 #ifdef RTL_HW_CRYPTO
 #include <hal_crypto.h>
 #include "device_lock.h"
+
+#if defined(CONFIG_BUILD_SECURE) && (CONFIG_BUILD_SECURE == 1)
+#if defined(__ICCARM__)
+extern void (__cmse_nonsecure_call *ns_device_mutex_lock)(uint32_t);
+extern void (__cmse_nonsecure_call *ns_device_mutex_unlock)(uint32_t);
+#else
+extern void __attribute__((cmse_nonsecure_call)) (*ns_device_mutex_lock)(uint32_t);
+extern void __attribute__((cmse_nonsecure_call)) (*ns_device_mutex_unlock)(uint32_t);
+#endif
+#define device_mutex_lock ns_device_mutex_lock
+#define device_mutex_unlock ns_device_mutex_unlock
+#endif
+
 #ifdef CONFIG_PLATFORM_8710C
 #include "crypto_api.h"
 #endif
@@ -2286,6 +2299,20 @@ int mbedtls_ssl_fetch_input( mbedtls_ssl_context *ssl, size_t nb_want )
         return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
     }
 
+#if defined(CONFIG_BUILD_SECURE) && (CONFIG_BUILD_SECURE == 1)
+#if defined(__ICCARM__)
+    mbedtls_ssl_recv_t __cmse_nonsecure_call *ns_f_recv =
+        cmse_nsfptr_create((mbedtls_ssl_recv_t __cmse_nonsecure_call *) ssl->f_recv);
+    mbedtls_ssl_recv_timeout_t __cmse_nonsecure_call *ns_f_recv_timeout =
+        cmse_nsfptr_create((mbedtls_ssl_recv_timeout_t __cmse_nonsecure_call *) ssl->f_recv_timeout);
+#else
+    mbedtls_ssl_recv_t __attribute__((cmse_nonsecure_call)) *ns_f_recv =
+        cmse_nsfptr_create((mbedtls_ssl_recv_t __attribute__((cmse_nonsecure_call)) *) ssl->f_recv);
+    mbedtls_ssl_recv_timeout_t __attribute__((cmse_nonsecure_call)) *ns_f_recv_timeout =
+        cmse_nsfptr_create((mbedtls_ssl_recv_timeout_t __attribute__((cmse_nonsecure_call)) *) ssl->f_recv_timeout);
+#endif
+#endif
+
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
     if( ssl->conf->transport == MBEDTLS_SSL_TRANSPORT_DATAGRAM )
     {
@@ -2373,10 +2400,19 @@ int mbedtls_ssl_fetch_input( mbedtls_ssl_context *ssl, size_t nb_want )
             MBEDTLS_SSL_DEBUG_MSG( 3, ( "f_recv_timeout: %u ms", timeout ) );
 
             if( ssl->f_recv_timeout != NULL )
+#if defined(CONFIG_BUILD_SECURE) && (CONFIG_BUILD_SECURE == 1)
+                ret = ns_f_recv_timeout( ssl->p_bio, ssl->in_hdr, len,
+                                                                    timeout );
+#else
                 ret = ssl->f_recv_timeout( ssl->p_bio, ssl->in_hdr, len,
                                                                     timeout );
+#endif
             else
+#if defined(CONFIG_BUILD_SECURE) && (CONFIG_BUILD_SECURE == 1)
+                ret = ns_f_recv( ssl->p_bio, ssl->in_hdr, len );
+#else
                 ret = ssl->f_recv( ssl->p_bio, ssl->in_hdr, len );
+#endif
 
             MBEDTLS_SSL_DEBUG_RET( 2, "ssl->f_recv(_timeout)", ret );
 
@@ -2441,14 +2477,25 @@ int mbedtls_ssl_fetch_input( mbedtls_ssl_context *ssl, size_t nb_want )
             {
                 if( ssl->f_recv_timeout != NULL )
                 {
+#if defined(CONFIG_BUILD_SECURE) && (CONFIG_BUILD_SECURE == 1)
+                    ret = ns_f_recv_timeout( ssl->p_bio,
+                                               ssl->in_hdr + ssl->in_left, len,
+                                               ssl->conf->read_timeout );
+#else
                     ret = ssl->f_recv_timeout( ssl->p_bio,
                                                ssl->in_hdr + ssl->in_left, len,
                                                ssl->conf->read_timeout );
+#endif
                 }
                 else
                 {
+#if defined(CONFIG_BUILD_SECURE) && (CONFIG_BUILD_SECURE == 1)
+                    ret = ns_f_recv( ssl->p_bio,
+                                       ssl->in_hdr + ssl->in_left, len );
+#else
                     ret = ssl->f_recv( ssl->p_bio,
                                        ssl->in_hdr + ssl->in_left, len );
+#endif
                 }
             }
 
@@ -2502,7 +2549,17 @@ int mbedtls_ssl_flush_output( mbedtls_ssl_context *ssl )
 
         buf = ssl->out_hdr + mbedtls_ssl_hdr_len( ssl ) +
               ssl->out_msglen - ssl->out_left;
+
+#if defined(CONFIG_BUILD_SECURE) && (CONFIG_BUILD_SECURE == 1)
+#if defined(__ICCARM__)
+        mbedtls_ssl_send_t __cmse_nonsecure_call *ns_f_send = cmse_nsfptr_create((mbedtls_ssl_send_t __cmse_nonsecure_call *) ssl->f_send);
+#else
+        mbedtls_ssl_send_t __attribute__((cmse_nonsecure_call)) *ns_f_send = cmse_nsfptr_create((mbedtls_ssl_send_t __attribute__((cmse_nonsecure_call)) *) ssl->f_send);
+#endif
+        ret = ns_f_send( ssl->p_bio, buf, ssl->out_left );
+#else
         ret = ssl->f_send( ssl->p_bio, buf, ssl->out_left );
+#endif
 
         MBEDTLS_SSL_DEBUG_RET( 2, "ssl->f_send", ret );
 
@@ -3505,7 +3562,16 @@ static int ssl_handle_possible_reconnect( mbedtls_ssl_context *ssl )
         /* Dont check write errors as we can't do anything here.
          * If the error is permanent we'll catch it later,
          * if it's not, then hopefully it'll work next time. */
+#if defined(CONFIG_BUILD_SECURE) && (CONFIG_BUILD_SECURE == 1)
+#if defined(__ICCARM__)
+        mbedtls_ssl_send_t __cmse_nonsecure_call *ns_f_send = cmse_nsfptr_create((mbedtls_ssl_send_t __cmse_nonsecure_call *) ssl->f_send);
+#else
+        mbedtls_ssl_send_t __attribute__((cmse_nonsecure_call)) *ns_f_send = cmse_nsfptr_create((mbedtls_ssl_send_t __attribute__((cmse_nonsecure_call)) *) ssl->f_send);
+#endif
+        (void) ns_f_send( ssl->p_bio, ssl->out_buf, len );
+#else
         (void) ssl->f_send( ssl->p_bio, ssl->out_buf, len );
+#endif
 
         return( MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED );
     }
@@ -5496,6 +5562,16 @@ void mbedtls_ssl_init( mbedtls_ssl_context *ssl )
 /*
  * Setup an SSL context
  */
+#if defined(CONFIG_BUILD_SECURE) && (CONFIG_BUILD_SECURE == 1)
+#if defined(__ICCARM__)
+extern void* (__cmse_nonsecure_call *ns_calloc)(size_t, size_t);
+extern void (__cmse_nonsecure_call *ns_free)(void *);
+#else
+extern void* __attribute__((cmse_nonsecure_call)) (*ns_calloc)(size_t, size_t);
+extern void __attribute__((cmse_nonsecure_call)) (*ns_free)(void *);
+#endif
+#endif
+
 int mbedtls_ssl_setup( mbedtls_ssl_context *ssl,
                        const mbedtls_ssl_config *conf )
 {
@@ -5508,11 +5584,20 @@ int mbedtls_ssl_setup( mbedtls_ssl_context *ssl,
     /*
      * Prepare base structures
      */
+#if defined(CONFIG_BUILD_SECURE) && (CONFIG_BUILD_SECURE == 1)
+    if( ( ssl-> in_buf = ns_calloc( 1, len ) ) == NULL ||
+        ( ssl->out_buf = ns_calloc( 1, len ) ) == NULL )
+#else
     if( ( ssl-> in_buf = mbedtls_calloc( 1, len ) ) == NULL ||
         ( ssl->out_buf = mbedtls_calloc( 1, len ) ) == NULL )
+#endif
     {
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "alloc(%d bytes) failed", len ) );
+#if defined(CONFIG_BUILD_SECURE) && (CONFIG_BUILD_SECURE == 1)
+        ns_free( ssl->in_buf );
+#else
         mbedtls_free( ssl->in_buf );
+#endif
         ssl->in_buf = NULL;
         return( MBEDTLS_ERR_SSL_ALLOC_FAILED );
     }
@@ -7198,13 +7283,21 @@ void mbedtls_ssl_free( mbedtls_ssl_context *ssl )
     if( ssl->out_buf != NULL )
     {
         mbedtls_zeroize( ssl->out_buf, MBEDTLS_SSL_BUFFER_LEN );
+#if defined(CONFIG_BUILD_SECURE) && (CONFIG_BUILD_SECURE == 1)
+        ns_free( ssl->out_buf );
+#else
         mbedtls_free( ssl->out_buf );
+#endif
     }
 
     if( ssl->in_buf != NULL )
     {
         mbedtls_zeroize( ssl->in_buf, MBEDTLS_SSL_BUFFER_LEN );
+#if defined(CONFIG_BUILD_SECURE) && (CONFIG_BUILD_SECURE == 1)
+        ns_free( ssl->in_buf );
+#else
         mbedtls_free( ssl->in_buf );
+#endif
     }
 
 #if defined(MBEDTLS_ZLIB_SUPPORT)

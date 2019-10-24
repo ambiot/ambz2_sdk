@@ -1,5 +1,8 @@
 #include "rom_ssl_ram_map.h"
 #include <diag.h>
+#if defined(CONFIG_PLATFORM_8710C)
+#include "crypto_api.h"
+#endif
 
 extern struct _rom_ssl_ram_map rom_ssl_ram_map;
 
@@ -49,7 +52,7 @@ int platform_set_malloc_free( void * (*malloc_func)( size_t ),
 	/* OS interface */
 	rom_ssl_ram_map.ssl_malloc = malloc_func;
 	rom_ssl_ram_map.ssl_free = free_func;
-	rom_ssl_ram_map.ssl_printf = (int (*)(char const *, ...))DiagPrintf;
+//	rom_ssl_ram_map.ssl_printf = (int (*)(char const *, ...))DiagPrintf;
 
 	//AES HW CRYPTO
 	rom_ssl_ram_map.hw_crypto_aes_ecb_init = rtl_crypto_aes_ecb_init;
@@ -59,6 +62,7 @@ int platform_set_malloc_free( void * (*malloc_func)( size_t ),
 	rom_ssl_ram_map.hw_crypto_aes_cbc_decrypt = rtl_crypto_aes_cbc_decrypt;
 	rom_ssl_ram_map.hw_crypto_aes_cbc_encrypt = rtl_crypto_aes_cbc_encrypt;
 
+#if !defined(CONFIG_PLATFORM_8710C)
 	//DES HW CRYPTO
 	rom_ssl_ram_map.hw_crypto_des_cbc_init = rtl_crypto_des_cbc_init;
 	rom_ssl_ram_map.hw_crypto_des_cbc_decrypt = rtl_crypto_des_cbc_decrypt;
@@ -66,6 +70,7 @@ int platform_set_malloc_free( void * (*malloc_func)( size_t ),
 	rom_ssl_ram_map.hw_crypto_3des_cbc_init = rtl_crypto_3des_cbc_init;
 	rom_ssl_ram_map.hw_crypto_3des_cbc_decrypt = rtl_crypto_3des_cbc_decrypt;
 	rom_ssl_ram_map.hw_crypto_3des_cbc_encrypt = rtl_crypto_3des_cbc_encrypt;
+#endif
 
 	/* Variables */
 	rom_ssl_ram_map.use_hw_crypto_func = 1;

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <project>
     <fileVersion>3</fileVersion>
     <configuration>
@@ -403,6 +403,8 @@
                     <state>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\platform</state>
                     <state>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\driver</state>
                     <state>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\os</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\drivers\wlan\realtek\src\core\option</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\api\wifi\rtw_wpa_supplicant\src\crypto</state>
                     <state>$PROJ_DIR$\..\..\..\component\common\file_system\fatfs</state>
                     <state>$PROJ_DIR$\..\..\..\component\common\file_system\fatfs\r0.10c\include</state>
                 </option>
@@ -900,6 +902,13 @@
                     <state>--redirect atoull=__wrap_atoull</state>
                     <state>--redirect atof=__wrap_atof</state>
                     <state>--skip_dynamic_initialization</state>
+                    <state>--redirect aesccmp_construct_mic_iv=aesccmp_construct_mic_iv_ram</state>
+                    <state>--redirect aesccmp_construct_mic_header1=aesccmp_construct_mic_header1_ram</state>
+                    <state>--redirect aesccmp_construct_ctr_preload=aesccmp_construct_ctr_preload_ram</state>
+                    <state>--redirect rom_psk_CalcGTK=ram_patch_rom_psk_CalcGTK</state>
+                    <state>--redirect rom_psk_CalcPTK=ram_patch_rom_psk_CalcPTK</state>
+                    <state>--redirect aes_80211_encrypt=ram_patch_aes_80211_encrypt</state>
+                    <state>--redirect aes_80211_decrypt=ram_patch_aes_80211_decrypt</state>
                 </option>
                 <option>
                     <name>IlinkLowLevelInterfaceSlave</name>
@@ -1640,8 +1649,20 @@
                         <state>$PROJ_DIR$\..\..\..\component\common\mbed\targets\hal\rtl8710c</state>
                         <state>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\mbed-drivers\include</state>
                         <state>$PROJ_DIR$\..\..\..\component\os\os_dep\include</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\network</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\network\coap\include</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\network\http2\nghttp2-1.31.0\includes</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\network\lwip\lwip_v2.0.2\src\include</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\network\lwip\lwip_v2.0.2\src\include\lwip</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\network\lwip\lwip_v2.0.2\port\realtek</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\network\lwip\lwip_v2.0.2\port\realtek\freertos</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\api\wifi\rtw_wpa_supplicant\src</state>
                         <state>$PROJ_DIR$\..\..\..\component\common\network\ssl\mbedtls-2.4.0\include</state>
                         <state>$PROJ_DIR$\..\..\..\component\common\network\ssl\ssl_ram_map\rom</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\drivers\wlan\realtek\include</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\drivers\wlan\realtek\src\osdep</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\mbed\targets\hal\rtl8710c</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\test</state>
                         <state>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\platform</state>
                         <state>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\driver</state>
                         <state>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\os</state>

@@ -49,6 +49,7 @@ extern "C" {
 #define SHARED_ENABLED  0x00008000
 #define WPA_SECURITY    0x00200000
 #define WPA2_SECURITY   0x00400000
+#define WPA3_SECURITY		0x00800000
 #define WPS_ENABLED     0x10000000
 
 #define RTW_MAX_PSK_LEN		(64)
@@ -140,6 +141,8 @@ enum {
 
     RTW_SECURITY_WPS_OPEN       = WPS_ENABLED,                                      /**< WPS with open security                  */
     RTW_SECURITY_WPS_SECURE     = (WPS_ENABLED | AES_ENABLED),                      /**< WPS with AES security                   */
+
+    RTW_SECURITY_WPA3_AES_PSK 	= (WPA3_SECURITY | AES_ENABLED),						/**< WPA3-AES with AES security  */
 
     RTW_SECURITY_UNKNOWN        = -1,                                               /**< May be returned by scan function if security is unknown. Do not pass this to the join function! */
 

@@ -3179,7 +3179,12 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
         /*
          * For ECDSA, default hash is SHA-1 only
          */
+#if defined(CONFIG_BUILD_NONSECURE) && (CONFIG_BUILD_NONSECURE == 1) && defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) && (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 1)
+        extern int NS_ENTRY secure_mbedtls_pk_can_do(const mbedtls_pk_context *ctx, mbedtls_pk_type_t type);
+        if( secure_mbedtls_pk_can_do( mbedtls_ssl_own_key( ssl ), MBEDTLS_PK_ECDSA ) )
+#else
         if( mbedtls_pk_can_do( mbedtls_ssl_own_key( ssl ), MBEDTLS_PK_ECDSA ) )
+#endif
         {
             hash_start += 16;
             hashlen -= 16;
@@ -3218,7 +3223,12 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
             md_alg = MBEDTLS_MD_SHA256;
             ssl->out_msg[4] = MBEDTLS_SSL_HASH_SHA256;
         }
+#if defined(CONFIG_BUILD_NONSECURE) && (CONFIG_BUILD_NONSECURE == 1) && defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) && (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 1)
+        extern unsigned char NS_ENTRY secure_mbedtls_ssl_sig_from_pk(mbedtls_pk_context *pk);
+        ssl->out_msg[5] = secure_mbedtls_ssl_sig_from_pk( mbedtls_ssl_own_key( ssl ) );
+#else
         ssl->out_msg[5] = mbedtls_ssl_sig_from_pk( mbedtls_ssl_own_key( ssl ) );
+#endif
 
         /* Info from md_alg will be used instead */
         hashlen = 0;
@@ -3231,9 +3241,34 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
         return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
     }
 
+#if defined(CONFIG_BUILD_NONSECURE) && (CONFIG_BUILD_NONSECURE == 1) && defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) && (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 1)
+    struct secure_mbedtls_pk_sign_param {
+        mbedtls_pk_context *ctx;
+        mbedtls_md_type_t md_alg;
+        unsigned char *hash;
+        size_t hash_len;
+        unsigned char *sig;
+        size_t *sig_len;
+        int (*f_rng)(void *, unsigned char *, size_t);
+        void *p_rng;
+    } param = {
+        mbedtls_ssl_own_key( ssl ),
+        md_alg,
+        hash_start,
+        hashlen,
+        ssl->out_msg + 6 + offset,
+        &n,
+        ssl->conf->f_rng,
+        ssl->conf->p_rng,
+    };
+
+    extern int NS_ENTRY secure_mbedtls_pk_sign(struct secure_mbedtls_pk_sign_param *param);
+    if( ( ret = secure_mbedtls_pk_sign( &param ) ) != 0 )
+#else
     if( ( ret = mbedtls_pk_sign( mbedtls_ssl_own_key( ssl ), md_alg, hash_start, hashlen,
                          ssl->out_msg + 6 + offset, &n,
                          ssl->conf->f_rng, ssl->conf->p_rng ) ) != 0 )
+#endif
     {
         MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_pk_sign", ret );
         return( ret );

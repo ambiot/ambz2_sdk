@@ -358,7 +358,7 @@ typedef	long long __i64;
 #define SIOCSIWENCODEEXT 0x8B34		/* set encoding token & mode */
 #define SIOCGIWENCODEEXT 0x8B35		/* get encoding token & mode */
 
-/* WPA2 : PMKSA cache management */
+/* WPA2/WPA3 : Set PMKSA Cache Management Enable */
 #define SIOCSIWPMKSA	0x8B36		/* PMKSA cache operation */
 
 /* Send Mgnt Frame or Action Frame */
@@ -374,7 +374,11 @@ typedef	long long __i64;
 #define SIOCSIWMFP	0x8B3A		/* Set Management Frame Protection Support */
 
 /* Get SNR */
-#define SIOCGIWSNR	0x8B3B
+#define SIOCGIWSNR	0x8B3C
+
+/* Set Finite cyclic groups id for SAE  */
+#define SIOCSIWGRPID	0x8B3B		/* Set Finite cyclic groups id for SAE  */
+
 
 /* -------------------- DEV PRIVATE IOCTL LIST -------------------- */
 
@@ -655,6 +659,7 @@ typedef	long long __i64;
 #define IW_AUTH_ALG_OPEN_SYSTEM	0x00000001
 #define IW_AUTH_ALG_SHARED_KEY	0x00000002
 #define IW_AUTH_ALG_LEAP	0x00000004
+#define IW_AUTH_ALG_SAE			0x00000008
 
 /* IW_AUTH_ROAMING_CONTROL values */
 #define IW_AUTH_ROAMING_ENABLE	0	/* driver/firmware based roaming */

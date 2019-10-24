@@ -34,7 +34,7 @@ extern int inic_stop(void);
  ******************************************************/
 #define SCAN_USE_SEMAPHORE	0
 
-#define RTW_JOIN_TIMEOUT 15000
+#define RTW_JOIN_TIMEOUT 20000
 
 #define JOIN_ASSOCIATED             (uint32_t)(1 << 0)
 #define JOIN_AUTHENTICATED          (uint32_t)(1 << 1)
@@ -202,6 +202,9 @@ static int wifi_connect_local(rtw_network_info_t *pWifi)
 		case RTW_SECURITY_WPA2_AES_PSK:
 		case RTW_SECURITY_WPA2_MIXED_PSK:
 		case RTW_SECURITY_WPA_WPA2_MIXED:
+#ifdef CONFIG_SAE_SUPPORT
+		case RTW_SECURITY_WPA3_AES_PSK:			
+#endif			
 			ret = wext_set_auth_param(WLAN0_NAME, IW_AUTH_80211_AUTH_ALG, IW_AUTH_ALG_OPEN_SYSTEM);
 			if(ret == 0)
 				ret = wext_set_key_ext(WLAN0_NAME, IW_ENCODE_ALG_CCMP, NULL, 0, 0, 0, 0, NULL, 0);
@@ -464,6 +467,11 @@ void restore_wifi_info_to_flash(void)
 			case RTW_SECURITY_WPA2_AES_PSK:
 				wifi_data_to_flash.security_type = RTW_SECURITY_WPA2_AES_PSK;
 			    break;
+#ifdef CONFIG_SAE_SUPPORT
+			case RTW_SECURITY_WPA3_AES_PSK:
+				 wifi_data_to_flash.security_type = RTW_SECURITY_WPA3_AES_PSK;
+				break;
+#endif
 			default:
 			    break;
 		}
@@ -529,7 +537,8 @@ int wifi_connect(
              ( security_type == RTW_SECURITY_WPA_AES_PSK ) ||
              ( security_type == RTW_SECURITY_WPA2_AES_PSK ) ||
              ( security_type == RTW_SECURITY_WPA2_TKIP_PSK ) ||
-             ( security_type == RTW_SECURITY_WPA2_MIXED_PSK ) ) )) {
+             ( security_type == RTW_SECURITY_WPA2_MIXED_PSK )||
+             ( security_type == RTW_SECURITY_WPA3_AES_PSK)) )) {
              error_flag = RTW_WRONG_PASSWORD;
 		return RTW_INVALID_KEY;
 	}
@@ -1433,6 +1442,20 @@ int wifi_set_mfp_support(unsigned char value)
 	return wext_set_mfp_support(WLAN0_NAME, value);
 }
 
+#ifdef CONFIG_SAE_SUPPORT
+int wifi_set_group_id(unsigned char value)
+{
+	return wext_set_group_id(WLAN0_NAME, value);
+}
+#endif
+
+#ifdef CONFIG_PMKSA_CACHING
+int wifi_set_pmk_cache_enable(unsigned char value)
+{
+	return wext_set_pmk_cache_enable(WLAN0_NAME, value);
+}
+#endif
+
 int wifi_start_ap(
 	char 				*ssid,
 	rtw_security_t		security_type,
@@ -1884,6 +1907,9 @@ int wifi_get_setting(const char *ifname, rtw_wifi_setting_t *pSetting)
 	int ret = 0;
 	int mode = 0;
 	unsigned short security = 0;
+#ifdef CONFIG_SAE_SUPPORT
+	unsigned short auth_alg = 0;
+#endif
 
 	memset(pSetting, 0, sizeof(rtw_wifi_setting_t));
 	if(wext_get_mode(ifname, &mode) < 0)

@@ -45,6 +45,27 @@ static int _random(void *p_rng, unsigned char *output, size_t output_len)
 	return 0;
 }
 
+#if defined(__ICCARM__)
+void (__cmse_nonsecure_call *ns_device_mutex_lock)(uint32_t) = NULL;
+void (__cmse_nonsecure_call *ns_device_mutex_unlock)(uint32_t) = NULL;
+#else
+void __attribute__((cmse_nonsecure_call)) (*ns_device_mutex_lock)(uint32_t) = NULL;
+void __attribute__((cmse_nonsecure_call)) (*ns_device_mutex_unlock)(uint32_t) = NULL;
+#endif
+
+void NS_ENTRY secure_set_ns_device_lock(
+	void (*device_mutex_lock_func)(uint32_t),
+	void (*device_mutex_unlock_func)(uint32_t))
+{
+#if defined(__ICCARM__)
+	ns_device_mutex_lock = cmse_nsfptr_create((void (__cmse_nonsecure_call *)(uint32_t)) device_mutex_lock_func);
+	ns_device_mutex_unlock = cmse_nsfptr_create((void (__cmse_nonsecure_call *)(uint32_t)) device_mutex_unlock_func);
+#else
+	ns_device_mutex_lock = cmse_nsfptr_create((void __attribute__((cmse_nonsecure_call)) (*)(uint32_t)) device_mutex_lock_func);
+	ns_device_mutex_unlock = cmse_nsfptr_create((void __attribute__((cmse_nonsecure_call)) (*)(uint32_t)) device_mutex_unlock_func);
+#endif
+}
+
 void NS_ENTRY secure_mbedtls_ssl_conf_rng(mbedtls_ssl_config *conf, void *p_rng)
 {
 	mbedtls_ssl_conf_rng(conf, _random, p_rng);

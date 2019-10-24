@@ -74,6 +74,9 @@ void uart_send_string (serial_t *sobj, char *pstr)
 
 void uart_demo_tx (void *param)
 {
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1)
+	rtw_create_secure_context(256);
+#endif		
     serial_t *psobj=param;    // UART object
 //    int i;
     int tx_byte_timeout;
@@ -120,6 +123,9 @@ void uart_demo_tx (void *param)
 
 void uart_demo_rx (void *param)
 {
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1)
+	rtw_create_secure_context(256);
+#endif	
     serial_t *psobj=param;    // UART object
 
     int ret;

@@ -200,6 +200,9 @@ static void print_scan_result( rtw_scan_result_t* record )
                                  ( record->security == RTW_SECURITY_WPA2_TKIP_PSK ) ? "WPA2 TKIP" :
                                  ( record->security == RTW_SECURITY_WPA2_MIXED_PSK ) ? "WPA2 Mixed" :
                                  ( record->security == RTW_SECURITY_WPA_WPA2_MIXED ) ? "WPA/WPA2 AES" :
+#ifdef CONFIG_SAE_SUPPORT
+								 ( record->security == RTW_SECURITY_WPA3_AES_PSK) ? "WP3-SAE AES" :
+#endif
                                  "Unknown");
 
     RTW_API_INFO(" %s ", record->SSID.val);
@@ -256,7 +259,7 @@ void fATWD(void *arg){
 	printf("\n\rDeassociating AP ...");
 
 	if(wext_get_ssid(WLAN0_NAME, (unsigned char *) essid) < 0) {
-		printf("\n\rWIFI disconnected");
+		printf("\n\rnot connected yet");
 		goto exit_success;
 	}
 #if ATCMD_VER == ATVER_2
@@ -272,7 +275,7 @@ void fATWD(void *arg){
 
 	while(1) {
 		if(wext_get_ssid(WLAN0_NAME, (unsigned char *) essid) < 0) {
-			printf("\n\rWIFI disconnected");
+			printf("\n\rWIFI disconnect succeed");
 			break;
 		}
 
@@ -470,6 +473,7 @@ void fATWx(void *arg){
 #endif
 #endif
 	u8 *gw = LwIP_GetGW(&xnetif[0]);
+	u8 *msk = LwIP_GetMASK(&xnetif[0]);
 #endif
 	u8 *ifname[2] = {(u8*)WLAN0_NAME,(u8*)WLAN1_NAME};
 	rtw_wifi_setting_t setting;
@@ -493,6 +497,7 @@ void fATWx(void *arg){
 #endif
 #endif
 			gw = LwIP_GetGW(&xnetif[i]);
+			msk = LwIP_GetMASK(&xnetif[i]);
 #endif
 			printf("\n\r\nWIFI %s Status: Running",  ifname[i]);
 			printf("\n\r==============================");
@@ -525,7 +530,8 @@ void fATWx(void *arg){
 				ipv6[8], ipv6[9], ipv6[10], ipv6[11], ipv6[12], ipv6[13], ipv6[14], ipv6[15]);
 #endif
 #endif
-			printf("\n\r\tGW  => %d.%d.%d.%d\n\r", gw[0], gw[1], gw[2], gw[3]);
+			printf("\n\r\tGW  => %d.%d.%d.%d", gw[0], gw[1], gw[2], gw[3]);
+			printf("\n\r\tmsk  => %d.%d.%d.%d\n\r", msk[0], msk[1], msk[2], msk[3]);
 #endif
 			if(setting.mode == RTW_MODE_AP || i == 1)
 			{
@@ -639,7 +645,16 @@ void fATW1(void *arg){
 		goto exit;
 	}	
 	printf("[ATW1]: _AT_WLAN_SET_PASSPHRASE_ [%s]\n\r", (char*)arg); 
-	strcpy((char *)password, (char*)arg);
+	
+#ifdef CONFIG_SAE_SUPPORT
+	if(strlen((char*)arg) > 63)
+	{
+		 printf("[ATW1]: Error: password input(%d) > 63 \n\r", strlen((char*)arg));
+		 goto exit; 
+	}
+#endif		
+
+	strcpy((char *)password, (char*)arg);	
 	wifi.password = password;
 	wifi.password_len = strlen((char*)arg);
 exit:
@@ -698,10 +713,8 @@ exit:
 }
 
 void fATW4(void *arg){
-
     volatile int ret = RTW_SUCCESS;
 	(void) ret;
-
     if(!arg){
         printf("[ATW4]Usage: ATW4=PASSWORD\n\r");
         ret = RTW_BADARG;
@@ -1663,6 +1676,9 @@ void fATPE(void *arg)
     char *argv[MAX_ARGC] = {0};
     unsigned int ip_addr = 0;
     //unsigned char sta_ip[4] = {192,168,3,80}, sta_netmask[4] = {255,255,255,0}, sta_gw[4] = {192,168,3,1};
+	struct ip_addr ipaddr;
+	struct ip_addr netmask;
+	struct ip_addr gw;
 
     if(!arg){
         AT_DBG_MSG(AT_FLAG_WIFI, AT_DBG_ERROR,
@@ -1672,6 +1688,7 @@ void fATPE(void *arg)
     }
 
     argc = parse_param(arg, argv);
+	
     if( (argc > 4) || (argc < 2) ){
         //at_printf("\r\n[ATPE] ERROR : command format error");
         error_no = 1;
@@ -1680,44 +1697,28 @@ void fATPE(void *arg)
 
     if(argv[1] != NULL){
         ip_addr = inet_addr(argv[1]);
-        sta_ip[0] = (unsigned char) ip_addr & 0xff;
-        sta_ip[1] = (unsigned char) (ip_addr >> 8) & 0xff;
-        sta_ip[2] = (unsigned char) (ip_addr >> 16) & 0xff;
-        sta_ip[3] = (unsigned char) (ip_addr >> 24) & 0xff;
+		IP4_ADDR(ip_2_ip4(&ipaddr), ip_addr&0xff, (ip_addr>>8)&0xff, (ip_addr>>16)&0xff, (ip_addr>>24)&0xff);
     }
     else{
         //at_printf("\r\n[ATPE] ERROR : parameter format error");
         error_no = 2;
         goto exit;
     }
-
+   
     if(argv[2] != NULL){
         ip_addr = inet_addr(argv[2]);
-        sta_gw[0] = (unsigned char) ip_addr & 0xff;
-        sta_gw[1] = (unsigned char) (ip_addr >> 8) & 0xff;
-        sta_gw[2] = (unsigned char) (ip_addr >> 16) & 0xff;
-        sta_gw[3] = (unsigned char) (ip_addr >> 24) & 0xff;
-    }
-    else{
-        sta_gw[0] = sta_ip[0];
-        sta_gw[1] = sta_ip[1];
-        sta_gw[2] = sta_ip[2];
-        sta_gw[3] = 1;
-    }
+		IP4_ADDR(ip_2_ip4(&gw), ip_addr&0xff, (ip_addr>>8)&0xff, (ip_addr>>16)&0xff, (ip_addr>>24)&0xff);
 
+    }
+	
     if(argv[3] != NULL){
         ip_addr = inet_addr(argv[3]);
-        sta_netmask[0] = (unsigned char) ip_addr & 0xff;
-        sta_netmask[1] = (unsigned char) (ip_addr >> 8) & 0xff;
-        sta_netmask[2] = (unsigned char) (ip_addr >> 16) & 0xff;
-        sta_netmask[3] = (unsigned char) (ip_addr >> 24) & 0xff;
+		IP4_ADDR(ip_2_ip4(&netmask), ip_addr&0xff, (ip_addr>>8)&0xff, (ip_addr>>16)&0xff, (ip_addr>>24)&0xff);
+
     }
-    else{
-        sta_netmask[0] = 255;
-        sta_netmask[1] = 255;
-        sta_netmask[2] = 255;
-        sta_netmask[3] = 0;
-    }
+	
+	//IP4_ADDR(ip_2_ip4(&netmask), 255, 255, 255, 0);
+	netif_set_addr(&xnetif[0], ip_2_ip4(&ipaddr), ip_2_ip4(&netmask),ip_2_ip4(&gw));
 
 exit:
     if(error_no==0)
@@ -1728,6 +1729,80 @@ exit:
     return;
 
 }
+
+#ifdef CONFIG_SAE_SUPPORT
+void fATWGRP(void *arg){
+
+    unsigned char grp_id = 0 , i = 0, error = 0;
+	int target_grp_id[10] = {15, 16, 17, 18, 19, 20, 21,28,29,30};
+
+	if(!arg)
+	{
+		error = 1;
+	}
+	else
+	{
+		grp_id = atoi((const char *)(arg));
+		
+		for(i = 0; i < 10; i++)
+			if(grp_id == target_grp_id[i])
+				break;
+		
+		if(i == 10)
+			error = 1;
+	}
+	
+	if(error)
+	{
+		printf("[ATGP]error cmd  !!\n\r");
+		printf("[ATGP]Usage: ATGP = group_id \n\r");
+		printf("      *************************************************\n\r");
+		printf("      ECC group: 19, 20, 21, 28, 29, 30 \n\r      DH group: 15, 16, 17, 18\r\n");
+		printf("      *************************************************\n\r");
+	}
+	else
+	{
+		printf("[ATGP]: _AT_WLAN_SET_GRPID [%s]\n\r", (char*)arg);
+		wifi_set_group_id(grp_id);
+	}
+	
+	return;
+}
+#endif
+
+#ifdef CONFIG_PMKSA_CACHING
+void fATWPMK(void *arg){
+
+    unsigned char pmk_enable = 0,error = 0;
+
+	if(!arg)
+	{
+		error = 1;
+	}
+	else
+	{
+		if(1 != atoi((const char *)(arg)))
+			pmk_enable = 0;
+		else
+			pmk_enable = 1;
+		
+		printf("pmk_enable = %d\r\n",pmk_enable);	
+		printf("[ATPM]: _AT_WLAN_SET_PMK [%s]\n\r", (char*)arg);
+		wifi_set_pmk_cache_enable(pmk_enable);
+
+	}
+	
+	if(error)
+	{
+		printf("[ATPM]error cmd  !!\n\r");
+		printf("[ATPM]Usage: ATPM = enable \n\r");
+		printf("      *************************************************\n\r");
+		printf("      1: enable; 0: disable \r\n");
+		printf("      *************************************************\n\r");
+	}
+
+}
+#endif
 #endif
 
 #elif ATCMD_VER == ATVER_2 // UART module at command
@@ -2875,6 +2950,12 @@ log_item_t at_wifi_items[ ] = {
 #endif
 #if WIFI_LOGO_CERTIFICATION_CONFIG
 	{"ATPE", fATPE,}, // set static IP for STA
+#ifdef CONFIG_SAE_SUPPORT
+	{"ATGP", fATWGRP,}, // set SAE group
+#endif
+#ifdef CONFIG_PMKSA_CACHING
+	{"ATPM", fATWPMK,},// enable pmk
+#endif
 #endif
 #if CONFIG_WLAN
 	{"ATW0", fATW0,{NULL,NULL}},

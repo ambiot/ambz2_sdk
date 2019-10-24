@@ -148,6 +148,9 @@ WIFI_RETRY_LOOP:
 				break;
 			case RTW_SECURITY_WPA_TKIP_PSK:
 			case RTW_SECURITY_WPA2_AES_PSK:
+#ifdef CONFIG_SAE_SUPPORT
+			case RTW_SECURITY_WPA3_AES_PSK:
+#endif
 				wifi.password = (unsigned char*) psk_passphrase;
 				wifi.password_len = strlen((char*)psk_passphrase);
 				break;

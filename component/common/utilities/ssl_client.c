@@ -255,10 +255,15 @@ void cmd_ssl_client(int argc, char **argv)
 #include "mbedtls/error.h"
 #include "mbedtls/debug.h"
 
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1) && defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) && (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 1)
+#include "device_lock.h"
+#endif
+
 #define SERVER_PORT   "443"
 #define SERVER_HOST   "192.168.13.15"
 #define GET_REQUEST   "GET / HTTP/1.0\r\n\r\n"
 #define DEBUG_LEVEL   0
+#define READ_TIMEOUT_MS		10000	// ssl read timeout value in ms
 
 //#define SSL_CLIENT_EXT
 #define STACKSIZE     2048
@@ -321,10 +326,12 @@ static void ssl_client(void *param)
 	mbedtls_ssl_context ssl;
 	mbedtls_ssl_config conf;
 
-#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1)
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1) && defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) && (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 1)
 	rtw_create_secure_context(STACKSIZE*4);
 	extern int NS_ENTRY secure_mbedtls_platform_set_calloc_free(void);
 	secure_mbedtls_platform_set_calloc_free();
+	extern void NS_ENTRY secure_set_ns_device_lock(void (*device_mutex_lock_func)(uint32_t), void (*device_mutex_unlock_func)(uint32_t));
+	secure_set_ns_device_lock(device_mutex_lock, device_mutex_unlock);
 #endif
 
 	mbedtls_platform_set_calloc_free(my_calloc, my_free);
@@ -361,7 +368,8 @@ static void ssl_client(void *param)
 	}
 #endif
 
-	mbedtls_ssl_set_bio(&ssl, &server_fd, mbedtls_net_send, mbedtls_net_recv, NULL);
+	mbedtls_ssl_conf_read_timeout(&conf, READ_TIMEOUT_MS);
+	mbedtls_ssl_set_bio(&ssl, &server_fd, mbedtls_net_send, mbedtls_net_recv, mbedtls_net_recv_timeout);
 
 	if((ret = mbedtls_ssl_config_defaults(&conf,
 		MBEDTLS_SSL_IS_CLIENT,
