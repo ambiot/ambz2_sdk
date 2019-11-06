@@ -72,7 +72,7 @@ void ping_test(void *param)
 	int pint_timeout = PING_TO;
 	struct sockaddr_in to_addr, from_addr;
 	int from_addr_len = sizeof(struct sockaddr);
-	int ping_size, reply_size;
+	int ping_size, reply_size, ret_size;
 	unsigned char *ping_buf, *reply_buf;
 	unsigned int ping_time, reply_time;
 	struct icmp_echo_hdr *pecho;
@@ -196,15 +196,15 @@ void ping_test(void *param)
 		ping_time = xTaskGetTickCount();
 #if LWIP_IPV6
 	if(ping_addr_is_ipv6){
-		reply_size = recvfrom(ping_socket, reply_buf, reply_size, 0, (struct sockaddr *) &from_addr6, (socklen_t *) &from_addr6_len);
+		ret_size = recvfrom(ping_socket, reply_buf, reply_size, 0, (struct sockaddr *) &from_addr6, (socklen_t *) &from_addr6_len);
 		if(!memcmp((void *)&from_addr6.sin6_addr, (void *)&to_addr6.sin6_addr, sizeof(from_addr6.sin6_addr)))
 			ipv6_addr_equal = TRUE;
 	}
 	else
 #endif
-		reply_size = recvfrom(ping_socket, reply_buf, reply_size, 0, (struct sockaddr *) &from_addr, (socklen_t *) &from_addr_len);
- 
-		if(reply_size >= (int)(sizeof(struct ip_hdr) + sizeof(struct icmp_echo_hdr))) {
+		ret_size = recvfrom(ping_socket, reply_buf, reply_size, 0, (struct sockaddr *) &from_addr, (socklen_t *) &from_addr_len);
+
+		if(ret_size >= (int)(sizeof(struct ip_hdr) + sizeof(struct icmp_echo_hdr))) {
 			reply_time = xTaskGetTickCount();
 #if LWIP_IPV6
 			if(ping_addr_is_ipv6)
@@ -242,9 +242,13 @@ void ping_test(void *param)
 		close(ping_socket);
 		vTaskDelay(ping_interval * configTICK_RATE_HZ);
 	}
-
-	printf("\n\r[%s] %d packets transmitted, %d received, %d%% packet loss, average %d ms", __FUNCTION__, ping_count, ping_received_count, (ping_count-ping_received_count)*100/ping_count, ping_received_count ? ping_total_time/ping_received_count : 0);
-	printf("\n\r[%s] min: %d ms, max: %d ms\n\r", __FUNCTION__, min_time, max_time);
+	if(ping_count == 0){
+		printf("\n\rNumber of echo requests to send cannot be zero\n\r");
+	}
+	else{
+		printf("\n\r[%s] %d packets transmitted, %d received, %d%% packet loss, average %d ms", __FUNCTION__, ping_count, ping_received_count, (ping_count-ping_received_count)*100/ping_count, ping_received_count ? ping_total_time/ping_received_count : 0);
+		printf("\n\r[%s] min: %d ms, max: %d ms\n\r", __FUNCTION__, min_time, max_time);
+	}
 	vPortFree(ping_buf);
 	vPortFree(reply_buf);
 	vPortFree(host);
