@@ -391,11 +391,10 @@ static int net_would_block( const mbedtls_net_context *ctx )
 {
 	/* To avoid gcc warnings */
 	( void ) ctx;
-#if 0
     /*
      * Never return 'WOULD BLOCK' on a non-blocking socket
      */
-    if( ( fcntl( ctx->fd, F_GETFL ) & O_NONBLOCK ) != O_NONBLOCK )
+    if( ( fcntl( ctx->fd, F_GETFL, 0) & O_NONBLOCK ) != O_NONBLOCK )
         return( 0 );
 
     switch( errno )
@@ -408,7 +407,6 @@ static int net_would_block( const mbedtls_net_context *ctx )
 #endif
             return( 1 );
     }
-#endif
     return( 0 );
 }
 #endif /* ( _WIN32 || _WIN32_WCE ) && !EFIX64 && !EFI32 */

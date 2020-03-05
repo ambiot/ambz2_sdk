@@ -481,11 +481,6 @@ int FreeRTOS_read(Network* n, unsigned char* buffer, int len, int timeout_ms)
 #if (MQTT_OVER_SSL)
 		if (n->use_ssl) {
 			rc = mbedtls_ssl_read(n->ssl, buffer + recvLen, len - recvLen);
-
-			getsockopt(n->my_socket, SOL_SOCKET, SO_ERROR, &so_error, &errlen);
-			if (so_error && so_error != EAGAIN) {
-				n->disconnect(n);
-			}
 		} else
 #endif
 		rc = recv(n->my_socket, buffer + recvLen, len - recvLen, 0);
@@ -494,7 +489,8 @@ int FreeRTOS_read(Network* n, unsigned char* buffer, int len, int timeout_ms)
 		else if (rc < 0)
 		{
 			getsockopt(n->my_socket, SOL_SOCKET, SO_ERROR, &so_error, &errlen);
-			if (so_error != EAGAIN) {
+			if (so_error && so_error != EAGAIN) {
+				mqtt_printf(MQTT_DEBUG, "disconnected(rc:%d) ,so_error:%d",rc,so_error);
 				n->disconnect(n);
 			}
 			recvLen = rc;
@@ -531,10 +527,6 @@ int FreeRTOS_write(Network* n, unsigned char* buffer, int len, int timeout_ms)
 		if (n->use_ssl) {
 			rc = mbedtls_ssl_write(n->ssl, buffer + sentLen, len - sentLen);
 
-			getsockopt(n->my_socket, SOL_SOCKET, SO_ERROR, &so_error, &errlen);
-			if (so_error && so_error != EAGAIN) {
-				n->disconnect(n);
-			}
 		} else
 #endif
 		rc = send(n->my_socket, buffer + sentLen, len - sentLen, 0);
@@ -543,7 +535,8 @@ int FreeRTOS_write(Network* n, unsigned char* buffer, int len, int timeout_ms)
 		else if (rc < 0)
 		{
 			getsockopt(n->my_socket, SOL_SOCKET, SO_ERROR, &so_error, (socklen_t *)&len);
-			if (so_error != EAGAIN) {
+			if (so_error && so_error != EAGAIN) {
+				mqtt_printf(MQTT_DEBUG, "disconnected(rc:%d) ,so_error:%d",rc,so_error);
 				n->disconnect(n);
 			}
 			sentLen = rc;
@@ -565,10 +558,6 @@ void FreeRTOS_disconnect(Network* n)
 	if (n->use_ssl) {
 		mbedtls_ssl_free(n->ssl);
 		mbedtls_ssl_config_free(n->conf);
-		free(n->ssl);
-		free(n->conf);
-		n->ssl = NULL;
-		n->conf = NULL;
 	}
 #endif
 }
@@ -724,8 +713,7 @@ int NetworkConnect(Network* n, char* addr, int port)
 			mqtt_printf(MQTT_DEBUG, "ssl config defaults failed!");
 			goto err;
 		}
-
-		mbedtls_ssl_conf_own_cert(n->conf, client_crt, client_rsa);
+        
 		mbedtls_ssl_set_bio(n->ssl, &n->my_socket, mbedtls_net_send, mbedtls_net_recv, NULL);
 		mbedtls_ssl_conf_rng(n->conf, my_random, NULL);	
 
@@ -779,6 +767,7 @@ int NetworkConnect(Network* n, char* addr, int port)
 				mqtt_printf(MQTT_DEBUG, "parse client_rsa failed!");
 				goto err;
 			}
+         	mbedtls_ssl_conf_own_cert(n->conf, client_crt, client_rsa);
 		}
 	
 		retVal = mbedtls_ssl_handshake(n->ssl);
