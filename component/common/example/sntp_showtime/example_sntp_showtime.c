@@ -5,6 +5,36 @@
 
 #define TIME_MODE    1	//0: for UTC with microseconds, 1: for timezone with seconds
 
+#if (defined(CONFIG_SYSTEM_TIME64) && CONFIG_SYSTEM_TIME64)
+static void show_time(void)
+{
+#if (TIME_MODE == 0)
+	unsigned int update_tick = 0;
+	long long update_sec = 0, update_usec = 0;
+
+	sntp_get_lasttime(&update_sec, &update_usec, &update_tick);
+
+	if(update_tick) {
+		long long tick_diff_sec, tick_diff_ms, current_sec, current_usec;
+		unsigned int current_tick = xTaskGetTickCount();
+
+		tick_diff_sec = (current_tick - update_tick) / configTICK_RATE_HZ;
+		tick_diff_ms = (current_tick - update_tick) % configTICK_RATE_HZ / portTICK_RATE_MS;
+		update_sec += tick_diff_sec;
+		update_usec += (tick_diff_ms * 1000);
+		current_sec = update_sec + update_usec / 1000000;
+		current_usec = update_usec % 1000000;
+		printf("%s + %d usec\n", ctime(&current_sec), current_usec);
+	}
+#elif (TIME_MODE == 1)
+	int timezone = 8;	// use UTC+8 timezone for example
+	struct tm tm_now = sntp_gen_system_time(timezone);
+	printf("%d-%d-%d %d:%d:%d UTC%s%d\n",
+		tm_now.tm_year, tm_now.tm_mon, tm_now.tm_mday, tm_now.tm_hour, tm_now.tm_min, tm_now.tm_sec,
+		(timezone > 0) ? "+" : "", timezone);
+#endif
+}
+#else
 static void show_time(void)
 {
 #if (TIME_MODE == 0)
@@ -33,6 +63,7 @@ static void show_time(void)
 		(timezone > 0) ? "+" : "", timezone);
 #endif
 }
+#endif
 
 static void example_sntp_showtime_thread(void *param)
 {

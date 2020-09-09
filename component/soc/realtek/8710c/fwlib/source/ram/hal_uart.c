@@ -104,14 +104,14 @@ hal_status_t hal_uart_init (phal_uart_adapter_t puart_adapter, uint8_t tx_pin, u
 {
     hal_status_t ret;
     uint8_t uart_idx;
+    
+    uart_idx = hal_uart_check_uart_id(tx_pin,rx_pin);
 
-    if (rx_pin != PIN_NC) {
+    if ((uart_idx <= Uart2) && (rx_pin != PIN_NC)) {
         // RX Pin pull-high to prevent this folating on this pin
         hal_gpio_pull_ctrl (rx_pin, Pin_PullUp);
         hal_delay_us(4);
     }
-
-    uart_idx = hal_uart_check_uart_id(tx_pin,rx_pin);
 
     if ((uart_idx < MaxUartNum) && (Uart0 == uart_idx)) {
         hal_syson_wakeup_uart_func_reset();
@@ -131,7 +131,7 @@ hal_status_t hal_uart_init (phal_uart_adapter_t puart_adapter, uint8_t tx_pin, u
             }
         }
     } else {
-        if (rx_pin != PIN_NC) {
+        if ((uart_idx <= Uart2) && (rx_pin != PIN_NC)) {
             hal_gpio_pull_ctrl (rx_pin, Pin_PullNone);
         }
     }

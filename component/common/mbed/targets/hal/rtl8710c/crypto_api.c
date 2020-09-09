@@ -3,7 +3,7 @@
  * @brief    This file implements the CRYPTO Mbed HAL API functions.
  *
  * @version  V1.00
- * @date     2019-08-23
+ * @date     2019-12-09
  *
  * @note
  *
@@ -1089,6 +1089,7 @@ crypto_aes_gcm_decrypt_end:
     return ret;
 }
 
+#if defined(CONFIG_BUILD_NONSECURE)
 // crc
 int crypto_crc32_cmd(const uint8_t *message, const uint32_t msglen, uint32_t *pCrc)
 {
@@ -1140,6 +1141,7 @@ int crypto_crc_dma(const uint8_t *message, const uint32_t msglen, uint32_t *pCrc
 crypto_crc_dma_end:
     return ret;
 }
+#endif
 
 #if !defined(CONFIG_BUILD_NONSECURE)
 
@@ -1227,9 +1229,11 @@ static int crypto_hkdf_expand (const uint8_t *prk, size_t prk_len, const uint8_t
             }
         }
 
-        ret = crypto_hmac_sha2_256_update (info, info_len);
-        if (ret != SUCCESS) {
-            goto __hkdf_expand_exit;
+        if ((info_len > 0) && (info != NULL)) {
+            ret = crypto_hmac_sha2_256_update (info, info_len);
+            if (ret != SUCCESS) {
+                goto __hkdf_expand_exit;
+            }
         }
 
         /* The constant concatenated to the end of each T(n) is a single octet.
@@ -1350,17 +1354,17 @@ int crypto_random_generate (uint8_t *rn_buf, uint32_t rn_size)
     pkey_buf = (uint8_t *)(((((uint32_t)key_buf - 1) >> 5) + 1) << 5);
     pnonce = (uint8_t *)(((((uint32_t)nonce - 1) >> 5) + 1) << 5);
     ret = crypto_random_seed (pkey_buf,RNG_KEY_LEN);
-    if ( (ret != SUCCESS) || ret != HAL_OK) {
+    if (ret != SUCCESS) {
         goto __random_generate_exit;
     }
     ret = crypto_random_seed (pnonce,RNG_NONCE_LEN);
-    if ( (ret != SUCCESS) || ret != HAL_OK) {
+    if (ret != SUCCESS) {
         goto __random_generate_exit;
     }
 #if (RNG_SALT_LEN > 0)
     psalt = (uint8_t *)(((((uint32_t)salt - 1) >> 5) + 1) << 5);
     ret = crypto_random_seed (psalt,RNG_SALT_LEN);
-    if ( (ret != SUCCESS) || ret != HAL_OK) {
+    if (ret != SUCCESS) {
         goto __random_generate_exit;
     }
 #else
@@ -1370,8 +1374,8 @@ int crypto_random_generate (uint8_t *rn_buf, uint32_t rn_size)
     if (ret != SUCCESS) {
         goto __random_generate_exit;
     }
+__random_generate_exit:
 
-__random_generate_exit:    
     memset(key_buf, 0, RNG_KEY_LEN+31);
     memset(nonce, 0, RNG_NONCE_LEN+31);
 #if (RNG_SALT_LEN > 0)
@@ -1411,7 +1415,6 @@ int crypto_random_generate (uint8_t *rn_buf, uint32_t rn_size)
     return ret;
 }
 #endif  // end of "#if defined(CONFIG_BUILD_NONSECURE)"
-
 
 
 #ifdef  __cplusplus

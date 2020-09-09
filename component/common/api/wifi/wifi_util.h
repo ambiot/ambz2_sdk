@@ -35,6 +35,9 @@ int wext_set_mfp_support(const char *ifname, __u8 value);
 #ifdef CONFIG_SAE_SUPPORT
 int wext_set_group_id(const char *ifname, __u8 value);
 #endif
+#ifdef CONFIG_PMKSA_CACHING
+int wext_set_pmk_cache_enable(const char *ifname, __u8 value);
+#endif
 int wext_set_key_ext(const char *ifname, __u16 alg, const __u8 *addr, int key_idx, int set_tx, const __u8 *seq, __u16 seq_len, __u8 *key, __u16 key_len);
 int wext_get_enc_ext(const char *ifname, __u16 *alg, __u8 *key_idx, __u8 *passphrase);
 int wext_set_passphrase(const char *ifname, const __u8 *passphrase, __u16 passphrase_len);
@@ -75,6 +78,8 @@ int wext_set_autoreconnect(const char *ifname, __u8 mode, __u8 retry_times, __u1
 int wext_get_autoreconnect(const char *ifname, __u8 *mode);
 int wext_set_adaptivity(rtw_adaptivity_mode_t adaptivity_mode);
 int wext_set_adaptivity_th_l2h_ini(__u8 l2h_threshold);
+int wext_set_trp_tis(__u8 enable);
+int wext_set_support_wpa3(__u8 enable);
 int wext_get_auto_chl(const char *ifname, unsigned char *channel_set, unsigned char channel_num);
 int wext_set_sta_num(unsigned char ap_sta_num);
 int wext_del_station(const char *ifname, unsigned char* hwaddr);
@@ -101,6 +106,7 @@ int wext_get_drv_ability(const char *ifname, __u32 *ability);
 int wext_enable_forwarding(const char *ifname);
 int wext_disable_forwarding(const char *ifname);
 int wext_set_ch_deauth(const char *ifname, __u8 enable);
+void wext_set_lowrssi_use_b(int enable,int rssi);
 
 #ifdef CONFIG_WOWLAN
 int wext_wowlan_ctrl(const char *ifname, int enable);

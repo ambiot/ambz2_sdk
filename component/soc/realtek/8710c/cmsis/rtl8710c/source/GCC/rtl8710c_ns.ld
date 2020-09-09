@@ -160,8 +160,8 @@ SECTIONS
 		KEEP(*strproc.o(.rodata*))
 		KEEP(*atoi.o(.text*))
 		KEEP(*atoi.o(.rodata*))
-		KEEP(*scanf.o(.text*))
-		KEEP(*scanf.o(.rodata*))
+		KEEP(*rt_scanf.o(.text*))
+		KEEP(*rt_scanf.o(.rodata*))
 
 		/**** WLAN ROM code ****/
 		KEEP(*(.rom.wlan.text))
@@ -226,7 +226,7 @@ SECTIONS
 		*_arm_cmpsf2.o(.text*)
 		*eqsf2.o(.text*)
 		*gesf2.o(.text*)
-		*lesf2.o(.text*)		
+		*lesf2.o(.text*)
 		__lib_gcc_end = .;
 		
 		KEEP(*(.init))

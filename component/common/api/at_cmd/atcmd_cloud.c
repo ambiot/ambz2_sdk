@@ -179,6 +179,85 @@ USAGE:
 }
 #endif
 
+#if (defined(CONFIG_RSC) && CONFIG_RSC)
+#include "rsc/rsc_device.h"
+#include "rsc/rsc_dev_ota.h"
+void fATCR(void *arg)
+{
+	int argc;
+	unsigned char len1, len2;
+	unsigned char *argv[MAX_ARGC] = {0};
+	rsc_msg_v v = {0};
+	
+	argv[0] = "rscloud";
+	argc = parse_param(arg, argv);
+	if(argc == 2 && !strcmp("ota", argv[1])) {
+		v.msg_t = MSG_OTA_REQ;
+		v.loop = 0;
+		rsc_dev_msg_dump((void *)&v);
+	}else if(argc == 3 && !strcmp("ota", argv[1]) && (!strcmp("0", argv[2]) || !strcmp("1", argv[2]))) {
+		v.msg_t = MSG_OTA_REQ;
+		v.loop = *argv[2] - '0';
+		rsc_dev_msg_dump((void *)&v);
+	}else if(argc == 3 && !strcmp("ota", argv[1]) && !strcmp("s", argv[2])) {
+		v.msg_t = MSG_OTA_STP;
+		rsc_dev_msg_dump((void *)&v);	
+	}else if(argc == 4 && !strcmp("ota", argv[1]) && (!strcmp("0", argv[2]) || !strcmp("1", argv[2]))) {
+		v.msg_t = MSG_OTA_REQ;
+		v.loop = *argv[2] - '0';
+		if(strlen(argv[3]) > sizeof(v.nv_num) -1) {
+			printf("\r\n[ATCR] error: the new version num should no longer than %d !", sizeof(v.nv_num) - 1);
+		}else {
+			strcpy(v.nv_num, argv[3]);
+			rsc_dev_msg_dump((void *)&v);
+		}
+	}else {
+		goto USAGE;
+	}
+	return;
+
+USAGE:	
+	printf("\r\n[ATCR] Control ameba operation to RSCloud");
+	printf("\r\n[ATCR] Usage: ATCR=ota[,loop]  ==>ota with default expected fw version num for one time [or one(loop:0) / infinite(loop:1) time(s)]");
+	printf("\r\n[ATCR] Usage: ATCR=ota,loop,version  ==>ota with specified fw version num(version) for one(loop:0) or  infinite(loop:1) time(s)");
+	printf("\r\n[ATCR] Usage: ATCR=ota,s  ==>stop the infinite ota if it's started before");
+	return;
+}
+extern int rsc_set_userid(char *);
+extern int rsc_set_server_ip(char *);
+extern void  rsc_flash_erase_sector(uint32_t address);
+
+void fATUS(void *arg)
+{
+	int argc;
+	char *argv[MAX_ARGC] = {0};
+	
+	argv[0] = "rscloud";
+	argc = parse_param(arg,argv);
+	if(argc == 3){
+		if(!strcmp("userid",argv[1]))
+		{
+			rsc_set_userid(argv[2]);	
+		}else if(!strcmp("svrip",argv[1])){
+			rsc_set_server_ip(argv[2]);
+		}
+	}else if(argc == 2){
+          if(!strcmp("erase",argv[1])){
+            rsc_flash_erase_sector(CONFIG_USER_INFO);
+          }
+    }else{
+		goto USAGE;
+	}
+	return;
+USAGE:	
+	printf("\r\n[ATUS] Setup User and Server info RSCloud");
+	printf("\r\n[ATUS] Usage: ATUS=userid,xxxx  ==>set registed user id");
+	printf("\r\n[ATUS] Usage: ATUS=svrip,xxx.xxx.xxx.xxx ==>set rscloud server ip address");
+	printf("\r\n[ATUS] Usage: ATUS=erase ==>erase user id and server ip address");
+	return;		
+}
+#endif
+
 void fATCx(void *arg)
 {	
 }
@@ -203,6 +282,12 @@ log_item_t at_cloud_items[ ] = {
 #if (defined(CONFIG_MIIO) && CONFIG_MIIO)
 	{"ATCM", fATCM},
 #endif
+
+#if (defined(CONFIG_RSC) && CONFIG_RSC)
+	{"ATCR", fATCR,},
+    {"ATUS", fATUS,},
+#endif
+
 	{"ATC?", fATCx,},
 };
 void at_cloud_init(void)

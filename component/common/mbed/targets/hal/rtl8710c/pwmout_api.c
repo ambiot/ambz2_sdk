@@ -99,6 +99,7 @@ void pwmout_init(pwmout_t *obj, PinName pin)
     obj->is_init = 0;
     obj->pulse = 0;
     obj->offset_us = 0;
+    obj->polarity = 1; // Output high
     memset((void *)&obj->pwm_hal_adp, 0, sizeof(hal_pwm_adapter_t));
 
     if (hal_pwm_init (&obj->pwm_hal_adp, pin, duty_res) != HAL_OK) {
@@ -124,6 +125,9 @@ void pwmout_write(pwmout_t *obj, float percent)
     }
 
     obj->pulse = (uint32_t)((float)obj->period * percent);
+    if (obj->polarity == 0) {
+        obj->offset_us = obj->period - obj->pulse;
+    }
     //DBG_PWM_ERR("obj->period! %d\n", obj->period);
     hal_pwm_set_duty (&obj->pwm_hal_adp, obj->period, obj->pulse, obj->offset_us);
 }
@@ -246,6 +250,16 @@ void pwmout_multi_start(u8 pin_ctrl)
 {
     hal_pwm_comm_disable(pin_ctrl);
     hal_pwm_comm_enable(pin_ctrl);
+}
+
+void pwmout_set_polarity(pwmout_t* obj, int polarity)
+{
+    if(0 == polarity) {
+        obj->polarity = 0;
+    } else {
+        obj->polarity = 1;
+        obj->offset_us = 0;
+    }
 }
 
 #endif // #ifdef CONFIG_PWM_EN

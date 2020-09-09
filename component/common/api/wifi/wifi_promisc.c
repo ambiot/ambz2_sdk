@@ -60,7 +60,7 @@ int promisc_recv_lens_func(void *padapter, u8 *payload, u8 plen)
 int promisc_filter_retransmit_pkt(u8 enable, u8 filter_interval_ms)
 {
 #ifdef CONFIG_PROMISC
-	#if CONFIG_UNSUPPORT_PLCPHDR_RPT
+	#if defined(CONFIG_UNSUPPORT_PLCPHDR_RPT) && CONFIG_UNSUPPORT_PLCPHDR_RPT
 		return _promisc_filter_retransmit_plcp_pkt(enable, filter_interval_ms);
 	#else
 		return -1;//_promisc_filter_retransmit_normal_pkt(enable);

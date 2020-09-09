@@ -76,6 +76,7 @@ struct pwmout_s {
     uint32_t period;
     uint32_t pulse;
     uint32_t offset_us;
+    uint32_t polarity;
     hal_pwm_adapter_t  pwm_hal_adp;
 };
 #endif

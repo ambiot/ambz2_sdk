@@ -14,8 +14,8 @@
  * limitations under the License.
  *
  ******************************************************************************/
-#ifndef __LIST_H
-#define __LIST_H
+#ifndef __LIST_H__
+#define __LIST_H__
 
 #if defined ( __CC_ARM   )
 #ifndef inline
@@ -38,14 +38,11 @@
  * generate better code by using them directly rather than
  * using the generic single-entry routines.
  */
- #include "platform_opts.h"
- #if defined(CONFIG_MIIO)&&CONFIG_MIIO
-#include "list/list.h"
-#else
 
 struct list_head {
 	struct list_head *next, *prev;
 };
+typedef struct list_head list_head_t;
 
 #define LIST_HEAD_INIT(name) { &(name), &(name) }
 
@@ -278,6 +275,6 @@ static inline void list_splice_init(struct list_head *list,
 		n = list_entry(pos->member.next, type, member);	\
 	     &pos->member != (head); 					\
 	     pos = n, n = list_entry(n->member.next, type, member))
-#endif
+
 #endif
 

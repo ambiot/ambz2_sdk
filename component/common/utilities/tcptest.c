@@ -247,7 +247,10 @@ int tcp_server_func(struct iperf_data_t iperf_data)
 
 	printf("\n\r%s: Create socket fd = %d", __func__,iperf_data.server_fd);
 
-	setsockopt( iperf_data.server_fd, SOL_SOCKET, SO_REUSEADDR, (const char *) &n, sizeof( n ) );
+	if(setsockopt( iperf_data.server_fd, SOL_SOCKET, SO_REUSEADDR, (const char *) &n, sizeof( n ) ) != 0){
+		printf("\n\r[ERROR] %s: Set sockopt failed", __func__);
+		goto Exit2;
+	}
 
 	//initialize structure dest
 	memset(&ser_addr, 0, sizeof(ser_addr));
@@ -321,12 +324,12 @@ int tcp_server_func(struct iperf_data_t iperf_data)
 		total_size+=recv_size;
 		report_size+=recv_size;
 		if( (iperf_data.report_interval != DEFAULT_REPORT_INTERVAL) && ((end_time - report_start_time) >= (configTICK_RATE_HZ * iperf_data.report_interval)) && ((end_time - report_start_time) <= (configTICK_RATE_HZ * (iperf_data.report_interval + 1)))) {
-			printf("\n\r%s: Receive %d KBytes in %d ms, %d Kbits/sec",__func__, (uint32_t) (report_size/KB),(uint32_t) (end_time-report_start_time),((uint32_t) (report_size*8)/(end_time - report_start_time)));
+			printf("\n\r%s: Receive %d KBytes in %d ms, %d Kbits/sec",__func__, (uint32_t) (report_size/KB),(uint32_t) (end_time-report_start_time),(uint32_t) ((uint64_t)(report_size*8)/(end_time - report_start_time)));
 			report_start_time = end_time;
 			report_size = 0;
 		}
 	}
-	printf("\n\r%s: [END] Totally receive %d KBytes in %d ms, %d Kbits/sec",__func__, (uint32_t) (total_size/KB),(uint32_t) (end_time-start_time),((uint32_t) (total_size*8)/(end_time - start_time)));
+	printf("\n\r%s: [END] Totally receive %d KBytes in %d ms, %d Kbits/sec",__func__, (uint32_t) (total_size/KB),(uint32_t) (end_time-start_time),(uint32_t) ((uint64_t)(total_size*8)/(end_time - start_time)));
 
 Exit1:
 	// close the connected socket after receiving from connected TCP client
@@ -353,8 +356,9 @@ int udp_client_func(struct iperf_data_t iperf_data)
 	uint32_t            start_time, end_time, bandwidth_time,report_start_time;
 	uint64_t            total_size=0, bandwidth_size=0, report_size=0;
 	struct iperf_udp_client_hdr client_hdr = {0};
-    	u32_t now; 
-    	uint32_t id_cnt = 0; 
+    u32_t now; 
+    uint32_t id_cnt = 0;
+	int tos_value = (int)iperf_data.tos_value;
 
 	udp_client_buffer = pvPortMalloc(iperf_data.buf_size);
 	if(!udp_client_buffer){
@@ -381,7 +385,10 @@ int udp_client_func(struct iperf_data_t iperf_data)
 	printf("\n\r%s: Server IP=%s, port=%d", __func__,iperf_data.server_ip, iperf_data.port);
 	printf("\n\r%s: Create socket fd = %d", __func__,iperf_data.client_fd);
 
-	lwip_setsockopt(iperf_data.client_fd,IPPROTO_IP,IP_TOS,&iperf_data.tos_value,sizeof(iperf_data.tos_value));
+	if(setsockopt(iperf_data.client_fd,IPPROTO_IP,IP_TOS,&tos_value,sizeof(int)) != 0){
+		printf("\n\r[ERROR] %s: Set sockopt failed", __func__);
+		goto Exit1;
+	}
 
 	client_hdr.numThreads = htonl(0x00000001);
 	client_hdr.mPort = htonl(iperf_data.port);
@@ -525,7 +532,7 @@ int udp_client_func(struct iperf_data_t iperf_data)
 			break; 
 		}
 	}
-//Exit1:
+Exit1:
 	close(iperf_data.client_fd);
 Exit2:
 	printf("\n\r%s: Close client socket",__func__);
@@ -560,7 +567,10 @@ int udp_server_func(struct iperf_data_t iperf_data)
 	}
 	printf("\n\r%s: Create socket fd = %d, port = %d", __func__,iperf_data.server_fd,iperf_data.port);
 
-	setsockopt( iperf_data.server_fd, SOL_SOCKET, SO_REUSEADDR, (const char *) &n, sizeof( n ) );
+	if(setsockopt( iperf_data.server_fd, SOL_SOCKET, SO_REUSEADDR, (const char *) &n, sizeof( n ) ) != 0){
+		printf("\n\r[ERROR] %s: Set sockopt failed", __func__);
+		goto Exit1;
+	}
 
 	//initialize structure dest
 	memset(&ser_addr, 0, sizeof(ser_addr));
@@ -659,13 +669,13 @@ int udp_server_func(struct iperf_data_t iperf_data)
 			total_size+=recv_size;
 			report_size+=recv_size;
 			if( (iperf_data.report_interval != DEFAULT_REPORT_INTERVAL) && ((end_time - report_start_time) >= (configTICK_RATE_HZ * iperf_data.report_interval)) && ((end_time - report_start_time) <= (configTICK_RATE_HZ * (iperf_data.report_interval + 1)))) {
-				printf("\n\r%s: Receive %d KBytes in %d ms, %d Kbits/sec",__func__,(uint32_t) (report_size/KB),(uint32_t)(end_time-report_start_time),((uint32_t)(report_size*8)/(end_time - report_start_time)));
+				printf("\n\r%s: Receive %d KBytes in %d ms, %d Kbits/sec",__func__,(uint32_t) (report_size/KB),(uint32_t)(end_time-report_start_time),(uint32_t) ((uint64_t)(report_size*8)/(end_time - report_start_time)));
 				report_start_time = end_time;
 				report_size = 0;
 			}
 		}
 	}
-	printf("\n\r%s: [END] Totally receive %d KBytes in %d ms, %d Kbits/sec",__func__,(uint32_t) (total_size/KB),(uint32_t)(end_time-start_time),((uint32_t)(total_size*8)/(end_time - start_time)));
+	printf("\n\r%s: [END] Totally receive %d KBytes in %d ms, %d Kbits/sec",__func__,(uint32_t) (total_size/KB),(uint32_t)(end_time-start_time),(uint32_t) ((uint64_t)(total_size*8)/(end_time - start_time)));
 
 Exit1:
 	// close the listening socket

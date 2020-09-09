@@ -472,6 +472,8 @@ void hal_flash_set_quad_enable (phal_spic_adaptor_t phal_spic_adaptor)
     switch (flash_type) {
         case FLASH_TYPE_WINBOND:
         case FLASH_TYPE_GD32:
+        case FLASH_TYPE_BOYA:
+        case FLASH_TYPE_XMC:
             status_value = hal_flash_get_status(phal_spic_adaptor, cmd->rdsr2);
             hal_flash_set_status(phal_spic_adaptor, cmd->wrsr2, 0x2 | status_value);
             break;
@@ -517,6 +519,8 @@ void hal_flash_unset_quad_enable (phal_spic_adaptor_t phal_spic_adaptor)
     switch (flash_type) {
         case FLASH_TYPE_WINBOND:         
         case FLASH_TYPE_GD32:
+        case FLASH_TYPE_BOYA:
+        case FLASH_TYPE_XMC:
             status_value = hal_flash_get_status(phal_spic_adaptor, cmd->rdsr2);
             hal_flash_set_status(phal_spic_adaptor, cmd->wrsr2, ~0x2 & status_value);
             break;
@@ -965,22 +969,39 @@ void hal_flash_reset_to_spi (phal_spic_adaptor_t phal_spic_adaptor)
  */
 void hal_flash_support_new_type (phal_spic_adaptor_t phal_spic_adaptor)
 {
-    if (phal_spic_adaptor->flash_id[0] == 0xC8) {
-        phal_spic_adaptor->cmd = &new_flash_cmd;
-        if (phal_spic_adaptor->flash_id[2] >= 0x16) {
-            phal_spic_adaptor->flash_type = FLASH_TYPE_GD32;
-        } else {
-            phal_spic_adaptor->flash_type = FLASH_TYPE_GD;
-        }
-    }
-    
-    if (phal_spic_adaptor->flash_id[0] == 0x0B) {
-        phal_spic_adaptor->cmd = &new_flash_cmd;
-        phal_spic_adaptor->flash_type = FLASH_TYPE_XTX;
-    }
+    u8 flash_id = phal_spic_adaptor->flash_id[0];
 
-    if (phal_spic_adaptor->flash_id[0] == 0x1C) {       
-        phal_spic_adaptor->flash_type = FLASH_TYPE_EON;
+    switch (flash_id) {
+        case 0xC8:
+            phal_spic_adaptor->cmd = &new_flash_cmd;
+            if (phal_spic_adaptor->flash_id[2] >= 0x16) {
+                phal_spic_adaptor->flash_type = FLASH_TYPE_GD32;
+            } else {
+                phal_spic_adaptor->flash_type = FLASH_TYPE_GD;
+            }
+            break;
+
+        case 0x0B:
+            phal_spic_adaptor->cmd = &new_flash_cmd;
+            phal_spic_adaptor->flash_type = FLASH_TYPE_XTX;
+            break;
+            
+        case 0x68:
+            phal_spic_adaptor->cmd = &new_flash_cmd;
+            phal_spic_adaptor->flash_type = FLASH_TYPE_BOYA;
+            break;
+
+        case 0x46:
+            phal_spic_adaptor->cmd = &new_flash_cmd;
+            phal_spic_adaptor->flash_type = FLASH_TYPE_XMC;
+            break;
+            
+        case 0x1C:
+            phal_spic_adaptor->flash_type = FLASH_TYPE_EON;
+            break;
+                   
+        default:
+            break;
     }
 }
 

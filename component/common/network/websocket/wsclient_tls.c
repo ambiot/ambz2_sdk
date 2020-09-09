@@ -109,6 +109,7 @@ exit:
 
 		if((ret = mbedtls_net_connect(server_fd, host, port_str, MBEDTLS_NET_PROTO_TCP)) != 0){
 			printf("\n[WSCLIENT] ERROR: net_connect %d\n", ret);
+			free(port_str);
 			goto exit;
 		}
 

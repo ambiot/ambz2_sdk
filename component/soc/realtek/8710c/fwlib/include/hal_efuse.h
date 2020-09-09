@@ -3,7 +3,7 @@
 * @brief       The HAL API implementation for the EFUSE
 *
 * @version     V1.00
-* @date        2018-07-26
+* @date        2019-11-25
 *
 * @note
 *

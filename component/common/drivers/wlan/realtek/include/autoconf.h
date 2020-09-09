@@ -235,13 +235,13 @@
 #define PSK_SUPPORT_TKIP	1
 #endif
 
-//#define CONFIG_PMKSA_CACHING
+#define CONFIG_PMKSA_CACHING
 
 /* For WPA3 */
-//#define CONFIG_IEEE80211W
-//#define CONFIG_SAE_SUPPORT
+#define CONFIG_IEEE80211W
+#define CONFIG_SAE_SUPPORT
 #ifdef CONFIG_SAE_SUPPORT
-//#define CONFIG_SAE_DH_SUPPORT 1
+#define CONFIG_SAE_DH_SUPPORT 1
 #define ALL_DH_GROUPS
 #endif
 
@@ -420,12 +420,14 @@ extern unsigned int g_ap_sta_num;
 		//#define CONFIG_BT_COEXIST
 		//#define CONFIG_SW_MAILBOX_EN
 		//#define NEW_BT_COEX
+		//#define CONFIG_BT_COEXIST_SOC
 	#endif
 	#if defined(CONFIG_PLATFORM_8710C)
-		//#define CONFIG_ANTENNA_DIVERSITY
+		#define CONFIG_ANTENNA_DIVERSITY
 		//#define CONFIG_BT_COEXIST
 		//#define CONFIG_SW_MAILBOX_EN
 		//#define NEW_BT_COEX
+		#define CONFIG_BT_COEXIST_SOC
 	#endif
 #endif // #ifdef CONFIG_MP_INCLUDED
 
@@ -640,7 +642,10 @@ extern unsigned int g_ap_sta_num;
 		#if defined(CONFIG_MAC_LOOPBACK_DRIVER_RTL8710C) && (CONFIG_MAC_LOOPBACK_DRIVER_RTL8710C == 3)
 		#define CONFIG_MAC_LOOPBACK_DRIVER_AMEBA
 		#endif
-		//#define CONFIG_UNSUPPORT_PLCPHDR_RPT 1
+		#define CONFIG_UNSUPPORT_PLCPHDR_RPT 1
+
+		//#define CONFIG_ENHANCE_ACTIVE_SCAN	// double scan action on each channel and reduce SURVEY_TO to half	
+		#define CONFIG_WLAN_SWITCH_MODE         //save memory while switching mode without driver re-init
 	#endif
 #elif defined(CONFIG_HARDWARE_8188F)
 #define CONFIG_RTL8188F

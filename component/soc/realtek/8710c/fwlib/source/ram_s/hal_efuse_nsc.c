@@ -34,7 +34,12 @@
 
 #if CONFIG_EFUSE_EN && CONFIG_EFUSE_NSC_EN
 
-#if defined(CONFIG_BUILD_SECURE)
+#if !defined(CONFIG_BUILD_SECURE) && !defined(CONFIG_BUILD_NONSECURE)
+#undef SECTION_NS_ENTRY_FUNC
+#undef NS_ENTRY
+#define SECTION_NS_ENTRY_FUNC
+#define NS_ENTRY
+#endif 
 /**
  * @addtogroup hs_hal_efuse EFUSE
  * @{
@@ -274,7 +279,7 @@ uint32_t NS_ENTRY hal_efuse_disable_nonsec_jtag_nsc(void)
 
 /** @} */ /* End of group hs_hal_efuse */
 
-#endif
+//#endif
 
 #endif  /* end of "#if CONFIG_EFUSE_EN && CONFIG_EFUSE_NSC_EN" */
 

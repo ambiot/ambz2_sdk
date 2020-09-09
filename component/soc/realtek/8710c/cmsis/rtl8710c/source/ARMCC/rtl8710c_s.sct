@@ -1,43 +1,142 @@
 ; *************************************************************
-; *** Scatter-Loading Description File for RTL8195BHP       ***
+; *** Scatter-Loading Description File for RTL8710C         ***
 ; *************************************************************
-LR_ITCM 0x00000000 0x001FF000  {    ; load region size_region
-  _ITCM_ROM 0x00000000 0x00003000  {  ; load address = execution address
-   startup_rtl8195bhp.o (.rom.vectors, +First)
+LR_VECTOR_ROM 0x00000000 0x00000100  {    ; load region size_region
+  _VECTOR_ROM 0x00000000 0x00000100  {  ; load address = execution address
+   startup_rtl8710c.o (RESET, +First)
    *(InRoot$$Sections)
-
-	startup_rtl8195bhp.o (+RO)
-	startup.o (+RO)
-	fw_flash_boot.o (+RO)
-  }
 }
 
-LR_ROM 0x1006F000 0x00041000  {    ; load region size_region
-  _ROM_CODE 0x1006F000 0x00040000  {  ; Text & RO data
-	rtl8195bhp_vectors.o (+RO)
-	system_rtl8195bhp.o (+RO)
-	rtl8195bhp_misc.o (+RO)
-   
-	*(.rom.hal_uart.rodata)
-	*(.rom.hal_timer.rodata)
-	*(.rom.hal_timer_ba.rodata)
-	*(.rom.hal_icc.text)
-	*(.rom.hal_icc.rodata)
-	*(.rom.hal_efuse.text)
-	*(.rom.hal_efuse.rodata)
-	*(.rom.hal_gdma.text)
-	*(.rom.hal_gdma.rodata)
-	*(.rom.hal_sce.text)
-	*(.rom.hal_sce.rodata)
-	
-	rtl8195bhp_uart.o (+RO)
-	rtl8195bhp_timer.o (+RO)
-	rtl8195bhp_icc.o (+RO)
-	rtl8195bhp_efuse.o (+RO)
-	rtl8195bhp_gdma.o (+RO)
-	rtl8195blp_pinmux.o (+RO)
-	rtl8195blp_sce.o (+RO)
-    
+LR_ROM_STUB 0x00000100 0x00000900  {    ; load region size_region
+  _STUB_SYSON 0x00000100 FIXED {  ; load address = execution address
+		*.o (.rom.hal_syson.stubs)
+  }
+
+  _STUB_PINMUX AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
+		*.o (.rom.hal_pinmux.stubs)
+  }
+
+  _STUB_TIMER AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
+		*.o (.rom.hal_timer.stubs)
+  }
+
+  _STUB_INT_VECTOR AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
+		*.o (.rom.hal_vector.stubs)
+  }
+
+  _STUB_CRYPTO AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
+		*.o (.rom.hal_crypto_s.stubs)
+  }
+
+  _STUB_UART AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
+		*.o (.rom.hal_uart.stubs)
+  }
+
+  _STUB_GPIO_S AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
+		*.o (.rom.hal_gpio.stubs)
+  }
+
+  _STUB_EFUSE AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
+		*.o (.rom.hal_efuse.stubs)
+  }
+
+  _STUB_GDMA AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
+		*.o (.rom.hal_gdma.stubs)
+  }
+
+  _STUB_SPIC AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
+		*.o (.rom.hal_spic.stubs)
+  }
+
+  _STUB_FLASH AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
+		*.o (.rom.hal_flash.stubs)
+  }
+
+  _STUB_CACHE AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
+		*.o (.rom.hal_cache.stubs)
+  }
+
+  _STUB_SCE AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
+		*.o (.rom.hal_sce.stubs)
+  }
+
+  _STUB_VENDOR AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
+		*.o (.rom.hal_vdr.stubs)
+  }
+
+  _STUB_MISC AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
+		*.o (.rom.hal_misc.stubs)
+  }
+
+  _STUB_SBOOT AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
+		*.o (.rom.sboot.stubs)
+  }
+
+  _STUB_PRINTFS AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
+		*.o (.rom.printf.stubs)
+  }
+
+  _STUB_STRPROC AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
+		*.o (.rom.strproc.stubs)
+  }
+
+  _STUB_UTILITY AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
+		*.o (.rom.utility.stubs)
+  }
+
+  _STUB_SSL AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
+		*.o (.rom.ssl.stubs)
+  }						
+}
+
+LR_ITCM_ROM 0x00000A00 0x00018600  {    ; load region size_region
+  _ROM_CODE 0x00000A00 0x00018500  {  ; load address = execution address
+    startup_rtl8710c.o (+RO)
+    *.o (.sysstart.text)
+	startup.o (+RO)
+	fw_flash_boot.o (+RO)
+	system_rtl8710c.o (+RO)
+    *.o (.startup.text)
+    *.o (.vector.text)
+	rtl8710c_irq.o (+RO)
+    *.o (.sys_misc.text)
+    *.o (.rom.irq.rodata*)
+
+	xmodem.o(+RO)
+	xmport_uart.o(+RO)
+	fw_flash_boot.o(+RO)
+	fw_otu.o(+RO)
+	fw_uart_boot.o(+RO)
+	fw_sdio_boot.o(+RO)
+
+	rtl8710c_syson.o(+RO)
+	rtl8710c_uart.o(+RO)
+	rtl8710c_gdma.o(+RO)
+	rtl8710c_pinmux.o(+RO)
+	rtl8710c_crypto.o(+RO)
+	rtl8710c_irq.o(+RO)
+	rtl8710c_timer.o(+RO)
+	rtl8710c_gpio.o(+RO)
+	rtl8710c_efuse.o(+RO)
+	rtl8710c_gdma.o(+RO)
+	rtl8710c_spic.o(+RO)
+	rtl8710c_flash.o(+RO)
+	rtl8710c_pinmux.o(+RO)
+	rtl8710c_crypto.o(+RO)
+	rtl8710c_syson.o(+RO)
+	rtl8710c_misc.o(+RO)
+	rtl8710c_sce.o(+RO)
+
+	rtl_printf.o(+RO)
+	strproc.o(+RO)
+	atoi.o(+RO)
+
+	shell.o(+RO)
+	rtl_printf.o(+RO)
+	utility.o(+RO)
+
+	rom_mbedtls_bignum.o(+RO)
+
 	strproc.o (+RO)
 	memcmp.o (+RO)
 	memcpy.o (+RO)
@@ -84,137 +183,76 @@ LR_ROM 0x1006F000 0x00041000  {    ; load region size_region
 	fmul.o (+RO)
 	faddsub.o (+RO)
 	usenofp.o (+RO)
+
+	*.o (.rom.hal_syson.text)
+	*.o (.rom.hal_syson.rodata)
+	*.o (.rom.hal_pinmux.rodata*)
+	*.o (.rom.hal_uart.text)
+	*.o (.rom.hal_uart.rodata)
+	*.o (.rom.hal_timer.text)
+	*.o (.rom.hal_timer.rodata)
+	*.o (.rom.hal_timer_ba.rodata)
+	*.o (.rom.hal_gpio.text)
+	*.o (.rom.hal_gpio.rodata)
+	*.o (.rom.hal_efuse.text)
+	*.o (.rom.hal_efuse.rodata)
+	*.o (.rom.hal_gdma.text*)
+	*.o (.rom.hal_gdma.rodata*)
+	*.o (.rom.hal_spic.text*)
+	*.o (.rom.hal_spic.rodata*)
+	*.o (.rom.hal_flash.text*)
+	*.o (.rom.hal_flash.rodata*)
+	*.o (.rom.hal_cache.text*)
+	*.o (.rom.hal_cache.rodata*)
+	*.o (.rom.hal_sce.text*)
+	*.o (.rom.hal_sce.rodata*)
+	*.o (.rom.hal_vdr.text*)
+	*.o (.rom.hal_vdr.rodata*)
+
+	*.o (.rom.hal_pinmux.rodata*)
+	*.o (.infra.rom.text)
+	*.o (.stdioport.text)
+	*.o (.stdioport.rodata)
+	*.o (.rtlprintf.text)
+	*.o (.rtlprintf.rodata)
+	*.o (.rtlprintf.text)
+	*.o (.shell.text)
+	*.o (.shell.rodata)
+	*.o (.shellcmd.text)
+	*.o (.shellcmd.rodata)
+	*.o (.ccmd.text)
+	*.o (.ccmd.rodata)
+	*.o (.rom.utility.text*)
+	*.o (.rom.ssl.text)
+	*.o (.rom.ssl.rodata)
+	*.o (.rom.ssl.itcm)
+	*.o (.rom.ssl.dtcm)
   }
 
-  _ROM_DATA 0x20157700 0x100  {
+  _ROM_DATA 0x100000A0 0x100  {
     system_rtl8195bhp.o (+RW)
+    startup.o (+RW)
+    rtl8710c_irq.o (+RW)
+    fw_uart_boot.o (+RW)
+    rtl8710c_crypto.o (+RW)
     * (.rom.hal_uart.data)
 	* (.rom.hal_timer.data)
-	* (.rom.hal_icc.data)
 	* (.rom.hal_efuse.data)
-  }
-
-  _STUB_SYSON 0x100AEC00 FIXED {  ; load address = execution address
-		*.o (.rom.hal_syson.stubs)
-  }
-
-  _STUB_TMR AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
-		*.o (.rom.hal_timer.stubs)
-  }
-
-  _STUB_INT_VECTOR AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
-		*.o (.rom.hal_vector.stubs)
-  }
-
-  _STUB_CRYPTO AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
-		*.o (.rom.hal_crypto_s.stubs)
-  }
-
-  _STUB_UART AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
-		*.o (.rom.hal_uart.stubs)
-  }
-
-  _STUB_ICC AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
-		*.o (.rom.hal_icc.stubs)
-  }
-
-  _STUB_EFUSE AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
-		*.o (.rom.hal_efuse.stubs)
-  }
-
-  _STUB_GDMA AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
-		*.o (.rom.hal_gdma.stubs)
-  }
-
-  _STUB_SPIC AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
-		*.o (.rom.hal_spic.stubs)
-  }
-
-  _STUB_FLASH AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
-		*.o (.rom.hal_flash.stubs)
-  }
-
-  _STUB_PINMUX AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
-		*.o (.rom.hal_pinmux.stubs)
-  }
-
-  _STUB_CACHE AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
-		*.o (.rom.hal_cache.stubs)
-  }
-
-  _STUB_SCE AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
-		*.o (.rom.hal_sce.stubs)
-  }
-
-  _STUB_MISC AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
-		*.o (.rom.hal_misc.stubs)
-  }
-
-  _STUB_SBOOT AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
-		*.o (.rom.sboot.stubs)
-  }
-
-  _STUB_PRINTFS AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
-		*.o (.rom.printf.stubs)
-  }
-
-  _STUB_STRPROC AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
-		*.o (.rom.strproc.stubs)
-  }
-
-  _STUB_UTILITY AlignExpr(+0, 0x10) FIXED {  ; load address = execution address
-		*.o (.rom.utility.stubs)
-  }
-
+    * (.rom.hal_cache.data)
+    * (.rom.hal_flash.data)
+	* (.rom.hal_gdma.data)
+	* (.rom.hal_spic.data)
+  }  
 }
 
-LR_DTCM 0x20000000 0x00008000  {    ; load region size_region
+LR_DTCM_RAM 0x10000000 0x0003FA00  {    ; load region size_region
 
-  _ROM_TEMP_BSS 0x20000000 UNINIT {
-    * (.rom_temp.bss)
-  }
-
-  _ROM_SBOOT_BSS +0 UNINIT FIXED {
-    * (.rom.sboot.bss)
+  _RAM_VECTOR 0x10000000 FIXED 0x00A0  {  ; RW data
+	* (.ram_vector_table)
+	* (.rom.irq.bss)
   }
 
-  _DTCM_RAM +0 UNINIT {
-  	* (.dtcm.ram)
-    startup_rtl8195bhp.o (.heap)
-  }
-
-  _STACK 0x20007000 0x00001000  {
-    startup_rtl8195bhp.o (.stack)
-  }
-}
-
-LR_RAM 0x20138000 0x00020000  {    ; load region size_region
-  EXEC_NSCR 0x20138000 0x8000  {
-    * (Veneer$$CMSE)
-  }
-
-  _RAM_CODE 0x20140000 FIXED {
-   .ANY (+RO)
-  }
-  
-  _DATA +0 FIXED {
-   .ANY (+RW)
-  }
-
-  _BSS +0 UNINIT FIXED {
-    RTX_Conf_CM.o (+ZI)
-      .ANY (+ZI)
-  }
-
-  _RAM_FUNC_TBL 0x20157600 FIXED 0xF0 {
-    ram_start.o (.start.ram.data*)
-  }
-
-  _RAM_IMG_SIGN 0x201576F0 FIXED 0x10  {
-    ram_start.o (.start.ram.sign*)
-  }
- 
-  _ROM_BSS 0x20157800 FIXED UNINIT {
+  _ROM_BSS 0x100000A0 UNINIT FIXED {
 	* (.sysstart.bss)
 	* (.sys_misc.bss)
 	* (.diag.bss)
@@ -223,9 +261,9 @@ LR_RAM 0x20138000 0x00020000  {    ; load region size_region
 	* (.rom.hal_timer.bss)
 	* (.rom.hal_icc.bss)
 	* (.rom.hal_efuse.bss)
-	* (.rom.hal_gdma.bss)
-	* (.rom.hal_spic.bss)
-	* (.rom.hal_flash.bss)        
+    * (.rom.hal_gdma.bss)
+    * (.rom.hal_spic.bss)
+    * (.rom.hal_flash.bss)        
 	* (.rom.hal_pinmux.bss)
 	* (.rom.hal_cache.bss)
 	* (.rom.hal_sce.bss)
@@ -233,17 +271,49 @@ LR_RAM 0x20138000 0x00020000  {    ; load region size_region
 	* (.stdioport.bss)
 	* (.rom.wlan.bss)
 	* (.rom.hal_crypto_s.bss)
-    strproc.o (+ZI)	
-    rtl8195bhp_gdma.o (+ZI)	
-	rtl8195blp_pinmux.o (+ZI)  	
+	* (.rom.ssl.bss)
+	strproc.o(+ZI)
+    libspace.o(+ZI)
   }
 
-  _RAM_VECTOR 0x20157E00 FIXED 0x100 {  ; RW data
-	rtl8195bhp_vectors.o (.ram_vector_table)
+  _RAM_FUNC_TBL 0x10000480 FIXED 0x70  {
+    ram_start.o (.start.ram.data*)
   }
 
-  _RAM_IRQ_TABL 0x20157F00 FIXED 0x100 {  ; RW data
-	rtl8195bhp_vectors.o (.ram_user_irq_table)
+  _RAM_IMG_SIGN 0x100004F0 FIXED 0x10  {
+    ram_start.o (.start.ram.sign*)
   }
 
+  _RAM_CODE 0x10000500 FIXED {
+   .ANY (+RO)
+  }
+  
+  _DATA +0 FIXED {
+   .ANY (+RW)
+  }
+
+  _BSS +0 UNINIT FIXED {
+   .ANY (+ZI)
+  }
+
+  EXEC_NSCR 0x10007000 0x1000  {
+    * (Veneer$$CMSE)
+  }
+
+  _ROM_TEMP_BSS 0x1002A000 UNINIT {
+    * (.rom_temp.bss)
+  }
+
+  _ROM_SBOOT_BSS +0 UNINIT FIXED {
+    * (.rom.sboot.bss)
+  }
+
+  _HEAP +0 UNINIT {
+  	* (.dtcm.ram)
+    startup_rtl8710c.o (HEAP)
+  }
+
+  _STACK 0x1003EA00 0x00001000  {
+    startup_rtl8710c.o (STACK)
+  }
 }

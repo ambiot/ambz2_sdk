@@ -22,6 +22,80 @@
 #include "mbedtls/pk.h"
 #include "mbedtls/pk_internal.h"
 
+#if defined(CONFIG_PLATFORM_8710C) && defined(CONFIG_BUILD_SECURE) && (CONFIG_BUILD_SECURE == 1)
+typedef struct ssl_func_stubs_s {
+	// ssl_ram_map
+	void (*init_rom_ssl_ram_map)(
+		void *(*ssl_calloc)(unsigned int, unsigned int),
+		void (*ssl_free)(void *),
+		int (*ssl_printf)(const char *, ...),
+		u32 use_hw_crypto_func
+	);
+	void (*init_rom_ssl_hw_crypto_aes_ecb)(
+		int (*hw_crypto_aes_ecb_init)(const u8*, const u32),
+		int (*hw_crypto_aes_ecb_decrypt)(const u8*, const u32, const u8*, const u32, u8*),
+		int (*hw_crypto_aes_ecb_encrypt)(const u8*, const u32, const u8*, const u32, u8*)
+	);
+	void (*init_rom_ssl_hw_crypto_aes_cbc)(
+		int (*hw_crypto_aes_cbc_init)(const u8*, const u32),
+		int (*hw_crypto_aes_cbc_decrypt)(const u8*, const u32, const u8*, const u32, u8*),
+		int (*hw_crypto_aes_cbc_encrypt)(const u8*, const u32, const u8*, const u32, u8*)
+	);
+	void (*init_rom_ssl_hw_crypto_des_cbc)(
+		int (*hw_crypto_des_cbc_init)(const u8*, const u32),
+		int (*hw_crypto_des_cbc_decrypt)(const u8*, const u32, const u8*, const u32, u8*),
+		int (*hw_crypto_des_cbc_encrypt)(const u8*, const u32, const u8*, const u32, u8*)
+	);
+	void (*init_rom_ssl_hw_crypto_3des_cbc)(
+		int (*hw_crypto_3des_cbc_init)(const u8*, const u32),
+		int (*hw_crypto_3des_cbc_decrypt)(const u8*, const u32, const u8*, const u32, u8*),
+		int (*hw_crypto_3des_cbc_encrypt)(const u8*, const u32, const u8*, const u32, u8*)
+	);
+	// bignum
+	void (*mbedtls_mpi_init)(mbedtls_mpi *X);
+	void (*mbedtls_mpi_free)(mbedtls_mpi *X);
+	int (*mbedtls_mpi_grow)(mbedtls_mpi *X, size_t nblimbs);
+	int (*mbedtls_mpi_shrink)(mbedtls_mpi *X, size_t nblimbs);
+	int (*mbedtls_mpi_copy)(mbedtls_mpi *X, const mbedtls_mpi *Y);
+	void (*mbedtls_mpi_swap)(mbedtls_mpi *X, mbedtls_mpi *Y);
+	int (*mbedtls_mpi_safe_cond_assign)(mbedtls_mpi *X, const mbedtls_mpi *Y, unsigned char assign);
+	int (*mbedtls_mpi_safe_cond_swap)(mbedtls_mpi *X, mbedtls_mpi *Y, unsigned char swap);
+	int (*mbedtls_mpi_lset)(mbedtls_mpi *X, mbedtls_mpi_sint z);
+	int (*mbedtls_mpi_get_bit)(const mbedtls_mpi *X, size_t pos);
+	int (*mbedtls_mpi_set_bit)(mbedtls_mpi *X, size_t pos, unsigned char val);
+	size_t (*mbedtls_mpi_lsb)(const mbedtls_mpi *X);
+	size_t (*mbedtls_mpi_bitlen)(const mbedtls_mpi *X);
+	size_t (*mbedtls_mpi_size)(const mbedtls_mpi *X);
+	int (*mbedtls_mpi_read_binary)(mbedtls_mpi *X, const unsigned char *buf, size_t buflen);
+	int (*mbedtls_mpi_write_binary)(const mbedtls_mpi *X, unsigned char *buf, size_t buflen);
+	int (*mbedtls_mpi_shift_l)(mbedtls_mpi *X, size_t count);
+	int (*mbedtls_mpi_shift_r)(mbedtls_mpi *X, size_t count);
+	int (*mbedtls_mpi_cmp_abs)(const mbedtls_mpi *X, const mbedtls_mpi *Y);
+	int (*mbedtls_mpi_cmp_mpi)(const mbedtls_mpi *X, const mbedtls_mpi *Y);
+	int (*mbedtls_mpi_cmp_int)(const mbedtls_mpi *X, mbedtls_mpi_sint z);
+	int (*mbedtls_mpi_add_abs)(mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *B);
+	int (*mbedtls_mpi_sub_abs)(mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *B);
+	int (*mbedtls_mpi_add_mpi)(mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *B);
+	int (*mbedtls_mpi_sub_mpi)(mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *B);
+	int (*mbedtls_mpi_add_int)(mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_sint b);
+	int (*mbedtls_mpi_sub_int)(mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_sint b);
+	int (*mbedtls_mpi_mul_mpi)(mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *B);
+	int (*mbedtls_mpi_read_string)(mbedtls_mpi *X, int radix, const char *s);
+	int (*mbedtls_mpi_mul_int)(mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_uint b);
+	int (*mbedtls_mpi_div_mpi)(mbedtls_mpi *Q, mbedtls_mpi *R, const mbedtls_mpi *A, const mbedtls_mpi *B);
+	int (*mbedtls_mpi_div_int)(mbedtls_mpi *Q, mbedtls_mpi *R, const mbedtls_mpi *A, mbedtls_mpi_sint b);
+	int (*mbedtls_mpi_mod_mpi)(mbedtls_mpi *R, const mbedtls_mpi *A, const mbedtls_mpi *B);
+	int (*mbedtls_mpi_mod_int)(mbedtls_mpi_uint *r, const mbedtls_mpi *A, mbedtls_mpi_sint b);
+	int (*mbedtls_mpi_write_string)(const mbedtls_mpi *X, int radix, char *buf, size_t buflen, size_t *olen);
+	int (*mbedtls_mpi_exp_mod)(mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *E, const mbedtls_mpi *N, mbedtls_mpi *_RR);
+	int (*mbedtls_mpi_gcd)(mbedtls_mpi *G, const mbedtls_mpi *A, const mbedtls_mpi *B);
+	int (*mbedtls_mpi_fill_random)(mbedtls_mpi *X, size_t size, int (*f_rng)(void *, unsigned char *, size_t), void *p_rng);
+	int (*mbedtls_mpi_inv_mod)(mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *N);
+	int (*mbedtls_mpi_is_prime)(const mbedtls_mpi *X, int (*f_rng)(void *, unsigned char *, size_t), void *p_rng);
+	int (*mbedtls_mpi_gen_prime)(mbedtls_mpi *X, size_t nbits, int dh_flag, int (*f_rng)(void *, unsigned char *, size_t), void *p_rng);
+	uint32_t reserved[14];  // reserved space for next ROM code version function table extension
+} ssl_func_stubs_t;
+#else
 typedef struct ssl_func_stubs_s {
 	// ssl_ram_map
 	void (*init_rom_ssl_ram_map)(
@@ -384,5 +458,5 @@ typedef struct ssl_func_stubs_s {
 	int (*mbedtls_pk_write_pubkey_pem)(mbedtls_pk_context *key, unsigned char *buf, size_t size);
 	int (*mbedtls_pk_write_key_pem)(mbedtls_pk_context *key, unsigned char *buf, size_t size);
 } ssl_func_stubs_t;
-
+#endif
 #endif // ROM_SSL_FUNC_STUBS_H

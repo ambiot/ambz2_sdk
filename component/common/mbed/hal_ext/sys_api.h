@@ -84,7 +84,6 @@ void sys_adc_calibration(u8 write, u16 *offset, u16 *gain);
   * @retval none
   */
 void sys_reset(void);
-void software_reset(void);
 
 ///@}
 
@@ -106,8 +105,8 @@ void sys_sdram_off(void);
 ///@}
 #endif //CONFIG_PLATFORM_8195A
 
-#if defined(CONFIG_PLATFORM_8711B) && (CONFIG_PLATFORM_8711B == 1)
-///@name AmebaZ Only 
+#if (defined(CONFIG_PLATFORM_8711B) && (CONFIG_PLATFORM_8711B == 1)) || defined(CONFIG_PLATFORM_8710C) && (CONFIG_PLATFORM_8710C == 1)
+///@name AmebaZ/AmebaZ2 
 ///@{
 /**
   * @brief vector reset 
@@ -115,7 +114,7 @@ void sys_sdram_off(void);
   */
 void sys_cpu_reset(void);
 ///@}
-#endif //CONFIG_PLATFORM_8711B
+#endif //CONFIG_PLATFORM_8711B | CONFIG_PLATFORM_8710C
 
 /*\@}*/
 

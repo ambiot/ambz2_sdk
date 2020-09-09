@@ -77,6 +77,8 @@ void rltk_wlan_tx_deauth(unsigned char b_broadcast, unsigned char key_type);
 void rltk_wlan_tx_auth(void);
 #endif
 
+void rltk_wlan_set_partial_scan_retry_times(unsigned char times);
+
 #ifdef	__cplusplus
 }
 #endif

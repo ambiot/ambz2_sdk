@@ -213,6 +213,11 @@ s32 shell_task(void)
     return cmd_shell_stubs.shell_task(&shell_cmd_hdl);
 }
 
+s32 shell_parse_one_cmd(void)
+{
+    return cmd_shell_stubs.shell_parse_one_cmd(&shell_cmd_hdl);
+}
+
 /**
  * @brief Initialize the application level of shell command interface entity.
  *

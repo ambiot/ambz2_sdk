@@ -80,10 +80,15 @@ void serial_free(serial_t *obj)
     uint8_t uart_idx;
 
     uart_idx = obj->uart_adp.uart_idx;
-    if (serial_dma_init[uart_idx] != 0) {
+    if ((serial_dma_init[uart_idx] & SERIAL_RX_DMA_EN) != 0) {
         hal_uart_rx_gdma_deinit(&obj->uart_adp);
-        serial_dma_init[uart_idx] = 0;
+        serial_dma_init[uart_idx] &= ~SERIAL_RX_DMA_EN;
     }
+    if ((serial_dma_init[uart_idx] & SERIAL_TX_DMA_EN) != 0) {
+        hal_uart_tx_gdma_deinit(&obj->uart_adp);
+        serial_dma_init[uart_idx] &= ~SERIAL_TX_DMA_EN;
+    }
+
     hal_uart_deinit (&obj->uart_adp);
 }
 

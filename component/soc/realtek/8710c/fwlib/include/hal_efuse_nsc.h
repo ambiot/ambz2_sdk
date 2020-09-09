@@ -81,6 +81,7 @@ uint32_t hal_user_otp_set_nsc(uint8_t *puser_otp);
 uint32_t hal_efuse_disable_sec_jtag_nsc(void);
 uint32_t hal_efuse_disable_nonsec_jtag_nsc(void);
 
+#if !defined(ENABLE_SECCALL_PATCH)
 #define hal_efuse_autoload_en               hal_efuse_autoload_en_nsc
 #define hal_efuse_hci_autoload_en           hal_efuse_hci_autoload_en_nsc
 #define hal_efuse_read                      hal_efuse_read_nsc
@@ -97,6 +98,7 @@ uint32_t hal_efuse_disable_nonsec_jtag_nsc(void);
 #define hal_user_otp_set                    hal_user_otp_set_nsc
 #define hal_efuse_disable_sec_jtag          hal_efuse_disable_sec_jtag_nsc
 #define hal_efuse_disable_nonsec_jtag       hal_efuse_disable_nonsec_jtag_nsc
+#endif
 #endif  // end of "#if defined(CONFIG_BUILD_NONSECURE)"
 
 /** @} */ /* End of group hs_hal_efuse */

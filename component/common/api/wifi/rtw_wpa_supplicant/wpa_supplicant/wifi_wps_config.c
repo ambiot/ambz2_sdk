@@ -1078,9 +1078,13 @@ int wps_judge_staion_disconnect(void)
 //		rltk_wlan_init(0,RTW_MODE_STA);
 //		rltk_wlan_start(0);
 		//modified by Chris Yang for iNIC
+#if defined(CONFIG_PLATFORM_8710C) && (defined(CONFIG_BT) && CONFIG_BT)
+		wifi_set_mode(RTW_MODE_STA);
+#else
 		wifi_off();
 		vTaskDelay(20);
 		wifi_on(RTW_MODE_STA);
+#endif
 		break;
 	case IW_MODE_INFRA:		//In STA mode
 		if(wext_get_ssid(WLAN0_NAME, ssid) > 0)

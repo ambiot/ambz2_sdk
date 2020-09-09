@@ -7,5 +7,8 @@
   <block>512 0x1000</block>
   <macro>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\iar_utility\flashloader\FlashRTL8710c.mac</macro>
   <aggregate>1</aggregate>
-  <args>debug=0</args>
+  <args>
+    debug=0
+    flash_state=0xFF
+  </args>
 </flash_device>

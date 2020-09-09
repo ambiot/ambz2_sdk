@@ -94,7 +94,7 @@ void ping_test(void *param)
 	
 	if(data_size > BUF_SIZE){
 		printf("\n\r[ERROR] %s: data size error, can't exceed %d",__func__,BUF_SIZE);
-		return;
+		goto Exit;
 	}
 
 	//Ping size = icmp header(8 bytes) + data size
@@ -103,7 +103,7 @@ void ping_test(void *param)
 	ping_buf = pvPortMalloc(ping_size);
 	if(NULL == ping_buf){
 		printf("\n\r[ERROR] %s: Allocate ping_buf failed",__func__);
-		return;
+		goto Exit;
 	}
 	printf("\n\r[%s] PING %s %d(%d) bytes of data\n", __FUNCTION__, host, data_size, sizeof(struct ip_hdr) + sizeof(struct icmp_echo_hdr) + data_size);			
 
@@ -122,9 +122,8 @@ void ping_test(void *param)
 
 	reply_buf = pvPortMalloc(reply_size);
 	if(NULL == reply_buf){
-		vPortFree(ping_buf);
 		printf("\n\r[ERROR] %s: Allocate reply_buf failed",__func__);
-		return;
+		goto Exit;
 	}
 
 	for(i = 0; (i < ping_count) || (infinite_loop == 1); i ++) {
@@ -141,9 +140,17 @@ void ping_test(void *param)
 		struct timeval timeout;
 		timeout.tv_sec = pint_timeout / 1000;
 		timeout.tv_usec = pint_timeout % 1000 * 1000;
-		setsockopt(ping_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+		if(setsockopt(ping_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) != 0){
+			printf("\n\r[%s] Set sockopt failed\n", __func__);
+			close(ping_socket);
+			goto Exit;
+		}
 #else	// lwip 1.4.1
-		setsockopt(ping_socket, SOL_SOCKET, SO_RCVTIMEO, &pint_timeout, sizeof(pint_timeout));
+		if(setsockopt(ping_socket, SOL_SOCKET, SO_RCVTIMEO, &pint_timeout, sizeof(pint_timeout)) != 0){
+			printf("\n\r[%s] Set sockopt failed\n", __func__);
+			close(ping_socket);
+			goto Exit;
+		}
 #endif
 
 #if LWIP_IPV6
@@ -249,9 +256,13 @@ void ping_test(void *param)
 		printf("\n\r[%s] %d packets transmitted, %d received, %d%% packet loss, average %d ms", __FUNCTION__, ping_count, ping_received_count, (ping_count-ping_received_count)*100/ping_count, ping_received_count ? ping_total_time/ping_received_count : 0);
 		printf("\n\r[%s] min: %d ms, max: %d ms\n\r", __FUNCTION__, min_time, max_time);
 	}
-	vPortFree(ping_buf);
-	vPortFree(reply_buf);
-	vPortFree(host);
+Exit:
+	if(ping_buf)
+		vPortFree(ping_buf);
+	if(reply_buf)
+		vPortFree(reply_buf);
+	if(host)
+		vPortFree(host);
 
 	if(!ping_call)
 		vTaskDelete(NULL);

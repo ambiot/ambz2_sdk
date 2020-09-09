@@ -991,7 +991,7 @@ L_retry:
 
 // return 0 success
 // return !0 fail
-uint32_t ftl_save_to_storage(void *pdata_tmp, uint16_t offset, uint16_t size)
+uint32_t ftl_save_to_storage_i(void *pdata_tmp, uint16_t offset, uint16_t size)
 {
     uint8_t *pdata8 = (uint8_t *)pdata_tmp;
 
@@ -1078,9 +1078,14 @@ uint32_t ftl_save_to_storage(void *pdata_tmp, uint16_t offset, uint16_t size)
     return ret;
 }
 
+__WEAK uint32_t ftl_save_to_storage(void *pdata_tmp, uint16_t offset, uint16_t size)
+{
+	return ftl_save_to_storage_i(pdata_tmp, offset, size);
+}
+
 // return 0 success
 // return !0 fail
-uint32_t ftl_load_from_storage(void *pdata_tmp, uint16_t offset, uint16_t size)
+uint32_t ftl_load_from_storage_i(void *pdata_tmp, uint16_t offset, uint16_t size)
 {
     if (g_pPage == NULL)
     {
@@ -1240,7 +1245,10 @@ L_retry:
     return ret;
 }
 
-
+__WEAK uint32_t ftl_load_from_storage(void *pdata_tmp, uint16_t offset, uint16_t size)
+{
+	return ftl_load_from_storage_i(pdata_tmp, offset, size);
+}
 
 uint32_t ftl_ioctl(uint32_t cmd, uint32_t p1, uint32_t p2)
 {

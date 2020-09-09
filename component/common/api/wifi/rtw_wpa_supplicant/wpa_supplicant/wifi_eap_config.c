@@ -33,9 +33,20 @@ const unsigned char *eap_client_cert = NULL;
 const unsigned char *eap_client_key = NULL;
 char *eap_client_key_pwd = NULL;
 
+void set_eap_phase(unsigned char is_trigger_eap);
+int get_eap_phase(void);
+int get_eap_ctx_method(void);
+int set_eap_peap_method(void);
+int set_eap_tls_method(void);
+int set_eap_ttls_method(void);
+
 void eap_eapol_recvd_hdl(char *buf, int buf_len, int flags, void* handler_user_data);
 void eap_eapol_start_hdl(char *buf, int buf_len, int flags, void* handler_user_data);
 int connect_by_open_system(char *target_ssid);
+
+#if !defined(CONFIG_MBED_ENABLED)
+int eap_start(char *method);
+#endif
 
 void set_eap_phase(unsigned char is_trigger_eap){
 	eap_phase = is_trigger_eap;
@@ -478,17 +489,13 @@ int eap_cert_setup(ssl_context *ssl)
 #include <mbedtls/ssl.h>
 #include <mbedtls/ssl_internal.h>
 
-#if (defined(CONFIG_EXAMPLE_AMAZON_FREERTOS) && CONFIG_EXAMPLE_AMAZON_FREERTOS) || \
-    (defined(CONFIG_EXAMPLE_AMAZON_AFQP_TESTS) && CONFIG_EXAMPLE_AMAZON_AFQP_TESTS)
-int max_buf_bio_size = MBEDTLS_SSL_IN_BUFFER_LEN;
-#else
 int max_buf_bio_size = ( MBEDTLS_SSL_MAX_CONTENT_LEN               \
                         + MBEDTLS_SSL_COMPRESSION_ADD               \
                         + 29 /* counter + header + IV */    \
                         + MBEDTLS_SSL_MAC_ADD                       \
                         + MBEDTLS_SSL_PADDING_ADD                   \
                         );    //modify by Relatek,  original define is MBEDTLS_SSL_BUFFER_LEN
-#endif
+
 
 struct eap_tls{
 	void *ssl;
@@ -614,9 +621,13 @@ int eap_cert_setup(struct eap_tls *tls_context)
 	if(eap_client_cert != NULL && eap_client_key != NULL){
 		if(mbedtls_x509_crt_parse(_cli_crt, eap_client_cert, strlen(eap_client_cert)+1) != 0)
 			return -1;
-	
-		if(mbedtls_pk_parse_key(_clikey_rsa, eap_client_key, strlen(eap_client_key)+1, eap_client_key_pwd, strlen(eap_client_key_pwd)+1) != 0)
-			return -1;
+		if(eap_client_key_pwd){
+			if(mbedtls_pk_parse_key(_clikey_rsa, eap_client_key, strlen(eap_client_key)+1, eap_client_key_pwd, strlen(eap_client_key_pwd)+1) != 0)
+				return -1;
+		}else{
+			if(mbedtls_pk_parse_key(_clikey_rsa, eap_client_key, strlen(eap_client_key)+1, eap_client_key_pwd, 1) != 0)
+				return -1;
+		}
 
 		mbedtls_ssl_conf_own_cert(tls_context->conf, _cli_crt, _clikey_rsa);
 	}

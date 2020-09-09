@@ -36,3 +36,5 @@ define exported symbol __rom_stubs_strproc = 0x800;
 define exported symbol strproc_stubs = 0x800;
 define exported symbol __rom_stubs_utility = 0x8c0;
 define exported symbol utility_stubs = 0x8c0;
+define exported symbol __rom_stubs_ssl = 0x910;
+define exported symbol ssl_func_stubs = 0x910;

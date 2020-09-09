@@ -21,6 +21,7 @@
 #include "osdep_service.h"
 #include "device_lock.h"
 #include "hal_wdt.h"
+#include "crypto_api.h"
 
 #define FLASH_SECTOR_SIZE				0x1000
 
@@ -250,14 +251,29 @@ void sys_reset(void)
 	hal_misc_rst_by_wdt();
 }
 
+/**
+  * @brief  system reboots with cpu reset.
+  * @retval none
+  */
 void software_reset(void)
 {
 	sys_disable_fast_boot();
 	hci_tp_close();  
 	hal_wlan_pwr_off();
+	crypto_deinit();
 	__disable_irq();
 	hal_misc_cpu_rst();
 }
+
+/**
+  * @brief vector reset
+  * @retval none
+  */
+void sys_cpu_reset(void)
+{
+	software_reset();
+}
+
 /**
   * @brief  Turn off the JTAG function.
   * @retval none

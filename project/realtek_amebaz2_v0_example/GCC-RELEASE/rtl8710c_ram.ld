@@ -264,6 +264,8 @@ SECTIONS
 
 	.xip.code_c :
 	{
+		/* For xip encrypted section ram image signature */
+		KEEP(*(.xip.ram.sign.s))
 		/* code and RO data in this section will be encrypted */
 		. = ALIGN(16);
 		__xip_code_text_start__ = .;

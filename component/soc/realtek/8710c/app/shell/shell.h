@@ -261,6 +261,7 @@ void shell_set_cmd_list(shell_command_entry_t *cmd_list, unsigned int list_size)
 BOOL shell_register(shell_program_t program, const char *cmd_string, const char *help_string);
 void shell_unregister_all(void);
 s32 shell_task(void);
+s32 shell_parse_one_cmd(void);
 
 /** @} */ /* End of group util_shell */
 

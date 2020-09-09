@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <project>
     <fileVersion>3</fileVersion>
     <configuration>
@@ -230,6 +230,7 @@
                     <state>CONFIG_BUILD_RAM=1</state>
                     <state>_NO_DEFINITIONS_IN_HEADER_FILES</state>
                     <state>V8M_STKOVF</state>
+                    <state>CONFIG_SYSTEM_TIME64=0</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
@@ -901,6 +902,8 @@
                     <state>--redirect atoul=__wrap_atoul</state>
                     <state>--redirect atoull=__wrap_atoull</state>
                     <state>--redirect atof=__wrap_atof</state>
+                    <!-- <state>--redirect __localtime64=__wrap_localtime</state> -->
+                    <!-- <state>--redirect __mktime64=__wrap_mktime</state> -->
                     <state>--skip_dynamic_initialization</state>
                     <state>--redirect aesccmp_construct_mic_iv=aesccmp_construct_mic_iv_ram</state>
                     <state>--redirect aesccmp_construct_mic_header1=aesccmp_construct_mic_header1_ram</state>
@@ -2208,6 +2211,12 @@
                     <name>$PROJ_DIR$\..\..\..\component\common\network\ssl\mbedtls-2.4.0\library\debug.c</name>
                 </file>
                 <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\network\ssl\mbedtls-2.4.0\library\entropy.c</name>
+                    <excluded>
+                        <configuration>Debug</configuration>
+                    </excluded>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\..\..\component\common\network\ssl\mbedtls-2.4.0\library\error.c</name>
                 </file>
                 <file>
@@ -2382,6 +2391,9 @@
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\..\component\os\freertos\freertos_cb.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\..\component\os\freertos\freertos_pmu.c</name>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\..\component\os\freertos\freertos_service.c</name>

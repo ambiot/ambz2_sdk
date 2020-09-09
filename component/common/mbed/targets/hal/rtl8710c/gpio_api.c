@@ -30,6 +30,7 @@
 #include "pinmap.h"
 #include "gpio_api.h"
 #include "hal_gpio.h"
+#include "string.h"
 
 /* map mbed pin mode definition to RTK HAL pull control type */
 #define MAX_PIN_MODE            4
@@ -74,7 +75,11 @@ void gpio_init(gpio_t *obj, PinName pin)
         is_mbd_gpio_com_inited = 1;
     }
 
-    hal_gpio_init (&obj->adapter, pin);
+    if (HAL_OK != hal_gpio_init (&obj->adapter, pin)){
+        DBG_GPIO_ERR("GPIO pin init error\n");
+        memset(&obj->adapter, 0, sizeof(hal_gpio_adapter_t));
+        obj->adapter.pin_name = (u8)NC;
+    }
 }
 
 /**
@@ -91,6 +96,10 @@ void gpio_mode(gpio_t *obj, PinMode mode)
 {
     pin_pull_type_t pull_type;
 
+    if(obj->adapter.pin_name == (u8)NC){
+        return;
+    }
+    
     if (mode < MAX_PIN_MODE) {
         pull_type = mbed_pinmode_map[mode];
     } else {
@@ -118,6 +127,9 @@ void gpio_mode(gpio_t *obj, PinMode mode)
   */
 void gpio_dir(gpio_t *obj, PinDirection direction)
 {
+    if(obj->adapter.pin_name == (u8)NC){
+        return;
+    }
     hal_gpio_set_dir (&obj->adapter, direction);
 }
 
@@ -131,6 +143,9 @@ void gpio_dir(gpio_t *obj, PinDirection direction)
   */
 void gpio_change_dir(gpio_t *obj, PinDirection direction)
 {
+    if(obj->adapter.pin_name == (u8)NC){
+        return;
+    }
     hal_gpio_set_dir (&obj->adapter, direction);
 }
 
@@ -145,6 +160,9 @@ void gpio_change_dir(gpio_t *obj, PinDirection direction)
   */
 void gpio_write(gpio_t *obj, int value)
 {
+    if(obj->adapter.pin_name == (u8)NC){
+        return;
+    }
     hal_gpio_write (&obj->adapter, value);
 }
 
@@ -159,6 +177,9 @@ void gpio_write(gpio_t *obj, int value)
   */
 void gpio_direct_write(gpio_t *obj, BOOL value)
 {
+    if(obj->adapter.pin_name == (u8)NC){
+        return;
+    }
     hal_gpio_write (&obj->adapter, value);
 }
 
@@ -171,7 +192,10 @@ void gpio_direct_write(gpio_t *obj, BOOL value)
   */
 int gpio_read(gpio_t *obj)
 {
-	return hal_gpio_read (&obj->adapter);
+    if(obj->adapter.pin_name == (u8)NC){
+        return -1;
+    }
+    return hal_gpio_read (&obj->adapter);
 }
 
 /**
@@ -188,6 +212,9 @@ void gpio_pull_ctrl(gpio_t *obj, PinMode pull_type)
 {
     pin_pull_type_t io_pull_type;
 
+    if(obj->adapter.pin_name == (u8)NC){
+        return;
+    }
     if (pull_type < MAX_PIN_MODE) {
         io_pull_type = (pin_pull_type_t)mbed_pinmode_map[pull_type];
     } else {
@@ -205,6 +232,9 @@ void gpio_pull_ctrl(gpio_t *obj, PinMode pull_type)
   */
 void gpio_deinit(gpio_t *obj)
 {
+    if(obj->adapter.pin_name == (u8)NC){
+        return;
+    }
     hal_gpio_deinit (&obj->adapter);
 }
 

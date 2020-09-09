@@ -541,6 +541,8 @@ extern u32 ConfigDebugWarn;
 #define DBG_SDR_INFO(...)
 #define DBG_UART_INFO(...)
 #define DBG_CRYPTO_INFO(...)
+#define DBG_SCE_INFO(...)
+#define DBG_SDIO_DEV_INFO(...)
 
 #if defined(CONFIG_VRF_MODE) && (CONFIG_VRF_MODE==1)
 #define DBG_MAIN_INFO(...)

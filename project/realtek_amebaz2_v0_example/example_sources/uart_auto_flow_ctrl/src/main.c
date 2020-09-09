@@ -60,42 +60,39 @@ void uart_send_string(serial_t *sobj, char *pstr)
 serial_t sobj;
 unsigned char buffer[UART_BUF_SIZE];
 
-int main (void)
+void main (void)
 {
     // sample text
     char rc;
+    char sent;
     int i,j;
     int rx_side=0;
 
     dbg_printf("\r\n   UART Auto Flow Ctrl DEMO   \r\n");
 
     sys_log_uart_off();
-
-#if defined(CONFIG_BUILD_NONSECURE) && (CONFIG_BUILD_NONSECURE==1)
-    log_uart_port_init_ns(LOG_UART_TX, LOG_UART_RX, ((uint32_t)115200));
-#elif (!(defined(CONFIG_BUILD_NONSECURE) && (CONFIG_BUILD_NONSECURE==1))) || (defined(CONFIG_BUILD_BOOT) && (CONFIG_BUILD_BOOT==1))
     log_uart_port_init(LOG_UART_TX, LOG_UART_RX, ((uint32_t)115200));
-#endif
 
     /*UART2  used*/
     sobj.uart_adp.uart_idx = 2;
 
     // mbed uart test
-    pin_mode(UART_RX, PullUp);
     serial_init(&sobj, UART_TX, UART_RX);
     serial_baud(&sobj, 38400);
     serial_format(&sobj, 8, ParityNone, 1);
     serial_set_flow_control(&sobj, FlowControlNone, (PinName)0, (PinName)0);// Pin assignment can be ignored when autoflow control function is disabled
 
-    for (i = 0; i < 1000; i++) {
-        // Tide Break
+    wait_ms(10000);                    
+    serial_clear_rx(&sobj);           
+    for (sent = 0; sent < 126; sent++) {
         dbg_printf("Wait peer ready... \r\n");
-        serial_putc(&sobj, (i + 1));
-        if (serial_readable(&sobj)) {
-            rc = serial_getc(&sobj);
-            if (rc > i) {
+        serial_putc(&sobj, sent);          
+        if (serial_readable(&sobj)) {       
+            rc = serial_getc(&sobj);         
+            if (rc > sent) {                
                 rx_side = 1;
-            } else {
+                serial_putc(&sobj, 0);
+            } else{
                 rx_side = 0;
             }
             break;
@@ -103,9 +100,10 @@ int main (void)
         wait_ms(100);
     }
 
-    serial_clear_rx(&sobj);
     // Enable flow control
-    serial_set_flow_control(&sobj, FlowControlRTSCTS, UART_RTS, UART_CTS);// Pin assignment is ignored
+    serial_set_flow_control(&sobj, FlowControlRTSCTS, UART_RTS, UART_CTS);
+    serial_clear_rx(&sobj);
+    wait_ms(5000);
 
     if (rx_side) {
         dbg_printf("UART Flow Control: RX ==> \r\n");

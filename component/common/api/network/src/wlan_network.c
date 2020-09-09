@@ -35,9 +35,6 @@ xSemaphoreHandle uart_rx_interrupt_sema = NULL;
 
 void init_thread(void *param)
 {
-#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1)
-	rtw_create_secure_context(configMINIMAL_SECURE_STACK_SIZE);
-#endif
 	/* To avoid gcc warnings */
 	( void ) param;
 #if CONFIG_INIT_NET
@@ -51,7 +48,7 @@ void init_thread(void *param)
 #endif
 #if CONFIG_WLAN
 	wifi_on(RTW_MODE_STA);
-#if CONFIG_AUTO_RECONNECT
+#if defined(CONFIG_AUTO_RECONNECT) && CONFIG_AUTO_RECONNECT
 	//setup reconnection flag
 	wifi_set_autoreconnect(1);
 #endif

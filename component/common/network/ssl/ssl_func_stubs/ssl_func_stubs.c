@@ -5,7 +5,338 @@
 #include "hal_crypto.h"
 #endif
 
+#include "mbedtls/version.h"
+#ifdef MBEDTLS_BIGNUM_USE_S_ROM_API
+#include "mbedtls/bignum_rom.h"
+ssl_func_stubs_t __ram_stubs_ssl;
+#endif
+
 extern const ssl_func_stubs_t __rom_stubs_ssl;
+
+#if defined(CONFIG_PLATFORM_8710C) && (MBEDTLS_VERSION_NUMBER==0x02100300)
+#if defined(MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT)
+int platform_set_malloc_free(
+	void *(*ssl_calloc)(unsigned int, unsigned int),
+	void (*ssl_free)(void *)
+);
+int init_hw_crypto(void)
+{
+	platform_set_malloc_free(calloc,free);
+	return 0;
+}
+#endif
+
+#ifdef MBEDTLS_BIGNUM_USE_S_ROM_API
+void __bignum_stubs_init_ram(void)
+{
+	__ram_stubs_ssl.mbedtls_mpi_init = _mbedtls_mpi_init;
+	__ram_stubs_ssl.mbedtls_mpi_free = _mbedtls_mpi_free;
+	__ram_stubs_ssl.mbedtls_mpi_grow = _mbedtls_mpi_grow;
+	__ram_stubs_ssl.mbedtls_mpi_shrink = _mbedtls_mpi_shrink;
+	__ram_stubs_ssl.mbedtls_mpi_copy = _mbedtls_mpi_copy;
+	__ram_stubs_ssl.mbedtls_mpi_swap = _mbedtls_mpi_swap;
+	__ram_stubs_ssl.mbedtls_mpi_safe_cond_assign = _mbedtls_mpi_safe_cond_assign;
+	__ram_stubs_ssl.mbedtls_mpi_safe_cond_swap = _mbedtls_mpi_safe_cond_swap;
+	__ram_stubs_ssl.mbedtls_mpi_lset = _mbedtls_mpi_lset;
+	__ram_stubs_ssl.mbedtls_mpi_get_bit = _mbedtls_mpi_get_bit;
+	__ram_stubs_ssl.mbedtls_mpi_set_bit = _mbedtls_mpi_set_bit;
+	__ram_stubs_ssl.mbedtls_mpi_lsb = _mbedtls_mpi_lsb;
+	__ram_stubs_ssl.mbedtls_mpi_bitlen = _mbedtls_mpi_bitlen;
+	__ram_stubs_ssl.mbedtls_mpi_size = _mbedtls_mpi_size;
+	__ram_stubs_ssl.mbedtls_mpi_read_binary = _mbedtls_mpi_read_binary;
+	__ram_stubs_ssl.mbedtls_mpi_write_binary = _mbedtls_mpi_write_binary;
+	__ram_stubs_ssl.mbedtls_mpi_shift_l = _mbedtls_mpi_shift_l;
+	__ram_stubs_ssl.mbedtls_mpi_shift_r = _mbedtls_mpi_shift_r;
+	__ram_stubs_ssl.mbedtls_mpi_cmp_abs = _mbedtls_mpi_cmp_abs;
+	__ram_stubs_ssl.mbedtls_mpi_cmp_mpi = _mbedtls_mpi_cmp_mpi;
+	__ram_stubs_ssl.mbedtls_mpi_cmp_int = _mbedtls_mpi_cmp_int;
+	__ram_stubs_ssl.mbedtls_mpi_add_abs = _mbedtls_mpi_add_abs;
+	__ram_stubs_ssl.mbedtls_mpi_sub_abs = _mbedtls_mpi_sub_abs;
+	__ram_stubs_ssl.mbedtls_mpi_add_mpi = _mbedtls_mpi_add_mpi;
+	__ram_stubs_ssl.mbedtls_mpi_sub_mpi = _mbedtls_mpi_sub_mpi;
+	__ram_stubs_ssl.mbedtls_mpi_add_int = _mbedtls_mpi_add_int;
+	__ram_stubs_ssl.mbedtls_mpi_sub_int = _mbedtls_mpi_sub_int;
+	__ram_stubs_ssl.mbedtls_mpi_mul_mpi = _mbedtls_mpi_mul_mpi;
+	__ram_stubs_ssl.mbedtls_mpi_read_string = _mbedtls_mpi_read_string;
+	__ram_stubs_ssl.mbedtls_mpi_mul_int = _mbedtls_mpi_mul_int;
+	__ram_stubs_ssl.mbedtls_mpi_div_mpi = _mbedtls_mpi_div_mpi;
+	__ram_stubs_ssl.mbedtls_mpi_div_int = _mbedtls_mpi_div_int;
+	__ram_stubs_ssl.mbedtls_mpi_mod_mpi = _mbedtls_mpi_mod_mpi;
+	__ram_stubs_ssl.mbedtls_mpi_mod_int = _mbedtls_mpi_mod_int;
+	__ram_stubs_ssl.mbedtls_mpi_write_string = _mbedtls_mpi_write_string;
+	__ram_stubs_ssl.mbedtls_mpi_exp_mod = _mbedtls_mpi_exp_mod;
+	__ram_stubs_ssl.mbedtls_mpi_gcd = _mbedtls_mpi_gcd;
+	__ram_stubs_ssl.mbedtls_mpi_fill_random = _mbedtls_mpi_fill_random;
+	__ram_stubs_ssl.mbedtls_mpi_inv_mod = _mbedtls_mpi_inv_mod;
+	__ram_stubs_ssl.mbedtls_mpi_is_prime = _mbedtls_mpi_is_prime;
+	__ram_stubs_ssl.mbedtls_mpi_gen_prime = _mbedtls_mpi_gen_prime;
+}
+
+void __bignum_stubs_init_rom(void)
+{
+	__ram_stubs_ssl.mbedtls_mpi_init = __rom_stubs_ssl.mbedtls_mpi_init;
+	__ram_stubs_ssl.mbedtls_mpi_free = __rom_stubs_ssl.mbedtls_mpi_free;
+	__ram_stubs_ssl.mbedtls_mpi_grow = __rom_stubs_ssl.mbedtls_mpi_grow;
+	__ram_stubs_ssl.mbedtls_mpi_shrink = __rom_stubs_ssl.mbedtls_mpi_shrink;
+	__ram_stubs_ssl.mbedtls_mpi_copy = __rom_stubs_ssl.mbedtls_mpi_copy;
+	__ram_stubs_ssl.mbedtls_mpi_swap = __rom_stubs_ssl.mbedtls_mpi_swap;
+	__ram_stubs_ssl.mbedtls_mpi_safe_cond_assign = __rom_stubs_ssl.mbedtls_mpi_safe_cond_assign;
+	__ram_stubs_ssl.mbedtls_mpi_safe_cond_swap = __rom_stubs_ssl.mbedtls_mpi_safe_cond_swap;
+	__ram_stubs_ssl.mbedtls_mpi_lset = __rom_stubs_ssl.mbedtls_mpi_lset;
+	__ram_stubs_ssl.mbedtls_mpi_get_bit = __rom_stubs_ssl.mbedtls_mpi_get_bit;
+	__ram_stubs_ssl.mbedtls_mpi_set_bit = __rom_stubs_ssl.mbedtls_mpi_set_bit;
+	__ram_stubs_ssl.mbedtls_mpi_lsb = __rom_stubs_ssl.mbedtls_mpi_lsb;
+	__ram_stubs_ssl.mbedtls_mpi_bitlen = __rom_stubs_ssl.mbedtls_mpi_bitlen;
+	__ram_stubs_ssl.mbedtls_mpi_size = __rom_stubs_ssl.mbedtls_mpi_size;
+	__ram_stubs_ssl.mbedtls_mpi_read_binary = __rom_stubs_ssl.mbedtls_mpi_read_binary;
+	__ram_stubs_ssl.mbedtls_mpi_write_binary = __rom_stubs_ssl.mbedtls_mpi_write_binary;
+	__ram_stubs_ssl.mbedtls_mpi_shift_l = __rom_stubs_ssl.mbedtls_mpi_shift_l;
+	__ram_stubs_ssl.mbedtls_mpi_shift_r = __rom_stubs_ssl.mbedtls_mpi_shift_r;
+	__ram_stubs_ssl.mbedtls_mpi_cmp_abs = __rom_stubs_ssl.mbedtls_mpi_cmp_abs;
+	__ram_stubs_ssl.mbedtls_mpi_cmp_mpi = __rom_stubs_ssl.mbedtls_mpi_cmp_mpi;
+	__ram_stubs_ssl.mbedtls_mpi_cmp_int = __rom_stubs_ssl.mbedtls_mpi_cmp_int;
+	__ram_stubs_ssl.mbedtls_mpi_add_abs = __rom_stubs_ssl.mbedtls_mpi_add_abs;
+	__ram_stubs_ssl.mbedtls_mpi_sub_abs = __rom_stubs_ssl.mbedtls_mpi_sub_abs;
+	__ram_stubs_ssl.mbedtls_mpi_add_mpi = __rom_stubs_ssl.mbedtls_mpi_add_mpi;
+	__ram_stubs_ssl.mbedtls_mpi_sub_mpi = __rom_stubs_ssl.mbedtls_mpi_sub_mpi;
+	__ram_stubs_ssl.mbedtls_mpi_add_int = __rom_stubs_ssl.mbedtls_mpi_add_int;
+	__ram_stubs_ssl.mbedtls_mpi_sub_int = __rom_stubs_ssl.mbedtls_mpi_sub_int;
+	__ram_stubs_ssl.mbedtls_mpi_mul_mpi = __rom_stubs_ssl.mbedtls_mpi_mul_mpi;
+	__ram_stubs_ssl.mbedtls_mpi_read_string = __rom_stubs_ssl.mbedtls_mpi_read_string;
+	__ram_stubs_ssl.mbedtls_mpi_mul_int = __rom_stubs_ssl.mbedtls_mpi_mul_int;
+	__ram_stubs_ssl.mbedtls_mpi_div_mpi = __rom_stubs_ssl.mbedtls_mpi_div_mpi;
+	__ram_stubs_ssl.mbedtls_mpi_div_int = __rom_stubs_ssl.mbedtls_mpi_div_int;
+	__ram_stubs_ssl.mbedtls_mpi_mod_mpi = __rom_stubs_ssl.mbedtls_mpi_mod_mpi;
+	__ram_stubs_ssl.mbedtls_mpi_mod_int = __rom_stubs_ssl.mbedtls_mpi_mod_int;
+	__ram_stubs_ssl.mbedtls_mpi_write_string = __rom_stubs_ssl.mbedtls_mpi_write_string;
+	__ram_stubs_ssl.mbedtls_mpi_exp_mod = __rom_stubs_ssl.mbedtls_mpi_exp_mod;
+	__ram_stubs_ssl.mbedtls_mpi_gcd = __rom_stubs_ssl.mbedtls_mpi_gcd;
+	__ram_stubs_ssl.mbedtls_mpi_fill_random = __rom_stubs_ssl.mbedtls_mpi_fill_random;
+	__ram_stubs_ssl.mbedtls_mpi_inv_mod = __rom_stubs_ssl.mbedtls_mpi_inv_mod;
+	__ram_stubs_ssl.mbedtls_mpi_is_prime = __rom_stubs_ssl.mbedtls_mpi_is_prime;
+	__ram_stubs_ssl.mbedtls_mpi_gen_prime = __rom_stubs_ssl.mbedtls_mpi_gen_prime;
+}
+
+void mbedtls_mpi_init(mbedtls_mpi *X)
+{
+	__ram_stubs_ssl.mbedtls_mpi_init(X);
+}
+
+void mbedtls_mpi_free(mbedtls_mpi *X)
+{
+	__ram_stubs_ssl.mbedtls_mpi_free(X);
+}
+
+int mbedtls_mpi_grow(mbedtls_mpi *X, size_t nblimbs)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_grow(X, nblimbs);
+}
+
+int mbedtls_mpi_shrink(mbedtls_mpi *X, size_t nblimbs)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_shrink(X, nblimbs);
+}
+
+int mbedtls_mpi_copy(mbedtls_mpi *X, const mbedtls_mpi *Y)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_copy(X, Y);
+}
+
+void mbedtls_mpi_swap(mbedtls_mpi *X, mbedtls_mpi *Y)
+{
+	__ram_stubs_ssl.mbedtls_mpi_swap(X, Y);
+}
+
+int mbedtls_mpi_safe_cond_assign(mbedtls_mpi *X, const mbedtls_mpi *Y, unsigned char assign)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_safe_cond_assign(X, Y, assign);
+}
+
+int mbedtls_mpi_safe_cond_swap(mbedtls_mpi *X, mbedtls_mpi *Y, unsigned char swap)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_safe_cond_swap(X, Y, swap);
+}
+
+int mbedtls_mpi_lset(mbedtls_mpi *X, mbedtls_mpi_sint z)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_lset(X, z);
+}
+
+int mbedtls_mpi_get_bit(const mbedtls_mpi *X, size_t pos)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_get_bit(X, pos);
+}
+
+int mbedtls_mpi_set_bit(mbedtls_mpi *X, size_t pos, unsigned char val)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_set_bit(X, pos, val);
+}
+
+size_t mbedtls_mpi_lsb(const mbedtls_mpi *X)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_lsb(X);
+}
+
+size_t mbedtls_mpi_bitlen(const mbedtls_mpi *X)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_bitlen(X);
+}
+
+size_t mbedtls_mpi_size(const mbedtls_mpi *X)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_size(X);
+}
+
+int mbedtls_mpi_read_binary(mbedtls_mpi *X, const unsigned char *buf, size_t buflen)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_read_binary(X, buf, buflen);
+}
+
+int mbedtls_mpi_write_binary(const mbedtls_mpi *X, unsigned char *buf, size_t buflen)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_write_binary(X, buf, buflen);
+}
+
+int mbedtls_mpi_shift_l(mbedtls_mpi *X, size_t count)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_shift_l(X, count);
+}
+
+int mbedtls_mpi_shift_r(mbedtls_mpi *X, size_t count)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_shift_r(X, count);
+}
+
+int mbedtls_mpi_cmp_abs(const mbedtls_mpi *X, const mbedtls_mpi *Y)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_cmp_abs(X, Y);
+}
+
+int mbedtls_mpi_cmp_mpi(const mbedtls_mpi *X, const mbedtls_mpi *Y)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_cmp_mpi(X, Y);
+}
+
+int mbedtls_mpi_cmp_int(const mbedtls_mpi *X, mbedtls_mpi_sint z)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_cmp_int(X, z);
+}
+
+int mbedtls_mpi_add_abs(mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *B)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_add_abs(X, A, B);
+}
+
+int mbedtls_mpi_sub_abs(mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *B)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_sub_abs(X, A, B);
+}
+
+int mbedtls_mpi_add_mpi(mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *B)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_add_mpi(X, A, B);
+}
+
+int mbedtls_mpi_sub_mpi(mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *B)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_sub_mpi(X, A, B);
+}
+
+int mbedtls_mpi_add_int(mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_sint b)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_add_int(X, A, b);
+}
+
+int mbedtls_mpi_sub_int(mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_sint b)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_sub_int(X, A, b);
+}
+
+int mbedtls_mpi_mul_mpi(mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *B)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_mul_mpi(X, A, B);
+}
+
+int mbedtls_mpi_read_string(mbedtls_mpi *X, int radix, const char *s)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_read_string(X, radix, s);
+}
+
+int mbedtls_mpi_mul_int(mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_uint b)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_mul_int(X, A, b);
+}
+
+int mbedtls_mpi_div_mpi(mbedtls_mpi *Q, mbedtls_mpi *R, const mbedtls_mpi *A, const mbedtls_mpi *B)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_div_mpi(Q, R, A, B);
+}
+
+int mbedtls_mpi_div_int(mbedtls_mpi *Q, mbedtls_mpi *R, const mbedtls_mpi *A, mbedtls_mpi_sint b)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_div_int(Q, R, A, b);
+}
+
+int mbedtls_mpi_mod_mpi(mbedtls_mpi *R, const mbedtls_mpi *A, const mbedtls_mpi *B)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_mod_mpi(R, A, B);
+}
+
+int mbedtls_mpi_mod_int(mbedtls_mpi_uint *r, const mbedtls_mpi *A, mbedtls_mpi_sint b)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_mod_int(r, A, b);
+}
+
+int mbedtls_mpi_write_string(const mbedtls_mpi *X, int radix, char *buf, size_t buflen, size_t *olen)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_write_string(X, radix, buf, buflen, olen);
+}
+
+int mbedtls_mpi_exp_mod(mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *E, const mbedtls_mpi *N, mbedtls_mpi *_RR)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_exp_mod(X, A, E, N, _RR);
+}
+
+int mbedtls_mpi_gcd(mbedtls_mpi *G, const mbedtls_mpi *A, const mbedtls_mpi *B)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_gcd(G, A, B);
+}
+
+int mbedtls_mpi_fill_random(mbedtls_mpi *X, size_t size, int (*f_rng)(void *, unsigned char *, size_t), void *p_rng)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_fill_random(X, size, f_rng, p_rng);
+}
+
+int mbedtls_mpi_inv_mod(mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *N)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_inv_mod(X, A, N);
+}
+
+int mbedtls_mpi_is_prime(const mbedtls_mpi *X, int (*f_rng)(void *, unsigned char *, size_t), void *p_rng)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_is_prime(X, f_rng, p_rng);
+}
+
+int mbedtls_mpi_gen_prime(mbedtls_mpi *X, size_t nbits, int dh_flag, int (*f_rng)(void *, unsigned char *, size_t), void *p_rng)
+{
+	return __ram_stubs_ssl.mbedtls_mpi_gen_prime(X, nbits, dh_flag, f_rng, p_rng);
+}
+
+int mbedtls_mpi_is_prime_ext( const mbedtls_mpi *X, int rounds,
+                              int (*f_rng)(void *, unsigned char *, size_t),
+                              void *p_rng )
+{
+	return __ram_stubs_ssl.mbedtls_mpi_is_prime(X, f_rng, p_rng);
+}
+#else
+int mbedtls_mpi_is_prime_ext( const mbedtls_mpi *X, int rounds,
+                              int (*f_rng)(void *, unsigned char *, size_t),
+                              void *p_rng )
+{
+	return __rom_stubs_ssl.mbedtls_mpi_is_prime(X, f_rng, p_rng);
+}
+#endif
+#endif
 
 /* ssl_ram_map */
 void init_rom_ssl_ram_map(
@@ -64,15 +395,50 @@ int platform_set_malloc_free(
 {
 	/* Variables */
 	rom_ssl_ram_map.use_hw_crypto_func = 1;
-
+	
+#if defined(CONFIG_PLATFORM_8710C) && (defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER==0x02100300)
+	//AES HW CRYPTO
+	rtl_cryptoEngine_init();
+	rom_ssl_ram_map.hw_crypto_aes_ecb_init = rtl_crypto_aes_ecb_init;
+	rom_ssl_ram_map.hw_crypto_aes_ecb_decrypt = rtl_crypto_aes_ecb_decrypt;
+	rom_ssl_ram_map.hw_crypto_aes_ecb_encrypt = rtl_crypto_aes_ecb_encrypt;
+	rom_ssl_ram_map.hw_crypto_aes_cbc_init = rtl_crypto_aes_cbc_init;
+	rom_ssl_ram_map.hw_crypto_aes_cbc_decrypt = rtl_crypto_aes_cbc_decrypt;
+	rom_ssl_ram_map.hw_crypto_aes_cbc_encrypt = rtl_crypto_aes_cbc_encrypt;
+#endif
+#if (defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER == 0x02040000) || ((defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER==0x02100300) && (defined(MBEDTLS_USE_ROM_API) || defined(MBEDTLS_BIGNUM_USE_S_ROM_API)))
+#if defined(MBEDTLS_BIGNUM_USE_S_ROM_API)
+	if((*((volatile u32*)(0x400001F0)) & (BIT4|BIT5|BIT6|BIT7))>>4 >= 0x3)
+	{
+		init_rom_ssl_ram_map(ssl_calloc, ssl_free, NULL, rom_ssl_ram_map.use_hw_crypto_func);
+		init_rom_ssl_hw_crypto_aes_ecb(rtl_crypto_aes_ecb_init, rtl_crypto_aes_ecb_decrypt, rtl_crypto_aes_ecb_encrypt);
+		init_rom_ssl_hw_crypto_aes_cbc(rtl_crypto_aes_cbc_init, rtl_crypto_aes_cbc_decrypt, rtl_crypto_aes_cbc_encrypt);
+		__bignum_stubs_init_rom();
+	}
+	else
+		__bignum_stubs_init_ram();
+#else
 	init_rom_ssl_ram_map(ssl_calloc, ssl_free, NULL, rom_ssl_ram_map.use_hw_crypto_func);
 	init_rom_ssl_hw_crypto_aes_ecb(rtl_crypto_aes_ecb_init, rtl_crypto_aes_ecb_decrypt, rtl_crypto_aes_ecb_encrypt);
 	init_rom_ssl_hw_crypto_aes_cbc(rtl_crypto_aes_cbc_init, rtl_crypto_aes_cbc_decrypt, rtl_crypto_aes_cbc_encrypt);
+#endif
+#endif
 #if defined(CONFIG_PLATFORM_8710C)
 	/// DES funtions are on longer supported on AmebaZ2's HW crypto
 	/// Must set them to NULL, so it will use SW instead of HW even use_hw_crypto_func is enabled
+#if (defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER==0x02100300)
+	//DES HW CRYPTO
+	rom_ssl_ram_map.hw_crypto_des_cbc_init = NULL;
+	rom_ssl_ram_map.hw_crypto_des_cbc_decrypt = NULL;
+	rom_ssl_ram_map.hw_crypto_des_cbc_encrypt = NULL;
+	rom_ssl_ram_map.hw_crypto_3des_cbc_init = NULL;
+	rom_ssl_ram_map.hw_crypto_3des_cbc_decrypt = NULL;
+	rom_ssl_ram_map.hw_crypto_3des_cbc_encrypt = NULL;
+#endif
+#if (defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER == 0x02040000) || ((defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER==0x02100300) && defined(MBEDTLS_USE_ROM_API))
 	init_rom_ssl_hw_crypto_des_cbc(NULL, NULL, NULL);
 	init_rom_ssl_hw_crypto_3des_cbc(NULL, NULL, NULL);
+#endif
 #else
 	init_rom_ssl_hw_crypto_des_cbc(rtl_crypto_des_cbc_init, rtl_crypto_des_cbc_decrypt, rtl_crypto_des_cbc_encrypt);
 	init_rom_ssl_hw_crypto_3des_cbc(rtl_crypto_3des_cbc_init, rtl_crypto_3des_cbc_decrypt, rtl_crypto_3des_cbc_encrypt);
@@ -80,6 +446,7 @@ int platform_set_malloc_free(
 	return 0;
 }
 
+#if (defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER == 0x02040000) || defined(MBEDTLS_USE_ROM_API)
 /* bignum */
 void mbedtls_mpi_init(mbedtls_mpi *X)
 {
@@ -1671,3 +2038,135 @@ int mbedtls_pk_write_key_pem(mbedtls_pk_context *key, unsigned char *buf, size_t
 {
 	return __rom_stubs_ssl.mbedtls_pk_write_key_pem(key, buf, size);
 }
+
+#if defined(MBEDTLS_USE_ROM_API) && (defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER==0x02100300)
+int mbedtls_md5_starts_ret( mbedtls_md5_context *ctx )
+{
+	__rom_stubs_ssl.mbedtls_md5_starts(ctx);
+	return 0;
+}
+int mbedtls_md5_update_ret( mbedtls_md5_context *ctx, const unsigned char *input, size_t ilen )
+{
+	__rom_stubs_ssl.mbedtls_md5_update(ctx, input, ilen);
+	return 0;
+}
+int mbedtls_md5_finish_ret(mbedtls_md5_context *ctx, unsigned char output[16])
+{
+	__rom_stubs_ssl.mbedtls_md5_finish(ctx, output);
+	return 0;
+}
+int mbedtls_internal_md5_process(mbedtls_md5_context * ctx, const unsigned char data [ 64 ])
+{
+	__rom_stubs_ssl.mbedtls_md5_process(ctx, data);
+	return 0;
+}
+int mbedtls_md5_ret(const unsigned char * input, size_t ilen, unsigned char output [ 16 ])
+{
+	__rom_stubs_ssl.mbedtls_md5(input, ilen, output);
+	return 0;
+}
+int mbedtls_sha1_starts_ret(mbedtls_sha1_context *ctx)
+{
+	__rom_stubs_ssl.mbedtls_sha1_starts(ctx);
+	return 0;
+}
+int mbedtls_sha1_update_ret(mbedtls_sha1_context *ctx, const unsigned char *input, size_t ilen)
+{
+	__rom_stubs_ssl.mbedtls_sha1_update(ctx, input, ilen);
+	return 0;
+}
+int mbedtls_sha1_finish_ret(mbedtls_sha1_context *ctx, unsigned char output[20])
+{
+	__rom_stubs_ssl.mbedtls_sha1_finish(ctx, output);
+	return 0;
+}
+int mbedtls_internal_sha1_process(mbedtls_sha1_context * ctx, const unsigned char data [ 64 ])
+{
+	__rom_stubs_ssl.mbedtls_sha1_process(ctx, data);
+	return 0;
+}
+int mbedtls_sha1_ret(const unsigned char * input, size_t ilen, unsigned char output [ 20 ])
+{
+	__rom_stubs_ssl.mbedtls_sha1(input, ilen, output);
+	return 0;
+}
+int mbedtls_sha512_starts_ret(mbedtls_sha512_context *ctx, int is384)
+{
+	__rom_stubs_ssl.mbedtls_sha512_starts(ctx, is384);
+	return 0;
+}
+int mbedtls_sha512_update_ret(mbedtls_sha512_context *ctx, const unsigned char *input, size_t ilen)
+{
+	__rom_stubs_ssl.mbedtls_sha512_update(ctx, input, ilen);
+	return 0;
+}
+int mbedtls_sha512_finish_ret(mbedtls_sha512_context *ctx, unsigned char output[64])
+{
+	__rom_stubs_ssl.mbedtls_sha512_finish(ctx, output);
+	return 0;
+}
+int mbedtls_internal_sha512_process(mbedtls_sha512_context * ctx, const unsigned char data [ 128 ])
+{
+	__rom_stubs_ssl.mbedtls_sha512_process(ctx, data);
+	return 0;
+}
+int mbedtls_sha512_ret(const unsigned char * input, size_t ilen, unsigned char output [ 64 ], int is384)
+{
+	__rom_stubs_ssl.mbedtls_sha512(input, ilen, output, is384);
+	return 0;
+}
+int mbedtls_pk_sign_restartable( mbedtls_pk_context *ctx,
+             mbedtls_md_type_t md_alg,
+             const unsigned char *hash, size_t hash_len,
+             unsigned char *sig, size_t *sig_len,
+             int (*f_rng)(void *, unsigned char *, size_t), void *p_rng,
+             mbedtls_pk_restart_ctx *rs_ctx )
+{
+	return __rom_stubs_ssl.mbedtls_pk_sign(ctx, md_alg, hash, hash_len, sig, sig_len, f_rng, p_rng);
+}
+int mbedtls_pk_verify_restartable( mbedtls_pk_context *ctx,
+               mbedtls_md_type_t md_alg,
+               const unsigned char *hash, size_t hash_len,
+               const unsigned char *sig, size_t sig_len,
+               mbedtls_pk_restart_ctx *rs_ctx )
+{
+	return __rom_stubs_ssl.mbedtls_pk_verify(ctx, md_alg, hash, hash_len, sig, sig_len);
+}
+#endif /* MBEDTLS_USE_ROM_API */
+#if defined(ENABLE_AMAZON_COMMON) || (defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER==0x02100300)
+#if !defined(SUPPORT_HW_SSL_HMAC_SHA256)
+/* sha256 */
+int mbedtls_sha256_starts_ret(mbedtls_sha256_context *ctx, int is224)
+{
+	__rom_stubs_ssl.mbedtls_sha256_starts(ctx, is224);
+	return 0;
+}
+int mbedtls_sha256_update_ret(mbedtls_sha256_context *ctx, const unsigned char *input, size_t ilen)
+{
+	__rom_stubs_ssl.mbedtls_sha256_update(ctx, input, ilen);
+	return 0;
+}
+int mbedtls_sha256_finish_ret(mbedtls_sha256_context *ctx, unsigned char output[32])
+{
+	__rom_stubs_ssl.mbedtls_sha256_finish(ctx, output);
+	return 0;
+}
+int mbedtls_internal_sha256_process(mbedtls_sha256_context * ctx, const unsigned char data [ 64 ])
+{
+	__rom_stubs_ssl.mbedtls_sha256_process(ctx, data);
+	return 0;
+}
+int mbedtls_sha256_ret(const unsigned char *input, size_t ilen, unsigned char output[32], int is224)
+{
+	__rom_stubs_ssl.mbedtls_sha256(input, ilen, output, is224);
+	return 0;
+}
+#endif /* !SUPPORT_HW_SSL_HMAC_SHA256 */
+#endif
+#if defined(ENABLE_AMAZON_COMMON) && (defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER == 0x02040000)
+void mbedtls_platform_zeroize( void *buf, size_t len )
+{
+	memset( buf, 0, len );
+}
+#endif
+#endif

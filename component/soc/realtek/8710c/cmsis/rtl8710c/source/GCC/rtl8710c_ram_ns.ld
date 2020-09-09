@@ -94,11 +94,24 @@ SECTIONS
 
 	} > RAM_FUN_TABLE
 
+	.psram.data : AT (__psram_etext)
+	{
+		. = ALIGN(16);
+	    __psram_etext = .; 
+		__psram_data_start__ = .;
+
+		*(.psram.data*)
+
+		__psram_data_end__ = .;
+
+	} > PSRAM
+
 	.data :
 	{
 		. = ALIGN(16);
 		__data_start__ = .;
 		*(vtable)
+		*(.sram.data*)		
 		*(.data*)
 
 		/* preinit data */
@@ -125,18 +138,6 @@ SECTIONS
 
 	} > DTCM_RAM
 
-	.psram.data :
-	{
-		. = ALIGN(16);
-	    __psram_etext = .; 
-		__psram_data_start__ = .;
-
-		*(.psram.data*)
-
-		__psram_data_end__ = .;
-
-	} > PSRAM
-
 	/* Set the XIP memory range for the SAU configuration */
 	__XIP_Start = ORIGIN(XIP_FLASH_C);
 	__XIP_Limit = __XIP_Start + LENGTH(XIP_FLASH_P);
@@ -156,54 +157,6 @@ SECTIONS
 		/* If the XIP is the 1st sub-image, then we should reserve 0xE0 bytes meore for OTA Sign. and 6 Public Key */
 		/*. += 0xE0; */
 	} > XIP_FLASH_P
-
-	.ram.code_text :
-	{
-		. = ALIGN(16);
-		__etext2 = .;
-		__ram_code_text_start__ = .;
-
-		*ram_start.o(.text*)		
-
-		/* SPI flash controller related code should be located in SRAM, never locates them in XIP */
-		*hal_spic*.o(.text*)
-		*hal_flash*.o(.text*)
-
-		/* LPDDR controller related code should be located in SRAM, never locates them in LPDDR */
-		*hal_lpcram*.o(.text*)
-
-		*ram_start.o(.text*)
-		*hal_power_mode.o(.text*)
-		*hal_sys_ctrl.o(.text*)
-		*rtl8710c_pinmux_patch.o(.text*)
-		*hal_pinmux.o(.text*)
-		*hal_syson.o(.text*)
-		. = ALIGN(4);
-		__ram_code_text_end__ = .;
-	} > DTCM_RAM
-
-	.ram.code_rodata :
-	{
-		. = ALIGN(16);
-		__ram_code_rodata_start__ = .;
-
-		*ram_start.o(.rodata*)		
-
-		/* SPI flash controller related code should be located in SRAM, never locates them in XIP */
-		*hal_spic*.o(.rodata*)
-		*hal_flash*.o(.rodata*)
-
-		/* LPDDR controller related code should be located in SRAM, never locates them in LPDDR */
-		*hal_lpcram*.o(.rodata*)
-		*ram_start.o(.rodata*)
-		*hal_power_mode.o(.rodata*)
-		*hal_sys_ctrl.o(.rodata*)
-		*rtl8710c_pinmux_patch.o(.rodata*)
-		*hal_pinmux.o(.rodata*)
-		*hal_syson.o(.rodata*)
-		. = ALIGN(4);
-		__ram_code_rodata_end__ = .;
-	} > DTCM_RAM
 
 	.psram.code_text :
 	{
@@ -238,24 +191,83 @@ SECTIONS
 		. = ALIGN(32);
 		__eram_bss_end__ = .;
 	} > PSRAM
+
+	.ram.code_text :
+	{
+		. = ALIGN(16);
+		__etext2 = .;
+		__ram_code_text_start__ = .;
+
+		/* SPI flash controller related code should be located in SRAM, never locates them in XIP */
+		*hal_spic*.o(.text*)
+		*hal_flash*.o(.text*)
+
+		/* LPDDR controller related code should be located in SRAM, never locates them in LPDDR */
+		*hal_lpcram*.o(.text*)
+
+		*ram_start*.o(.text*)
+		*hal_power_mode*.o(.text*)
+		*hal_sys_ctrl*.o(.text*)
+		*rtl8710c_pinmux_patch*.o(.text*)
+		*hal_syson*.o(.text*)
+		*hal_pinmux*.o(.text*)
+		*sys_irq*.o(.text*)
+
+		*(.lpddr.text*)
+		*(.sram.text*)
+		. = ALIGN(4);
+		__ram_code_text_end__ = .;
+	} > DTCM_RAM
+
+	.ram.code_rodata :
+	{
+		. = ALIGN(16);
+		__ram_code_rodata_start__ = .;
+
+		/* SPI flash controller related code should be located in SRAM, never locates them in XIP */
+		*hal_spic*.o(.rodata*)
+		*hal_flash*.o(.rodata*)
+
+		/* LPDDR controller related code should be located in SRAM, never locates them in LPDDR */
+		*hal_lpcram*.o(.rodata*)
+
+		*ram_start*.o(.rodata*)
+		*hal_power_mode*.o(.rodata*)
+		*hal_sys_ctrl*.o(.rodata*)
+		*rtl8710c_pinmux_patch*.o(.rodata*)
+		*hal_syson*.o(.rodata*)
+		*hal_pinmux*.o(.rodata*)
+		*sys_irq*.o(.rodata*)
+
+		. = ALIGN(4);
+		__ram_code_rodata_end__ = .;
+	} > DTCM_RAM
 			
 	.xip.code_c :
 	{
+		/* code and RO data in this section will be encrypted */
 		. = ALIGN(16);
 		__xip_code_text_start__ = .;
 
 		*(.xip.text*)
+
 		*(.text*)
 
+		/* put RO data sections need to be encrypted here */
+		*(.xip.sec_rodata*)
+		
 		__xip_code_text_end__ = .;
 	} > XIP_FLASH_C
 
 	.xip.code_p :
 	{
 		. = ALIGN(4);
+		/* code and RO data in this section will NOT be encrypted */
+		/* put DMA RO data here */
 		__xip_code_rodata_start__ = .;
 
 		*(.xip.rodata*)
+
 		*(.rodata*)
 		*(.rodata.str1*)
 		
@@ -267,7 +279,6 @@ SECTIONS
 	{
 		/* data in this section will not be initialed by ram_start() */
 		/* some of them will be initialed by boot loader */
-	
 		. = ALIGN(32);
 		*(.sys_restore.bss*)
 		*(.ram.bss.noinit*)
@@ -277,6 +288,7 @@ SECTIONS
 	{
 		. = ALIGN(16);
 		__bss_start__ = .;
+		*(.sram.bss*)
 		*(.bss*)
 		*(COMMON)
 		. = ALIGN(4);

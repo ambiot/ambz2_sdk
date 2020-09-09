@@ -143,15 +143,12 @@ hal_status_t hal_misc_jtag_pin_ctrl (BOOL en)
  */
 void hal_misc_cpu_rst (void)
 {
-    __disable_irq();
     rtl8710c_reset_reason_set(HAL_RESET_REASON_SOFTWARE);
-    
 #if defined(CONFIG_FLASH_XIP_EN) && (CONFIG_FLASH_XIP_EN == 1)
     if (pglob_spic_adaptor != NULL) {
         hal_flash_return_spi (pglob_spic_adaptor);
     }
 #endif
-
     hal_misc_stubs.hal_misc_cpu_rst ();
 }
 

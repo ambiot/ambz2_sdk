@@ -254,6 +254,7 @@ void cmd_ssl_client(int argc, char **argv)
 #include "mbedtls/ssl.h"
 #include "mbedtls/error.h"
 #include "mbedtls/debug.h"
+#include "mbedtls/version.h"
 
 #if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1) && defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) && (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 1)
 #include "device_lock.h"
@@ -270,6 +271,7 @@ void cmd_ssl_client(int argc, char **argv)
 
 static int is_task = 0;
 static char server_host[32];
+static char server_port[6];
 static size_t min_heap_size = 0;
 
 static void my_debug(void *ctx, int level, const char *file, int line, const char *str)
@@ -333,7 +335,9 @@ static void ssl_client(void *param)
 	extern void NS_ENTRY secure_set_ns_device_lock(void (*device_mutex_lock_func)(uint32_t), void (*device_mutex_unlock_func)(uint32_t));
 	secure_set_ns_device_lock(device_mutex_lock, device_mutex_unlock);
 #endif
-
+#if MBEDTLS_VERSION_NUMBER==0x02100300 //if is mbedtls 2.16.4
+	mbedtls_platform_setup(NULL);
+#endif
 	mbedtls_platform_set_calloc_free(my_calloc, my_free);
 #if defined(MBEDTLS_DEBUG_C)
 	mbedtls_debug_set_threshold(DEBUG_LEVEL);
@@ -342,11 +346,11 @@ static void ssl_client(void *param)
 	/*
 	 * 1. Start the connection
 	 */
-	printf("\n\r  . Connecting to tcp/%s/%s...", server_host, SERVER_PORT);
+	printf("\n\r  . Connecting to tcp/%s/%s...", server_host, server_port);
 
 	mbedtls_net_init(&server_fd);
 
-	if((ret = mbedtls_net_connect(&server_fd, server_host, SERVER_PORT, MBEDTLS_NET_PROTO_TCP)) != 0) {
+	if((ret = mbedtls_net_connect(&server_fd, server_host, server_port, MBEDTLS_NET_PROTO_TCP)) != 0) {
 		printf(" failed\n\r  ! mbedtls_net_connect returned %d\n", ret);
 		goto exit1;
 	}
@@ -518,6 +522,7 @@ void do_ssl_connect(void)
 
 	is_task = 0;
 	strcpy(server_host, SERVER_HOST);
+	strcpy(server_port, SERVER_PORT);
 	ssl_client(&ret);
 
 	if(ret != 0)
@@ -528,8 +533,12 @@ void do_ssl_connect(void)
 
 void cmd_ssl_client(int argc, char **argv)
 {
-	if(argc == 2) {
+	if(argc == 2 || argc == 3) {
 		strcpy(server_host, argv[1]);
+		if(argc == 3)
+			strcpy(server_port, argv[2]);
+		else
+			strcpy(server_port, SERVER_PORT);
 	}
 	else {
 		printf("\n\rUsage: %s SSL_SERVER_HOST", argv[0]);

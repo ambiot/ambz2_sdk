@@ -2,7 +2,11 @@
 #include <osdep_service.h>
 #include <skbuff.h>
 
+#ifdef CONFIG_PLATFORM_8710C
+#define MAX_SKB_BUF_SIZE     1658	// should >= the size in wlan driver
+#else
 #define MAX_SKB_BUF_SIZE     1650	// should >= the size in wlan driver
+#endif
 #define MAX_SKB_BUF_NUM      8
 #define MAX_LOCAL_SKB_NUM    (MAX_SKB_BUF_NUM + 2)
 
@@ -31,7 +35,13 @@ struct skb_buf skb_pool[MAX_LOCAL_SKB_NUM];
 // SRAM_BD_DATA_SECTION default in SRAM. Can modify image2.icf to link to the end of SDRAM
 SRAM_BD_DATA_SECTION
 struct skb_data skb_data_pool[MAX_SKB_BUF_NUM];
-
+void skb_data_size_check(int size)
+{
+	if(size != MAX_SKB_BUF_SIZE){
+		printf("\n\rAssert(%d == %d) failed on line %d in file %s", size, MAX_SKB_BUF_SIZE, __LINE__, __FILE__);
+		HALT();
+	}
+}
 #else
 // Change to use heap (malloc) to save SRAM memory
 SRAM_BD_DATA_SECTION
@@ -43,7 +53,8 @@ extern int max_skbdata_used_num;
 void init_skb_data_pool(void)
 {
 	int i;
-	
+
+	skb_data_size_check(MAX_SKB_BUF_SIZE);
 	//printf("\ninit_skb_data_pool\n");
 	skb_data_pool = (struct skb_data *)rtw_zmalloc(max_skb_buf_num * sizeof(struct skb_data));
 	if(!skb_data_pool){
@@ -65,6 +76,6 @@ void init_skb_data_pool(void)
 void deinit_skb_data_pool(void)
 {
 	//printf("\ndeinit_skb_data_pool\n");
-	rtw_mfree(skb_data_pool, MAX_SKB_BUF_NUM * sizeof(struct skb_data));
+	rtw_mfree((uint8_t*)skb_data_pool, MAX_SKB_BUF_NUM * sizeof(struct skb_data));
 }
 #endif

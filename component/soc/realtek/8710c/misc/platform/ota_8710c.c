@@ -17,6 +17,11 @@ sys_thread_t TaskOTA = NULL;
 #define TASK_PRIORITY	tskIDLE_PRIORITY + 1
 static flash_t flash_ota;
 
+// Checksum check before appending signature
+// Please make sure target OTA firmware did contains 4 bytes checksum value, or the checksum check would always fail
+// User can check target firmware postbuild routine. Please refer AN0500 application note OTA section for more detail
+#define USE_CHECKSUM 0
+
 void* update_malloc(unsigned int size){
 	return pvPortMalloc(size);
 }
@@ -113,6 +118,12 @@ static void update_ota_local_task(void *param)
 	int ret = -1 ;
 	uint32_t curr_fw_idx = 0;
 	uint32_t fw_len = 0;
+#if USE_CHECKSUM
+	uint32_t flash_checksum = 0;
+	_file_checksum file_checksum;
+	file_checksum.u = 0;
+#endif
+        
 #if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1)
 	rtw_create_secure_context(configMINIMAL_SECURE_STACK_SIZE);
 #endif
@@ -134,10 +145,7 @@ static void update_ota_local_task(void *param)
 		goto update_ota_exit;
 	}
 	
-	/* Get file size from server.
-	 * Note that AmebaPro do not need checksum to verify the OTA image but using hash by itself.
-	 * Hence the checksum info got from tools/DownloadServer/ can be ignored directly
-	 */
+	// Get file size from server.
 	memset(file_info, 0, sizeof(file_info));
 	if(file_info[0] == 0){
 		printf("\n\r[%s] Read info first", __FUNCTION__);
@@ -207,6 +215,17 @@ static void update_ota_local_task(void *param)
 				goto update_ota_exit;
 			}		
 			device_mutex_unlock(RT_DEV_LOCK_FLASH);
+                        
+#if USE_CHECKSUM
+			// checksum attached at file end
+			if(idx + read_bytes > NewFWLen - 4){
+				file_checksum.c[0] = buf[read_bytes - 4];
+				file_checksum.c[1] = buf[read_bytes - 3];
+				file_checksum.c[2] = buf[read_bytes - 2];
+				file_checksum.c[3] = buf[read_bytes - 1];
+			}
+#endif
+                        
 			idx += read_bytes;
 
 			if(idx == NewFWLen)
@@ -214,6 +233,30 @@ static void update_ota_local_task(void *param)
 		}
 		printf("\n\rRead data finished\r\n");
 
+#if USE_CHECKSUM
+		// read flash data back and calculate checksum
+		for(int i = 0; i < NewFWLen-4; i += BUF_SIZE){
+			int k;
+			int rlen = (idx-4-i)>BUF_SIZE?BUF_SIZE:(idx-4-i);
+			device_mutex_lock(RT_DEV_LOCK_FLASH);
+			flash_stream_read(&flash_ota, NewFWAddr+i, rlen, buf);
+			device_mutex_unlock(RT_DEV_LOCK_FLASH);
+			for(k = 0; k < rlen; k++){
+				if(i + k < 32)
+					flash_checksum += sig_backup[i + k];
+				else
+					flash_checksum += buf[k];
+			}
+		}
+
+		printf("\n\rflash checksum 0x%8x attached checksum 0x%8x", flash_checksum, file_checksum.u);
+		
+		if(file_checksum.u != flash_checksum){
+			printf("\n\r[%s] The checksume is wrong!\n\r", __FUNCTION__);
+			goto update_ota_exit;
+		}
+#endif
+                
 		// update ota signature at the end of OTA process
 		ret = update_ota_signature(sig_backup, NewFWAddr);
 		if(ret == -1){
@@ -537,12 +580,18 @@ int http_update_ota(char *host, int port, char *resource)
 	unsigned char *buf = NULL, *request = NULL;
 	unsigned char sig_backup[32];
 	int read_bytes = 0;
+	int read_rtn = 0;
 	uint32_t address = 0;
 	uint32_t NewFWLen = 0, NewFWAddr = 0;
 	int ret = -1;
 	uint32_t curr_fw_idx = 0;
 	uint32_t fw_len = 0;
 	http_response_result_t rsp_result = {0};
+#if USE_CHECKSUM
+	uint32_t flash_checksum = 0;
+	_file_checksum file_checksum;
+	file_checksum.u = 0;
+#endif
 	
 restart_http_ota:
 	redirect_server_port = 0;
@@ -633,7 +682,14 @@ restart_http_ota:
 			goto update_ota_exit;
 		}
 		
+		read_bytes = idx - rsp_result.header_len;
 		idx = 0;
+		if(read_bytes > 0){
+			memcpy(buf, buf+rsp_result.header_len, read_bytes);
+			memset(buf + read_bytes, 0, BUF_SIZE - read_bytes);
+			goto skip_read;
+		}
+		
 		while (idx < NewFWLen){
 			printf(".");
 			data_len = NewFWLen - idx;
@@ -644,13 +700,15 @@ restart_http_ota:
 			read_bytes = 0;
                         
 			while(read_bytes < data_len){
-				read_bytes += read(server_socket, &buf[read_bytes], data_len-read_bytes);
-				if(read_bytes < 0){
+				read_rtn = read(server_socket, &buf[read_bytes], data_len-read_bytes);
+				if(read_rtn <= 0){
 					printf("\n\r[%s] Read socket failed", __FUNCTION__);
 					goto update_ota_exit;
 				}
+				read_bytes += read_rtn;
 			}
 
+skip_read:
 			if((idx + read_bytes) > NewFWLen){
 				printf("\n\r[%s] Redundant bytes received", __FUNCTION__);
 				read_bytes = NewFWLen - idx;
@@ -671,9 +729,43 @@ restart_http_ota:
 			}
 			device_mutex_unlock(RT_DEV_LOCK_FLASH);
 
+#if USE_CHECKSUM
+			// checksum attached at file end
+			if(idx + read_bytes > NewFWLen - 4){
+				file_checksum.c[0] = buf[read_bytes - 4];
+				file_checksum.c[1] = buf[read_bytes - 3];
+				file_checksum.c[2] = buf[read_bytes - 2];
+				file_checksum.c[3] = buf[read_bytes - 1];
+			}
+#endif
+
 			idx += read_bytes;			
 		}
 		printf("\n\r[%s] Download new firmware %d bytes completed\n\r", __FUNCTION__, idx);
+
+#if USE_CHECKSUM
+		// read flash data back and calculate checksum
+		for(int i = 0; i < NewFWLen-4; i += BUF_SIZE){
+			int k;
+			int rlen = (idx-4-i)>BUF_SIZE?BUF_SIZE:(idx-4-i);
+			device_mutex_lock(RT_DEV_LOCK_FLASH);
+			flash_stream_read(&flash_ota, NewFWAddr+i, rlen, buf);
+			device_mutex_unlock(RT_DEV_LOCK_FLASH);
+			for(k = 0; k < rlen; k++){
+				if(i + k < 32)
+					flash_checksum += sig_backup[i + k];
+				else
+					flash_checksum += buf[k];
+			}
+		}
+
+		printf("\n\rflash checksum 0x%8x attached checksum 0x%8x", flash_checksum, file_checksum.u);
+		
+		if(file_checksum.u != flash_checksum){
+			printf("\n\r[%s] The checksume is wrong!\n\r", __FUNCTION__);
+			goto update_ota_exit;
+		}
+#endif
 
 		//update ota signature at the end of OTA process
 		ret = update_ota_signature(sig_backup, NewFWAddr);

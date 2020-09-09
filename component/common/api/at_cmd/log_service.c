@@ -30,9 +30,10 @@ extern void at_transport_init(void);
 extern void at_mp_init(void);
 extern void at_bt_init(void);
 extern void at_isp_init(void);
-#if (CONFIG_JOYLINK || CONFIG_GAGENT || CONFIG_QQ_LINK || 	\
+#if (CONFIG_JOYLINK || CONFIG_GAGENT || CONFIG_QQ_LINK || \
 	(defined(CONFIG_AIRKISS_CLOUD) && CONFIG_AIRKISS_CLOUD) || CONFIG_ALINK || \
-	(defined(CONFIG_HILINK) && CONFIG_HILINK) || (defined(CONFIG_MIIO) && CONFIG_MIIO))
+	(defined(CONFIG_HILINK) && CONFIG_HILINK) || (defined(CONFIG_MIIO) && CONFIG_MIIO) || \
+	(defined(CONFIG_RSC) && CONFIG_RSC))
 extern void at_cloud_init(void);
 #endif
 void at_log_init(void);
@@ -51,7 +52,9 @@ extern xSemaphoreHandle	uart_rx_interrupt_sema;
 #if CONFIG_INIC_EN
 extern unsigned char inic_cmd_ioctl;
 #endif
-
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1)
+extern NS_ENTRY size_t xPortGetFreeHeapSizeNSC( void );
+#endif
 //#if defined (__ICCARM__)
 //#pragma section=".data.log_init"
 //
@@ -100,7 +103,8 @@ log_init_t log_init_table[] = {
 #endif
 
 #if (CONFIG_JOYLINK || CONFIG_GAGENT || CONFIG_QQ_LINK || (defined(CONFIG_AIRKISS_CLOUD) && \
-	CONFIG_AIRKISS_CLOUD) || CONFIG_ALINK || (defined(CONFIG_HILINK) && CONFIG_HILINK) || (defined(CONFIG_MIIO) && CONFIG_MIIO))
+	CONFIG_AIRKISS_CLOUD) || CONFIG_ALINK || (defined(CONFIG_HILINK) && CONFIG_HILINK) || \
+	(defined(CONFIG_MIIO) && CONFIG_MIIO) || (defined(CONFIG_RSC) && CONFIG_RSC))
 	at_cloud_init,
 #endif	
 };
@@ -322,7 +326,7 @@ void at_set_debug_mask(unsigned int newDbgFlag)
 	gDbgFlag = newDbgFlag;
 }
 
-#if SUPPORT_INTERACTIVE_MODE
+#if defined(SUPPORT_INTERACTIVE_MODE) && SUPPORT_INTERACTIVE_MODE
 extern char uart_buf[64];
 void legency_interactive_handler(unsigned char argc, unsigned char **argv)
 {
@@ -409,13 +413,18 @@ void log_service_lock_init(void){
 }
 #endif
 
+#ifdef CONFIG_BT
+#define LOG_SERVICE_SECURE_STACK_SIZE	( configMINIMAL_SECURE_STACK_SIZE + 320 )
+#else
+#define LOG_SERVICE_SECURE_STACK_SIZE	configMINIMAL_SECURE_STACK_SIZE
+#endif
 void log_service(void *param)
 {
 	/* To avoid gcc warnings */
 	( void ) param;
 
 #if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1)
-	rtw_create_secure_context(configMINIMAL_SECURE_STACK_SIZE);
+	rtw_create_secure_context(LOG_SERVICE_SECURE_STACK_SIZE);
 #endif
 	_AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_INFO, "\n\rStart LOG SERVICE MODE\n\r");
 	_AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_INFO, "\n\r# ");        
@@ -429,7 +438,7 @@ void log_service(void *param)
 			if(mp_commnad_handler((char *)log_buf) < 0)
 #endif                        
 			{
-			#if SUPPORT_INTERACTIVE_MODE
+			#if defined(SUPPORT_INTERACTIVE_MODE) && SUPPORT_INTERACTIVE_MODE
 				print_help_handler((char *)log_buf);
 				legency_interactive_handler(NULL, NULL);
 			#else
@@ -443,8 +452,12 @@ void log_service(void *param)
 #if CONFIG_INIC_EN
 		inic_cmd_ioctl = 0;
 #endif
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1)
+		_AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ALWAYS, "\n\r[MEM] After do cmd, available heap %d, secure heap %d\n\r", xPortGetFreeHeapSize(), xPortGetFreeHeapSizeNSC());
+#else
 		_AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ALWAYS, "\n\r[MEM] After do cmd, available heap %d\n\r", xPortGetFreeHeapSize());
-		_AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ALWAYS, "\r\n\n#\r\n"); //"#" is needed for mp tool
+#endif
+		_AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ALWAYS, "\r\n\n# "); //"# " is needed for mp tool
 #if (defined(CONFIG_EXAMPLE_UART_ATCMD) && CONFIG_EXAMPLE_UART_ATCMD)
 		if(atcmd_lwip_is_tt_mode())
 			at_printf(STR_END_OF_ATDATA_RET);

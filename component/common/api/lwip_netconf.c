@@ -600,7 +600,7 @@ void LwIP_AUTOIP(struct netif *pnetif)
 #else
 	autoip = pnetif->autoip;
 #endif
-	if(autoip) // before autoip_start(), autoip may be NULL
+	if(autoip && (autoip->tried_llipaddr >= MAX_CONFLICTS)) // before autoip_start(), autoip may be NULL
 		autoip->tried_llipaddr = 0;
 
 	autoip_start(pnetif);

@@ -379,6 +379,8 @@ typedef	long long __i64;
 /* Set Finite cyclic groups id for SAE  */
 #define SIOCSIWGRPID	0x8B3B		/* Set Finite cyclic groups id for SAE  */
 
+/* Get rssiBCN */
+#define SIOCGIWBCNSENS	0x8B40
 
 /* -------------------- DEV PRIVATE IOCTL LIST -------------------- */
 
@@ -1002,6 +1004,7 @@ union	iwreq_data
 					 * > 1000 = frequency in Hz */
 
 	struct iw_param	sens;		/* signal level threshold */
+    struct iw_param bcnsens;        /* signal level threshold */
 	struct iw_param	snr;			/* signal noise ratio */
 	struct iw_param	bitrate;	/* default bit rate */
 	struct iw_param	txpower;	/* default transmit power */

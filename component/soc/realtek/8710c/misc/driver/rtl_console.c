@@ -27,6 +27,12 @@
 #include "stdio_port_func.h"
 #if defined(configUSE_TICKLESS_IDLE) && (configUSE_TICKLESS_IDLE > 0)
 #include "freertos_pmu.h"
+#include "rtl8710c_freertos_pmu.h"
+#include "sys_api.h"
+#include "gpio_irq_api.h"
+#include "gpio_irq_ex_api.h"
+#include "power_mode_api.h"
+static gpio_irq_t loguart_rx_as_wakeup_pin;
 #endif
 
 extern hal_uart_adapter_t log_uart;
@@ -176,6 +182,28 @@ static void uart_irq(u32 id,u32 event)
 }
 
 extern void log_service_init(void);
+extern void console_reinit_uart(void);
+#if defined(configUSE_TICKLESS_IDLE) && (configUSE_TICKLESS_IDLE > 0)
+u32 rtl8710c_loguart_suspend(u32 sleep_mode, void *param)
+{
+	sys_log_uart_off();
+	gpio_irq_init(&loguart_rx_as_wakeup_pin, (PinName)log_uart.rx_pin, NULL, (uint32_t)&loguart_rx_as_wakeup_pin);
+	gpio_irq_pull_ctrl(&loguart_rx_as_wakeup_pin, PullUp);
+	gpio_irq_set(&loguart_rx_as_wakeup_pin, IRQ_FALL, 1);
+	return TRUE;
+}
+
+u32 rtl8710c_loguart_resume(u32 sleep_mode, void *param)
+{
+	u32 wake_event = HAL_READ32(0x40000000, 0x108);
+	gpio_irq_deinit(&loguart_rx_as_wakeup_pin);
+	sys_log_uart_on();
+	console_reinit_uart();
+	if(wake_event | BIT4) //wakeup by GPIO
+		pmu_set_sysactive_time(100);
+	return TRUE;
+}
+#endif
 void console_init(void)
 {
 	int i;
@@ -186,6 +214,13 @@ void console_init(void)
 #endif
 	hal_uart_reset_rx_fifo(&log_uart);
 	hal_uart_rxind_hook(&log_uart,uart_irq,0,0);
+#if defined(configUSE_TICKLESS_IDLE) && (configUSE_TICKLESS_IDLE > 0)
+	pmu_register_sleep_callback(PMU_LOGUART_DEVICE, rtl8710c_loguart_suspend, &log_uart, rtl8710c_loguart_resume, &log_uart);
+	if(pmu_get_sleep_type() == SLEEP_CG)
+		pmu_set_wakeup_event(SLP_GPIO, log_uart.rx_pin);
+	else if(pmu_get_sleep_type() == SLEEP_PG)
+		pmu_set_wakeup_event(DSTBY_GPIO, log_uart.rx_pin);
+#endif
 }
 
 void console_reinit_uart(void)

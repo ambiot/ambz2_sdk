@@ -14,7 +14,7 @@
                 "port": 0,
                 "pin": 0
             },
-            "key_exp_op": 1,
+            "key_exp_op": 2,
             "user_len": 256,
             "user_bin":"user.bin",
             "items":["boot","fw1","fw2"]
@@ -27,15 +27,15 @@
             "hash_key":"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
         },
         "fw1":{
-            "start_addr" : "0x10000",
-            "length" : "0x80000",
+            "start_addr" : "0xC000",
+            "length" : "0xF8000",
             "type": "FW1",
             "dbg_skip": false,
             "hash_key":"000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E5F"
         },
         "fw2":{
-            "start_addr" : "0x90000",
-            "length" : "0x80000",
+            "start_addr" : "0x104000",
+            "length" : "0xF8000",
             "type": "FW2",
             "dbg_skip": false,
             "hash_key":"000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E5F"

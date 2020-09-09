@@ -8,7 +8,7 @@
 #include <analogin_api.h>
 #endif
 
-#if CONFIG_ATCMD_MP
+#if defined(CONFIG_ATCMD_MP) && CONFIG_ATCMD_MP
 
 #if CONFIG_ATCMD_MP_EXT0
 	extern void fATM0(void *arg);	// MP ext0 AT command

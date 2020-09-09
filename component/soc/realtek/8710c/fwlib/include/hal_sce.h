@@ -4,7 +4,7 @@
  *           ROM functions.
  *
  * @version  V1.00
- * @date     2017-12-07
+ * @date     2020-01-07
  *
  * @note
  *
@@ -399,6 +399,9 @@ hal_status_t hal_sce_set_mem_crypto ( uint32_t start_addr,
 {
     return hal_sce_stubs.hal_sce_set_mem_crypto (start_addr & 0x07FFFFFF, mem_size, key_id);
 }
+
+hal_status_t hal_sce_key_pair_search_check_info(phal_sce_check_info_t pcheck_info, uint8_t *key, uint8_t *iv);
+void hal_sce_set_key_pair_check (phal_sce_check_info_t pcheck_info, uint8_t pair_id, uint8_t *key, uint8_t *iv);
 
 #endif  // #if defined(CONFIG_BUILD_SECURE)
 

@@ -54,3 +54,6 @@
 0x000008c0 D __rom_stubs_utility
 0x000008c0 D Image$$_STUB_UTILITY$$Base
 0x000008c0 D utility_stubs
+0x00000910 D __rom_stubs_ssl
+0x00000910 D Image$$_STUB_SSL$$Base
+0x00000910 D ssl_func_stubs

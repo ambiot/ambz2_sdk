@@ -1,7 +1,9 @@
 
 #include "dhcps.h"
 #include "tcpip.h"
-
+#include "wifi_constants.h"
+#include "lwip_intf.h"
+extern rtw_mode_t wifi_mode;
 //static struct dhcp_server_state dhcp_server_state_machine;
 static uint8_t dhcp_server_state_machine = DHCP_SERVER_STATE_IDLE;
 /* recorded the client MAC addr(default sudo mac) */
@@ -75,7 +77,7 @@ static void mark_ip_in_table(uint8_t d)
 		printf("\r\n ip_table.ip_range[3] = 0x%x\r\n",ip_table.ip_range[3]);
 #endif	
 	} else if(128 < d && d <= 160) {
-		ip_table.ip_range[4] = MARK_RANGE5_IP_BIT(ip_table, d);	
+		ip_table.ip_range[4] = MARK_RANGE5_IP_BIT(ip_table, (d - 128));
 #if (debug_dhcps)		
 		printf("\r\n ip_table.ip_range[4] = 0x%x\r\n",ip_table.ip_range[4]);
 #endif	
@@ -110,7 +112,7 @@ static void save_client_addr(struct ip_addr *client_ip, uint8_t *hwaddr)
 #endif
 	
 	xSemaphoreTake(dhcps_ip_table_semaphore, portMAX_DELAY);
-	memcpy(ip_table.client_mac[d], hwaddr, 6); 
+	memcpy(ip_table.client_mac[d - DHCP_POOL_START], hwaddr, 6); 
 #if (debug_dhcps)	
 #if LWIP_VERSION_MAJOR >= 2
 	printf("\r\n%s: ip %d.%d.%d.%d, hwaddr %2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x\n", __func__,
@@ -148,7 +150,7 @@ static uint8_t check_client_request_ip(struct ip_addr *client_req_ip, uint8_t *h
 	for(i=DHCP_POOL_START;i<=DHCP_POOL_END;i++)
 	{
 		//printf("client[%d] = %2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x\n",i,ip_table.client_mac[i][0],ip_table.client_mac[i][0],ip_table.client_mac[i][1],ip_table.client_mac[i][2],ip_table.client_mac[i][3],ip_table.client_mac[i][4],ip_table.client_mac[i][5]);
-		if(memcmp(ip_table.client_mac[i], hwaddr, 6) == 0){
+		if(memcmp(ip_table.client_mac[i - DHCP_POOL_START], hwaddr, 6) == 0){
 			if((ip_table.ip_range[i/32]>>(i%32-1)) & 1){
 				ip_addr4 = i;
 				break;
@@ -203,24 +205,24 @@ static uint8_t check_client_direct_request_ip(struct ip_addr *client_req_ip, uin
 		goto Exit;
 	}
 	xSemaphoreTake(dhcps_ip_table_semaphore, portMAX_DELAY);
-	printf("ip_table[%d] = %x,%x,%x,%x,%x,%x\n",ip_addr4,ip_table.client_mac[ip_addr4][0],
-										  			     ip_table.client_mac[ip_addr4][1],
-										  				 ip_table.client_mac[ip_addr4][2],
-										  				 ip_table.client_mac[ip_addr4][3],
-										  				 ip_table.client_mac[ip_addr4][4],
-										  				 ip_table.client_mac[ip_addr4][5]);
-	if(	(	ip_table.client_mac[ip_addr4][0] == 0 &&
-			ip_table.client_mac[ip_addr4][1] == 0 &&
-			ip_table.client_mac[ip_addr4][2] == 0 &&
-			ip_table.client_mac[ip_addr4][3] == 0 &&
-			ip_table.client_mac[ip_addr4][4] == 0 &&
-			ip_table.client_mac[ip_addr4][5] == 0) ||
-		(	ip_table.client_mac[ip_addr4][0] == hwaddr[0] &&
-			ip_table.client_mac[ip_addr4][1] == hwaddr[1] &&
-			ip_table.client_mac[ip_addr4][2] == hwaddr[2] &&
-			ip_table.client_mac[ip_addr4][3] == hwaddr[3] &&
-			ip_table.client_mac[ip_addr4][4] == hwaddr[4] &&
-			ip_table.client_mac[ip_addr4][5] == hwaddr[5]))
+	printf("ip_table[%d] = %x,%x,%x,%x,%x,%x\n", ip_addr4,	ip_table.client_mac[ip_addr4 - DHCP_POOL_START][0],
+												ip_table.client_mac[ip_addr4 - DHCP_POOL_START][1],
+												ip_table.client_mac[ip_addr4 - DHCP_POOL_START][2],
+												ip_table.client_mac[ip_addr4 - DHCP_POOL_START][3],
+												ip_table.client_mac[ip_addr4 - DHCP_POOL_START][4],
+												ip_table.client_mac[ip_addr4 - DHCP_POOL_START][5]);
+	if(	(	ip_table.client_mac[ip_addr4 - DHCP_POOL_START][0] == 0 &&
+			ip_table.client_mac[ip_addr4 - DHCP_POOL_START][1] == 0 &&
+			ip_table.client_mac[ip_addr4 - DHCP_POOL_START][2] == 0 &&
+			ip_table.client_mac[ip_addr4 - DHCP_POOL_START][3] == 0 &&
+			ip_table.client_mac[ip_addr4 - DHCP_POOL_START][4] == 0 &&
+			ip_table.client_mac[ip_addr4 - DHCP_POOL_START][5] == 0) ||
+		(	ip_table.client_mac[ip_addr4 - DHCP_POOL_START][0] == hwaddr[0] &&
+			ip_table.client_mac[ip_addr4 - DHCP_POOL_START][1] == hwaddr[1] &&
+			ip_table.client_mac[ip_addr4 - DHCP_POOL_START][2] == hwaddr[2] &&
+			ip_table.client_mac[ip_addr4 - DHCP_POOL_START][3] == hwaddr[3] &&
+			ip_table.client_mac[ip_addr4 - DHCP_POOL_START][4] == hwaddr[4] &&
+			ip_table.client_mac[ip_addr4 - DHCP_POOL_START][5] == hwaddr[5]))
 	{
 		// the ip is available or already allocated to this client
 	}
@@ -851,6 +853,11 @@ struct pbuf *udp_packet_buffer, struct ip_addr *sender_addr, uint16_t sender_por
 		return;  
 	}
 	if (sender_port == DHCP_CLIENT_PORT) {
+		if(netif_get_idx(ip_current_input_netif()) == 0 && wifi_mode == RTW_MODE_STA_AP)
+		{
+			pbuf_free(udp_packet_buffer);
+			return;
+		}
 		total_length_of_packet_buffer = udp_packet_buffer->tot_len;
 		if (udp_packet_buffer->next != NULL) {
 			merged_packet_buffer = pbuf_coalesce(udp_packet_buffer,
