@@ -145,6 +145,7 @@ SECTIONS
 		__fw_img_start__ = .;
 		__data_start__ = .;
 		*(vtable)
+		*(.sram.data*)		
 		*(.data*)
 
 		. = ALIGN(4);
@@ -234,20 +235,21 @@ SECTIONS
 		. = ALIGN(32);		
 		__ram_code_text_start__ = .;
 		
-		*ram_start.o(.text*)		
-
 		/* SPI flash controller related code should be located in SRAM, never locates them in XIP */
-		*hal_spic.o(.text*)
+		*hal_spic*.o(.text*)
 
 		/* LPDDR controller related code should be located in SRAM, never locates them in LPDDR */
-		*hal_lpddr.o(.text*)
+		*hal_lpcram*.o(.text*)
 
-		*hal_sys_ctrl.o(.text*)
+		*ram_start*.o(.text*)
+		*hal_sys_ctrl*.o(.text*)
+		*rtl8710c_pinmux_patch*.o(.text*)
+		*hal_syson*.o(.text*)
+		*hal_pinmux*.o(.text*)
+		*hal_efuse*.o(.text*)
 
-		*rtl8710c_pinmux_patch.o(.text*)
-		*hal_pinmux.o(.text*)
-		*hal_syson.o(.text*)
-		*hal_efuse.o(.text*)
+		*(.lpddr.text*)
+		*(.sram.text*)
 		. = ALIGN(4);
 		__ram_code_text_end__ = .;
 	} > DTCM_RAM
@@ -257,34 +259,23 @@ SECTIONS
 		. = ALIGN(4);
 		__ram_code_rodata_start__ = .;
 
-		*ram_start.o(.rodata*)		
-
 		/* SPI flash controller related code should be located in SRAM, never locates them in XIP */		
-		*hal_spic.o(.rodata*)
+		*hal_spic*.o(.rodata*)
 
 		/* LPDDR controller related code should be located in SRAM, never locates them in LPDDR */
-		*hal_psram.o(.rodata*)
+		*hal_lpcram*.o(.rodata*)
 
-		*hal_sys_ctrl.o(.rodata*)
+		*ram_start*.o(.rodata*)	
+		*hal_sys_ctrl*.o(.rodata*)
+		*rtl8710c_pinmux_patch*.o(.rodata*)
+		*hal_syson*.o(.rodata*)
+		*hal_pinmux*.o(.rodata*)
+		*hal_efuse*.o(.rodata*)
 
-		*rtl8710c_pinmux_patch.o(.rodata*)
-		*hal_pinmux.o(.rodata*)
-		*hal_syson.o(.rodata*)
-		*hal_efuse.o(.rodata*)
 		. = ALIGN(4);
 		__ram_code_rodata_end__ = .;
 	} > DTCM_RAM
 
-	.system_restore_data :
-	{
-		/* data in this section will not be initialed by ram_start() */
-		/* some of them will be initialed by boot loader */
-
-		. = ALIGN(32);
-		*(.sys_restore.bss*)
-		*(.ram.bss.noinit*)
-	} > DTCM_RAM
-	
 	.xip.code_c :
 	{
 		/* code and RO data in this section will be encrypted */
@@ -316,10 +307,20 @@ SECTIONS
 		__xip_code_rodata_end__ = .;
 	} > XIP_FLASH_P
 	
+	.system_restore_data :
+	{
+		/* data in this section will not be initialed by ram_start() */
+		/* some of them will be initialed by boot loader */
+		. = ALIGN(32);
+		*(.sys_restore.bss*)
+		*(.ram.bss.noinit*)
+	} > DTCM_RAM
+	
 	.bss :
 	{
 		. = ALIGN(16);
 		__bss_start__ = .;
+		*(.sram.bss*)
 		*(.bss*)
 		*(COMMON)
 

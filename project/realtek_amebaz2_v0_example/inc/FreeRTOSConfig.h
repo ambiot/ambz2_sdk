@@ -45,6 +45,7 @@
  *----------------------------------------------------------*/
 
 #if defined(__ICCARM__) || defined(__CC_ARM) || defined(__GNUC__)
+#include <stdint.h>
 extern uint32_t SystemCoreClock; 
 #endif 
 
@@ -187,6 +188,7 @@ standard names - or at least those used in the unmodified vector table. */
 #define portGET_RUN_TIME_COUNTER_VALUE() xTickCount
 #undef configUSE_TRACE_FACILITY
 #define configUSE_TRACE_FACILITY 1
+#define portCONFIGURE_STATS_PEROID_VALUE	1000 //unit Ticks
 #endif
 
 #include "diag.h"
@@ -218,19 +220,27 @@ standard names - or at least those used in the unmodified vector table. */
 #endif /* __IASMARM__ */
 
 /* use the low power tickless mode */
-#define configUSE_TICKLESS_IDLE                 1
+#define configUSE_TICKLESS_IDLE                 0
 #if defined(configUSE_TICKLESS_IDLE) && configUSE_TICKLESS_IDLE
 #if !defined(__IASMARM__) || (__IASMARM__ != 1)
 #if !defined(CONFIG_BUILD_SECURE) || (CONFIG_BUILD_SECURE == 0)
+/* use realtek customized low power tickless mode */
+#define configUSE_CUSTOMIZED_TICKLESS_IDLE                 0 //NOT READY!!!!!!
+#if defined(configUSE_CUSTOMIZED_TICKLESS_IDLE) && configUSE_CUSTOMIZED_TICKLESS_IDLE
 extern void freertos_pre_sleep_processing(unsigned int *expected_idle_time);
 extern void freertos_post_sleep_processing(unsigned int *expected_idle_time);
 extern int  freertos_ready_to_sleep(void);
+extern void freertos_suppress_ticks_and_sleep(unsigned int xExpectedIdleTime);
 
 /* Enable tickless power saving. */
 #define configPRE_SUPPRESS_TICKS_AND_SLEEP_PROCESSING( x )  do { \
-                                                                                						if (freertos_ready_to_sleep() == FALSE)  {\
-																		x = 0;\
-																	}\
+                                                                                                                       if (freertos_ready_to_sleep() == FALSE)  {\
+                                                                                                                           x = 0;\
+                                                                                                                       }\
+                                                                                                             } while(0)
+
+#define portSUPPRESS_TICKS_AND_SLEEP( xExpectedIdleTime )  do { \
+                                                                                                                 freertos_suppress_ticks_and_sleep(xExpectedIdleTime); \
                                                                                                              } while(0)
 
 /* In wlan usage, this value is suggested to use value less than 80 milliseconds */
@@ -255,8 +265,9 @@ extern int  freertos_ready_to_sleep(void);
 
 #undef configMINIMAL_STACK_SIZE
 #define configMINIMAL_STACK_SIZE		( ( unsigned short ) 192 )
-#endif
-#endif // #if (__IASMARM__ != 1)
+#endif //#if defined(configUSE_CUSTOMIZED_TICKLESS_IDLE) && configUSE_CUSTOMIZED_TICKLESS_IDLE
+#endif // #if !defined(CONFIG_BUILD_SECURE) || (CONFIG_BUILD_SECURE == 0)
+#endif // #if !defined(__IASMARM__) || (__IASMARM__ != 1)
 #endif // #if defined(configUSE_TICKLESS_IDLE) && configUSE_TICKLESS_IDLE
 
 /* Add by Realtek to re-arrange the FreeRTOS priority*/
@@ -271,5 +282,9 @@ the source code because to do so would cause other compilers to generate
 warnings. */
 #pragma diag_suppress=Pe191
 #pragma diag_suppress=Pa082
+#endif
+
+#if defined(ENABLE_AMAZON_COMMON)
+#include "FreeRTOSConfig_Amazon.h"
 #endif
 #endif /* FREERTOS_CONFIG_H */

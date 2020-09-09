@@ -2,7 +2,7 @@
  * @file      hal_crypto.h
  * @brief     The HAL API implementation for the CRYPTO device.
  * @version   V1.00
- * @date      2019-08-22
+ * @date      2019-08-28
  *
  * @note
  *
@@ -1425,6 +1425,7 @@ int hal_crypto_aes_gcm_decrypt(
     IN const u8 *aad,		IN const u32 aadlen,
     OUT u8 *pResult, OUT u8 *pTag);
 
+#if defined(CONFIG_BUILD_NONSECURE)
 //
 //
 
@@ -1506,6 +1507,7 @@ int hal_crypto_crc_cmd(IN const u8 *message, IN const u32 msglen, OUT u32 *pCrc)
  *  @return      value < 0      fail(Refer to ERRNO)
  */
 int hal_crypto_crc_dma(IN const u8 *message, IN const u32 msglen, OUT u32 *pCrc);
+#endif
 
 //MIX-MODE
 /**

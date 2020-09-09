@@ -890,26 +890,28 @@ static void client_start_task(void *param)
 #if ATCMD_VER == ATVER_2 
 	if(param){
 		client_start(param);
+		client_task = NULL;
 		vTaskDelete(NULL);
 		return;
 	}
 //#endif
 #else
-	if(remote_addr == NULL){
+	if(remote_addr[0] == NULL){
 		printf("\r\n[ERROR] Please using ATP3 to input an valid remote IP address!\r\n");
-		vTaskDelete(client_task);
 		client_task = NULL;
+		vTaskDelete(NULL);
 	}
 	else if(remote_port == 0){
 		printf("\r\n[ERROR] Please using ATP4 to input an valid remote PORT!\r\n");
-		vTaskDelete(client_task);
 		client_task = NULL;
+		vTaskDelete(NULL);
 	}
 	else{
 		printf("\n\r\tStart Client\r\n\t[IP]: %s\r\n\t[PORT]:%d\n\r\n\r", remote_addr, remote_port);
 		client_start(param);
 	}
 #endif
+	client_task = NULL;
 	vTaskDelete(NULL);
 }
 
@@ -919,6 +921,7 @@ static void server_start_task(void *param)
 #if ATCMD_VER == ATVER_2      
 	if(param != NULL){
 		server_start(param);
+		server_task = NULL;
 		vTaskDelete(NULL);
 		return;
 	}
@@ -926,8 +929,8 @@ static void server_start_task(void *param)
 #else
 	if(local_port == 0){
 		printf("\r\n[ERROR] Please using ATP2 to input an valid local PORT!\r\n");
-		vTaskDelete(server_task);
 		server_task = NULL;
+		vTaskDelete(NULL);
 	}
 	else{
 		uint8_t *ip = (uint8_t *)LwIP_GetIP(&xnetif[0]);
@@ -935,6 +938,7 @@ static void server_start_task(void *param)
 		server_start(param);
 	}
 #endif
+	server_task = NULL;
 	vTaskDelete(NULL);
 }
 
@@ -3896,20 +3900,21 @@ static void client_start_task(void *param)
 	}
 //#endif
 #else
-	if(remote_addr == NULL){
+	if(remote_addr[0] == 0){
 		printf("\r\n[ERROR] Please using ATP3 to input an valid remote IP address!\r\n");
-		vTaskDelete(client_task);
 		client_task = NULL;
+		vTaskDelete(NULL);
 	}
 	else if(remote_port == 0){
 		printf("\r\n[ERROR] Please using ATP4 to input an valid remote PORT!\r\n");
-		vTaskDelete(client_task);
 		client_task = NULL;
+		vTaskDelete(NULL);
 	}
 	else{
 		printf("\n\r\tStart Client\r\n\t[IP]: %s\r\n\t[PORT]:%d\n\r\n\r", remote_addr, remote_port);
 		client_start(param);
 	}
+	client_task = NULL;
 #endif
 	vTaskDelete(NULL);
 }
@@ -3927,14 +3932,15 @@ static void server_start_task(void *param)
 #else
 	if(local_port == 0){
 		printf("\r\n[ERROR] Please using ATP2 to input an valid local PORT!\r\n");
-		vTaskDelete(server_task);
 		server_task = NULL;
+		vTaskDelete(NULL);
 	}
 	else{
 		uint8_t *ip = (uint8_t *)LwIP_GetIP(&xnetif[0]);
 		printf("\n\rStart Server\r\n\t[IP]: %d.%d.%d.%d\r\n\t[PORT]:%d\n\r\n\r", ip[0], ip[1], ip[2], ip[3], local_port);
 		server_start(param);
 	}
+	server_task = NULL;
 #endif
 	vTaskDelete(NULL);
 }
@@ -4885,13 +4891,12 @@ void fATPP(void *arg){
 			error_no = 2;
 			goto exit;
 		}
-		if( curnode->role == 1){ //ping remote server
+		if(( curnode->role == 1) || //ping remote server
+		   ( curnode->role == 2)){ //ping seed
 			addr.s_addr = htonl(curnode->addr);
 			inet_ntoa_r(addr, buf, sizeof(buf));
 		}else if( curnode->role == 0){//ping local server
 			strcpy(buf,SERVER);
-		}else if( curnode->role == 2){ //ping seed
-			strcpy(buf,(char*) curnode->addr);
 		}
 	}else
 		strcpy(buf, argv[1]);

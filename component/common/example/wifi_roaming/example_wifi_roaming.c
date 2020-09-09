@@ -175,7 +175,7 @@ void wifi_roaming_thread(void *param)
 						}
 					}
 					wifi_scan_networks_with_ssid((int (*)(char *, int, char *, void *))wifi_roaming_find_ap_from_scan_buf, (void *)&roaming_ap, SCAN_BUFLEN, (char*)roaming_ap.ssid, strlen((char const*)roaming_ap.ssid));
-#if CONFIG_AUTO_RECONNECT
+#if defined(CONFIG_AUTO_RECONNECT) && CONFIG_AUTO_RECONNECT
 					wifi_set_autoreconnect(0);
 #endif
 					
@@ -223,7 +223,7 @@ connect_ap:
 						free(pscan_config);
 
 					polling_count = 0;	
-#if CONFIG_AUTO_RECONNECT
+#if defined(CONFIG_AUTO_RECONNECT) && CONFIG_AUTO_RECONNECT
 					wifi_set_autoreconnect(1);
 #endif					
 				}else				

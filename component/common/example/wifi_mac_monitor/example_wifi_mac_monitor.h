@@ -9,6 +9,6 @@
  ******************************************************************************/
 
 void example_wifi_mac_monitor(void);
-int get_station_mac(unsigned char *sta_mac,char rssi);
+int get_station_mac(unsigned char *sta_mac,signed char rssi);
 
 #endif //#ifndef __EXAMPLE_WIFI_MAC_MONITOR_H__

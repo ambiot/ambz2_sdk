@@ -26,7 +26,15 @@
 #define MBED_RTC_API_H
 
 #include "device.h"
+
+#if CONFIG_SYSTEM_TIME64
+#include "time64.h"
+#else
 #include <time.h>
+#endif
+
+#undef time_t
+#define time_t long long
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,7 +46,9 @@ extern "C" {
  *  @{
  */
 
-#if CONFIG_PLATFORM_8711B || CONFIG_PLATFORM_8195BLP || CONFIG_PLATFORM_8710C
+#if (defined(CONFIG_PLATFORM_8711B) && CONFIG_PLATFORM_8711B) \
+	|| (defined(CONFIG_PLATFORM_8195BLP) && CONFIG_PLATFORM_8195BLP) \
+	|| (defined(CONFIG_PLATFORM_8710C) && CONFIG_PLATFORM_8710C)
 ///@name AmebaZ and AmebaPro
 ///@{
 typedef void (*alarm_irq_handler)(void);
@@ -95,7 +105,9 @@ void rtc_write(time_t t);
 
 ///@}
 
-#if CONFIG_PLATFORM_8711B || CONFIG_PLATFORM_8195BLP || CONFIG_PLATFORM_8710C
+#if (defined(CONFIG_PLATFORM_8711B) && CONFIG_PLATFORM_8711B) \
+	|| (defined(CONFIG_PLATFORM_8195BLP) && CONFIG_PLATFORM_8195BLP) \
+	|| (defined(CONFIG_PLATFORM_8710C) && CONFIG_PLATFORM_8710C)
 ///@name AmebaZ and AmebaPro
 ///@{
 /**

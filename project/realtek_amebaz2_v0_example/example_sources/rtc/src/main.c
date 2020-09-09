@@ -8,6 +8,19 @@
  */
 #include "rtc_api.h"
 #include "wait_api.h"
+#include "stdio.h"
+
+extern long long __wrap_mktime (struct tm *);
+extern struct tm * __wrap_localtime (long long *);
+extern char * __wrap_ctime (long long *);
+#undef time_t
+#define time_t long long
+#undef localtime
+#define localtime(a) __wrap_localtime(a)
+#undef mktime
+#define mktime(a) __wrap_mktime(a)
+#undef ctime
+#define ctime(a) __wrap_ctime (a)
 
 void alarm_callback(void)
 {
@@ -36,8 +49,7 @@ void alarm_callback(void)
         seconds = rtc_read();
         timeinfo = localtime(&seconds);
 
-        printf("Time as seconds since January 1, 1970 = %d\n", seconds);
-
+        printf("Time as seconds since January 1, 1970 = %llu\n", seconds);
         printf("Time as a basic string = %s", ctime(&seconds));
 
         printf("Time as a custom formatted string = %d-%d-%d %d:%d:%d\n", 
@@ -47,4 +59,3 @@ void alarm_callback(void)
         wait(1.0);
     }
  }
-

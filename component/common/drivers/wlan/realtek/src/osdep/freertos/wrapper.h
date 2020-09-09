@@ -28,7 +28,7 @@
 #include <skbuff.h>
 #include "osdep_service.h"
 
-#ifndef __LIST_H
+#ifndef __LIST_H__
 #warning "DLIST_NOT_DEFINE!!!!!!"
 //----- ------------------------------------------------------------------
 // Linled List
@@ -419,6 +419,7 @@ typedef struct {
 	unsigned int rx_busy;
 	unsigned char enable;
 	unsigned char mac[6];
+	_sema netif_rx_sema;            /* prevent race condition on .skb in rltk_netif_rx() */
 } Rltk_wlan_t;
 
 #define netdev_priv(dev)		dev->priv

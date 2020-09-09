@@ -80,6 +80,18 @@ int efuse_fw_verify_enable(void);
   */
 int efuse_fw_verify_check(void);
 
+/**
+  * @brief  Disable ROM boot debugging message
+  * @retval   status: Success:0 or Failure: -1.
+  */
+int efuse_boot_message_disable(void);
+
+/**
+  * @brief  Enable ROM boot debugging message
+  * @retval   status: Success:0 or Failure: -1.
+  */
+int efuse_boot_message_enable(void);
+
 #ifdef __cplusplus
 }
 #endif

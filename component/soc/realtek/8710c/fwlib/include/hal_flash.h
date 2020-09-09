@@ -45,6 +45,8 @@ extern "C"
 #define FLASH_TYPE_GD32 5
 #define FLASH_TYPE_XTX 6
 #define FLASH_TYPE_EON 7
+#define FLASH_TYPE_BOYA 8
+#define FLASH_TYPE_XMC 9
 
 /**
 

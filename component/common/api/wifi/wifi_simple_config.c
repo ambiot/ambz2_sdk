@@ -14,7 +14,7 @@
 #include "wifi_conf.h"
 #include "wifi_util.h"
 
-#if defined(CONFIG_PLATFORM_8721D)
+#if  defined(CONFIG_PLATFORM_8721D)
 #include "platform_autoconf.h"
 #endif
 
@@ -1821,7 +1821,11 @@ enum sc_result simple_config_test(rtw_network_info_t *wifi)
 		return SC_UDP_SOCKET_CREATE_FAIL;
 	}
 
-	setsockopt(softAP_socket, SOL_SOCKET, SO_REUSEADDR, (const char *)&tcp_reuse_timeout, sizeof(tcp_reuse_timeout));
+	if(setsockopt(softAP_socket, SOL_SOCKET, SO_REUSEADDR, (const char *)&tcp_reuse_timeout, sizeof(tcp_reuse_timeout)) != 0){
+		printf("set sockopt failed\n");
+		close(softAP_socket);
+		return SC_UDP_SOCKET_CREATE_FAIL;
+	}	
 
 	memset(&softAP_addr, 0, sizeof(softAP_addr));
 	softAP_addr.sin_family = AF_INET;
@@ -1834,9 +1838,11 @@ enum sc_result simple_config_test(rtw_network_info_t *wifi)
 	    close(softAP_socket);
 	    return SC_UDP_SOCKET_CREATE_FAIL;
 	}
-  
-    if(lwip_setsockopt(softAP_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(int)) < 0)
-        printf("set socket timeout error\n");
+
+	if(lwip_setsockopt(softAP_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(int)) < 0){
+		close(softAP_socket);
+		printf("set socket timeout error\n");
+	}
     
 	if(listen(softAP_socket, 2) != 0) {
 		printf("ERROR: listen\n");

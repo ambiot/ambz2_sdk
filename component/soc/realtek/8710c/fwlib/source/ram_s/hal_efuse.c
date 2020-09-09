@@ -3,7 +3,7 @@
 * @brief       This file implements the EFUSE HAL functions.
 *
 * @version     V1.00
-* @date        2018-07-26
+* @date        2019-11-25
 *
 * @note
 *
@@ -265,7 +265,6 @@ uint32_t hal_efuse_disable_nonsec_jtag (void)
 }
 
 /** @} */ /* End of group hs_hal_efuse */
-
 
 #endif  /* end of "#if CONFIG_EFUSE_EN" */
 

@@ -2,7 +2,7 @@
  * @file     hal_sys_ctrl.h
  * @brief    The system control functions declaration.
  * @version  v1.00
- * @date     2017/11/21
+ * @date     2019/11/25
  *
  * @note
  *
@@ -35,6 +35,24 @@
 #define SYS_DATA_OFFSET_SPI_CFG             (SYS_DATA_FLASH_BASE + 0x20)
 #define SYS_DATA_OFFSET_FLASH_INFO          (SYS_DATA_FLASH_BASE + 0x24)
 #define SYS_DATA_OFFSET_ULOG_BAUD           (SYS_DATA_FLASH_BASE + 0x30)
+
+#define CONFIG_EFUSE_SW_CHECK               (1)
+
+#if (CONFIG_EFUSE_SW_CHECK==1) && (CONFIG_EFUSE_EN==1)
+
+typedef enum chk_core_pwr_cali_status{
+    CORPWR_CALI_LOAD_PASS_DONE_PASS                 =  0,
+    CORPWR_CALI_LOAD_PASS_DONE_NONE                 = -1,
+    CORPWR_CALI_AUTOLOAD_PIN_DISABLE                = -2,
+    CORPWR_CALI_LOAD_PASS_PARSE_WEIRD               = -3,
+    CORPWR_CALI_CHECK_EFUSE_ID_FAIL                 = -4,
+    CORPWR_CALI_EFUSE_OTHER_FAIL                    = -5
+
+} chk_core_pwr_cali_status_t;
+
+chk_core_pwr_cali_status_t hal_efuse_check_core_pwr_cali_status (void);
+#endif
+
 
 /**
  * @brief  define debug port mode.

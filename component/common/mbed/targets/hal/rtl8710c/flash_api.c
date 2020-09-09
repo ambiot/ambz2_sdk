@@ -124,10 +124,6 @@ int flash_read_id(flash_t *obj, uint8_t *buf, uint8_t len)
         DBG_SPIF_ERR("ID length should be >= 3\n");
     }
 
-    flash_resource_lock();
-    hal_flash_read_id(phal_spic_adaptor);
-    flash_resource_unlock();
-
     if ((phal_spic_adaptor->flash_id[0] == 0x0) 
         || (phal_spic_adaptor->flash_id[0] == 0xFF)) {
         DBG_SPIF_ERR("Invalide ID\n");
@@ -360,6 +356,34 @@ int flash_get_status(flash_t *obj)
 
 /*
 Function Description:
+This function aims to read the value of the status register 2.
+It can be used to check the current status of the flash including protected region, busy state etc.
+Please refer to the datatsheet of flash for more details of the content of status register.
+
+* @brief  Read Status register 2 to check flash status
+* @param  obj: Specifies the parameter of flash object.
+* @retval status: the value of status register.
+*/
+int flash_get_status2(flash_t *obj)
+{
+    phal_spic_adaptor_t phal_spic_adaptor;
+    pflash_cmd_t cmd;
+    u8 status = 0;
+
+    flash_init(obj);
+    phal_spic_adaptor = (obj->phal_spic_adaptor);
+    cmd = phal_spic_adaptor->cmd;
+
+    flash_resource_lock();
+    status = hal_flash_get_status(phal_spic_adaptor, cmd->rdsr2);
+    flash_resource_unlock();
+    
+    return status;
+}
+
+
+/*
+Function Description:
 This function aims to set the value of the status register 1.
 It can be used to protect partial flash region.
 Please refer to the datatsheet of flash for more details of the content of status register.
@@ -382,23 +406,97 @@ int flash_set_status(flash_t *obj, uint32_t data)
     
     flash_resource_lock();
     
-    if ((phal_spic_adaptor->flash_type == FLASH_TYPE_GD) 
-        || (phal_spic_adaptor->flash_type == FLASH_TYPE_XTX)) {
-        if (phal_spic_adaptor->quad_pin_sel) {
-            data = (data & 0xFF) | 0x200;            
-            hal_flash_set_write_enable(phal_spic_adaptor);
-            spic_tx_cmd(phal_spic_adaptor, cmd->wrsr, 2, (u8*)&data);
-        } else {
-            hal_flash_set_status(phal_spic_adaptor, cmd->wrsr, (u8)data);
+    if (phal_spic_adaptor->quad_pin_sel) {
+        switch (phal_spic_adaptor->flash_type) {
+            case FLASH_TYPE_GD:
+            case FLASH_TYPE_XTX:
+                data = (data & 0xFF) | 0x200;            
+                hal_flash_set_write_enable(phal_spic_adaptor);
+                spic_tx_cmd(phal_spic_adaptor, cmd->wrsr, 2, (u8*)&data);
+                break;
+        
+            case FLASH_TYPE_MXIC:
+                hal_flash_set_status(phal_spic_adaptor, cmd->wrsr, (u8)(data | 0x40));                
+                break;
+        
+            default:
+                hal_flash_set_status(phal_spic_adaptor, cmd->wrsr, (u8)data);
         }
-    } else {
+    } else {       
         hal_flash_set_status(phal_spic_adaptor, cmd->wrsr, (u8)data);
     }
-
+    
     flash_resource_unlock();
 
     return 1;
 }
+
+/*
+Function Description:
+This function aims to set the value of the status register 2.
+It can be used to protect partial flash region.
+Please refer to the datatsheet of flash for more details of the content of status register.
+The block protected area and the corresponding control bits are provided in the flash datasheet.
+
+* @brief  Set Status register to enable desired operation
+* @param  obj: Specifies the parameter of flash object.
+* @param  data: Specifies which bit users like to set
+   ex: if users want to set the third bit, data = 0x8. 
+* @retval   status: Success:1 or Failure: Others.
+*/
+int flash_set_status2(flash_t *obj, uint32_t data)
+{   
+    phal_spic_adaptor_t phal_spic_adaptor;
+    pflash_cmd_t cmd;
+    u8 status_value = 0;
+
+    flash_init(obj);
+    phal_spic_adaptor = (obj->phal_spic_adaptor);
+    cmd = phal_spic_adaptor->cmd;
+    
+    flash_resource_lock();
+    
+    if (phal_spic_adaptor->quad_pin_sel) {
+        switch (phal_spic_adaptor->flash_type) {
+            case FLASH_TYPE_GD:
+            case FLASH_TYPE_XTX:
+                status_value = flash_get_status(obj) & 0xFF;
+                data = status_value | ((0x2 | data) << 8);            
+                hal_flash_set_write_enable(phal_spic_adaptor);
+                spic_tx_cmd(phal_spic_adaptor, cmd->wrsr, 2, (u8*)&data);
+                break;
+        
+            case FLASH_TYPE_MXIC:
+                status_value = flash_get_status(obj) & 0xFF;
+                data = (status_value | (data << 8));
+                hal_flash_set_write_enable(phal_spic_adaptor);
+                spic_tx_cmd(phal_spic_adaptor, cmd->wrsr, 2, (u8*)&data);
+                break;
+        
+            default:
+                data |= 0x2;
+                hal_flash_set_status(phal_spic_adaptor, cmd->wrsr2, (u8)data);
+        }
+    } else {       
+        switch (phal_spic_adaptor->flash_type) {
+            case FLASH_TYPE_GD:
+            case FLASH_TYPE_XTX:
+            case FLASH_TYPE_MXIC:
+                status_value = flash_get_status(obj) & 0xFF;
+                data = status_value | (data << 8);            
+                hal_flash_set_write_enable(phal_spic_adaptor);
+                spic_tx_cmd(phal_spic_adaptor, cmd->wrsr, 2, (u8*)&data);
+                break;
+        
+            default:
+                hal_flash_set_status(phal_spic_adaptor, cmd->wrsr2, (u8)data);
+        }
+    }
+    
+    flash_resource_unlock();
+    return 1;
+}
+
 
 /*
 Function Description:
@@ -418,17 +516,24 @@ void flash_reset_status(flash_t *obj)
     cmd = phal_spic_adaptor->cmd;
     
     flash_resource_lock();
-    if (phal_spic_adaptor->flash_type == FLASH_TYPE_GD 
-        || (phal_spic_adaptor->flash_type == FLASH_TYPE_XTX)) {
-        if (phal_spic_adaptor->quad_pin_sel) {
-            data = (data & 0xFF) | 0x200;            
-            hal_flash_set_write_enable(phal_spic_adaptor);
-            spic_tx_cmd(phal_spic_adaptor, cmd->wrsr, 2, (u8*)&data);
-        } else {
-            hal_flash_set_status(phal_spic_adaptor, cmd->wrsr, data);
+    if (phal_spic_adaptor->quad_pin_sel) {
+        switch (phal_spic_adaptor->flash_type) {
+            case FLASH_TYPE_GD:
+            case FLASH_TYPE_XTX:
+                data = (data & 0xFF) | 0x200;            
+                hal_flash_set_write_enable(phal_spic_adaptor);
+                spic_tx_cmd(phal_spic_adaptor, cmd->wrsr, 2, (u8*)&data);
+                break;
+        
+            case FLASH_TYPE_MXIC:
+                hal_flash_set_status(phal_spic_adaptor, cmd->wrsr, (u8)(data | 0x40));                
+                break;
+        
+            default:
+                hal_flash_set_status(phal_spic_adaptor, cmd->wrsr, (u8)data);
         }
-    } else {
-        hal_flash_set_status(phal_spic_adaptor, cmd->wrsr, data);
+    } else {       
+        hal_flash_set_status(phal_spic_adaptor, cmd->wrsr, (u8)data);
     }
     flash_resource_unlock();
 }

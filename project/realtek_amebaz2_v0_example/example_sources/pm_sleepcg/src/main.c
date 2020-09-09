@@ -170,11 +170,12 @@ int main (void)
 
 #elif (WAKEUP_SOURCE == 4)
         dbg_printf("Enter SleepCG, wake up by PWM \r\n");
-        pwmout_period_int(&my_PWM, 0, 0);
+
         if (PWM_init_count == 0) {
             pwmout_init(&my_PWM, WAKEUP_PWM_PIN);
             PWM_init_count = 1;
         }
+        pwmout_period_int(&my_PWM, 0, 0);
         pwmout_period(&my_PWM, PWM_SLEEP_DURATION);
         for (int i = 5; i > 0; i--) {
             dbg_printf("Enter SleepCG by %d seconds \r\n", i);

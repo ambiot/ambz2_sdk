@@ -118,6 +118,7 @@ SECTIONS
 		__fw_img_start__ = .;
 		__data_start__ = .;
 		*(vtable)
+		*(.sram.data*)
 		*(.data*)
 
 		. = ALIGN(4);
@@ -215,17 +216,15 @@ SECTIONS
 		/* LPDDR controller related code should be located in SRAM, never locates them in LPDDR */
 		*hal_lpcram*.o(.text*)
 
-		*ram_start.o(.text*)
-		*ram_start.o(.rodata*)
-		*hal_power_mode.o(.text*)
-		*hal_power_mode.o(.rodata*)
-		*hal_sys_ctrl.o(.text*)
-		*hal_sys_ctrl.o(.rodata*)
-		*rtl8710c_pinmux_patch.o(.text*)
-		*rtl8710c_pinmux_patch.o(.rodata*)
-		*hal_syson.o(.text*)
-		*hal_pinmux.o(.text*)
-		*hal_efuse.o(.text*)
+		*ram_start*.o(.text*)
+		*hal_power_mode*.o(.text*)
+		*hal_sys_ctrl*.o(.text*)
+		*rtl8710c_pinmux_patch*.o(.text*)
+		*hal_syson*.o(.text*)
+		*hal_pinmux*.o(.text*)
+		*hal_efuse*.o(.text*)
+		*sys_irq*.o(.text*)
+
 		*(.lpddr.text*)
 		*(.sram.text*)
 		. = ALIGN(4);
@@ -240,12 +239,18 @@ SECTIONS
 		/* SPI flash controller related code should be located in SRAM, never locates them in XIP */
 		*hal_spic*.o(.rodata*)
 		*hal_flash*.o(.rodata*)
-		*hal_syson.o(.rodata*)
-		*hal_pinmux.o(.rodata*)
-		*hal_efuse.o(.rodata*)
 
 		/* LPDDR controller related code should be located in SRAM, never locates them in LPDDR */
 		*hal_lpcram*.o(.rodata*)
+
+		*ram_start*.o(.rodata*)
+		*hal_power_mode*.o(.rodata*)
+		*hal_sys_ctrl*.o(.rodata*)
+		*rtl8710c_pinmux_patch*.o(.rodata*)
+		*hal_syson*.o(.rodata*)
+		*hal_pinmux*.o(.rodata*)
+		*hal_efuse*.o(.rodata*)
+		*sys_irq*.o(.rodata*)
 
 		. = ALIGN(4);
 		__ram_code_rodata_end__ = .;
@@ -253,6 +258,7 @@ SECTIONS
 
 	.xip.code_c :
 	{
+		/* code and RO data in this section will be encrypted */
 		. = ALIGN(16);
 		__xip_code_text_start__ = .;
 
@@ -260,11 +266,16 @@ SECTIONS
 
 		*(.text*)
 		
+		/* put RO data sections need to be encrypted here */
+		*(.xip.sec_rodata*)
+		
 		__xip_code_text_end__ = .;
 	} > XIP_FLASH_C
 
 	.xip.code_p :
 	{
+		/* code and RO data in this section will NOT be encrypted */
+		/* put DMA RO data here */
 		__xip_code_rodata_start__ = .;
 
 		*(.xip.rodata*)
@@ -289,6 +300,7 @@ SECTIONS
 	{
 		. = ALIGN(16);
 		__bss_start__ = .;
+		*(.sram.bss*)
 		*(.bss*)
 		*(COMMON)
 	} > DTCM_RAM

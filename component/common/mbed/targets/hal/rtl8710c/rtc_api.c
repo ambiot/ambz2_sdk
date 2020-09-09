@@ -29,8 +29,23 @@
 #include "rtc_api.h"
 
 #if DEVICE_RTC
+
+#if CONFIG_SYSTEM_TIME64
+#include "time64.h"
+#else
 #include <time.h>
+#endif
+
 #include "timer_api.h"     // software-RTC: use a g-timer for the tick of the RTC
+
+extern long long __wrap_mktime (struct tm *);
+extern struct tm * __wrap_localtime (long long *);
+#undef time_t
+#define time_t long long
+#undef localtime
+#define localtime(a) __wrap_localtime(a)
+#undef mktime
+#define mktime(a) __wrap_mktime(a)
 
 #define SW_RTC_TIMER_ID    TIMER4
 

@@ -197,7 +197,7 @@ int ssl_client_ext_setup(ssl_context *ssl)
 static mbedtls_x509_crt* _cli_crt = NULL;
 static mbedtls_pk_context* _clikey_rsa = NULL;
 
-#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1)
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1) && defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) && (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 1)
 //client key is moved to secure zone
 #else
 static const unsigned char *test_client_key = \
@@ -307,7 +307,7 @@ int ssl_client_ext_init(void)
 		mbedtls_x509_crt_init(_cli_crt);
 	else
 		return -1;
-#if !defined(configENABLE_TRUSTZONE) || (configENABLE_TRUSTZONE == 0)
+#if !defined(configENABLE_TRUSTZONE) || (configENABLE_TRUSTZONE == 0) || !defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) || (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 0)
 	_clikey_rsa = (mbedtls_pk_context *) mbedtls_calloc(1, sizeof(mbedtls_pk_context));
 
 	if(_clikey_rsa)
@@ -337,7 +337,7 @@ void ssl_client_ext_free(void)
 	}
 
 	if(_clikey_rsa) {
-#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1)
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1) && defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) && (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 1)
 		extern void NS_ENTRY secure_mbedtls_pk_free(mbedtls_pk_context *pk);
 		secure_mbedtls_pk_free(_clikey_rsa);
 #else
@@ -366,7 +366,7 @@ int ssl_client_ext_setup(mbedtls_ssl_config *conf)
 	if(mbedtls_x509_crt_parse(_cli_crt, test_client_cert, strlen((char const*)test_client_cert) + 1) != 0)
 		return -1;
 
-#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1)
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1) && defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) && (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 1)
 	extern mbedtls_pk_context* NS_ENTRY secure_mbedtls_pk_parse_key(void);
 	_clikey_rsa = secure_mbedtls_pk_parse_key();
 	if(_clikey_rsa == NULL)

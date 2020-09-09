@@ -6,7 +6,11 @@ echo $FIRMWARENAME
 
 #===============================================================================
 #get file size
-FIRMWARE_SIZE=$(stat -c %s $FIRMWARENAME)
+if [ “$(uname)” == “Darwin” ]; then
+                FIRMWARE_SIZE=$(stat -f %z $FIRMWARENAME)
+else
+                FIRMWARE_SIZE=$(stat -c %s $FIRMWARENAME)
+fi
 
 echo "set \$FirmwareName = \"$FIRMWARENAME\"" > fwinfo.gdb
 echo "set \$FirmwareSize = $FIRMWARE_SIZE" >> fwinfo.gdb

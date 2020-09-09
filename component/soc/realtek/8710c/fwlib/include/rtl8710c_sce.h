@@ -602,6 +602,12 @@ typedef struct hal_sce_group_adaptor_s {
 //    uint8_t  exmem_key_inited; /*!<  bit map of ext. mem key 1 ~ 2 initialed */
 } hal_sce_group_adaptor_t, *phal_sce_group_adaptor_t;
 
+typedef struct hal_sce_check_info_s {
+    uint32_t key_check[4] __attribute__((aligned(16)));
+    uint32_t iv_check[4] __attribute__((aligned(16)));
+
+} hal_sce_check_info_t, *phal_sce_check_info_t;
+
 /// @cond DOXYGEN_ROM_HAL_API
 
 /**

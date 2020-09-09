@@ -822,6 +822,11 @@ int wext_set_ap_ssid(const char *ifname, const __u8 *ssid, __u16 ssid_len)
 	struct iwreq iwr;
 	int ret = 0;
 
+	if(ssid_len > 32){
+		printf("Error: SSID should be 0-32 characters\r\n");
+		return RTW_BADARG;
+	}
+	
 	memset(&iwr, 0, sizeof(iwr));
 	iwr.u.essid.pointer = (void *) ssid;
 	iwr.u.essid.length = ssid_len;
@@ -867,6 +872,22 @@ int wext_get_rssi(const char *ifname, int *rssi)
 	return ret;
 }
 
+int wext_get_bcn_rssi(const char *ifname, int *rssi)
+{
+	struct iwreq iwr;
+	int ret = 0;
+
+	memset(&iwr, 0, sizeof(iwr));
+
+	if (iw_ioctl(ifname, SIOCGIWBCNSENS, &iwr) < 0) {
+		printf("\n\rioctl[SIOCGIWBCNSENS] error");
+		ret = -1;
+	} else {
+		*rssi = 0 - iwr.u.bcnsens.value;
+	}
+	return ret;
+}
+
 int wext_get_snr(const char *ifname, int *snr)
 {
 	struct iwreq iwr;
@@ -901,7 +922,7 @@ int wext_set_pscan_channel(const char *ifname, __u8 *ch, __u8 *pscan_config, __u
 	*(para+12) = length;
 	for(i = 0; i < length; i++){
 		*(para + 13 + i)= *(ch + i);
-		*((__u16*) (para + 13 + length + i))= *(pscan_config + i);
+		*(para + 13 + length + i)= *(pscan_config + i);
 	}
 	
 	iwr.u.data.pointer = para;
@@ -1468,6 +1489,30 @@ int wext_set_adaptivity_th_l2h_ini(__u8 l2h_threshold)
 	return 0;
 }
 
+int wext_set_trp_tis(__u8 enable)
+{
+	extern u8 rtw_tx_pwr_lmt_enable;
+	extern u8 rtw_tx_pwr_by_rate;
+	extern u8 rtw_trp_tis_test_en;
+
+	if(enable == ENABLE){
+		//close the tx power limit and pwr by rate incase the efficiency of Antenna is not good enough.
+		rtw_tx_pwr_lmt_enable = 2;//set 0 to disable, set 2 to use efuse value
+		rtw_tx_pwr_by_rate = 2;//set 0 to disable, set 2 to use efuse value
+		//disable some dynamic mechanism
+		rtw_trp_tis_test_en = 1;
+		//you can change autoreconnct mode to RTW_AUTORECONNECT_INFINITE in init_thread function
+	}
+	return 0;
+}
+
+int wext_set_support_wpa3(__u8 enable)
+{
+	extern u8 rtw_cmd_tsk_spt_wap3;
+	rtw_cmd_tsk_spt_wap3 = enable;
+	return 0;
+}
+
 extern int rltk_get_auto_chl(const char *ifname, unsigned char *channel_set, unsigned char channel_num);
 int wext_get_auto_chl(const char *ifname, unsigned char *channel_set, unsigned char channel_num)
 {
@@ -1694,3 +1739,9 @@ int wext_wlan_redl_fw(const char *ifname){
 	return ret;
 }
 #endif
+extern void rtw_set_lowrssi_use_b(int enable,int rssi);
+void wext_set_lowrssi_use_b(int enable,int rssi)
+{
+	rtw_set_lowrssi_use_b(enable,rssi);
+	return ;
+}

@@ -44,13 +44,16 @@ void flash_erase_dword(u32 address, u32 dword_num)
 	u32 read_addr;
 	flash_t flash;
 
+	u32 data_4=0;
+	u8 data_8[8];
 	/* erase backup sector 4k bytes*/ 
 	flash_erase_sector(&flash, FLASH_RESERVED_DATA_BASE);
 
 	/* backup this sector */
 	for (idx = 0; idx < 0x1000; idx += 4) {
 		read_addr = opt_sector + idx;
-		memcpy(data, (const void *)(SPI_FLASH_BASE + read_addr), 4);
+		flash_read_word(&flash, read_addr,&data_4);
+		memcpy(data, &data_4, 4);
 		if (erase_num > 0) {
 			if (erase_addr == read_addr) {
 				data[0] = 0xFFFFFFFF;
@@ -65,7 +68,8 @@ void flash_erase_dword(u32 address, u32 dword_num)
 
 	/* write this sector with target data erased */
 	for (idx = 0; idx < 0x1000; idx += 8) {
-		memcpy(data, (const void *)(SPI_FLASH_BASE + FLASH_RESERVED_DATA_BASE + idx), 8);
+		flash_stream_read(&flash, FLASH_RESERVED_DATA_BASE + idx, 8, data_8);
+		memcpy(data, data_8, 8);
 		flash_stream_write(&flash, (opt_sector + idx), 8, (u8*)data);
 	}
 }

@@ -171,6 +171,15 @@ SECTIONS
 		__ram_code_rodata_end__ = .;
 	} > RAM_RO
 
+	.system_restore_data :
+	{
+		/* data in this section will not be initialed by ram_start() */
+		/* some of them will be initialed by boot loader */
+		. = ALIGN(32);		
+		*(.sys_restore.bss*)
+		*(.ram.bss.noinit*)
+	} > RAM_RO
+
 	.heap (COPY):
 	{
 		__HeapBase = .;

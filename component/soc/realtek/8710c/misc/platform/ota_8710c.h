@@ -30,6 +30,10 @@ typedef struct {
 	uint32_t	parse_status;
 } http_response_result_t;
 
+typedef union { 
+	uint32_t u; 
+	unsigned char c[4]; 
+} _file_checksum;
 /*******************************************************************/
 
 

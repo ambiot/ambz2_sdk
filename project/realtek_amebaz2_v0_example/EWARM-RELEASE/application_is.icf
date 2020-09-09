@@ -203,8 +203,10 @@ define block SRAM_OBJECT with fixed order
     //block IAR_LIBS
 };
 
+keep { section .xip.ram.sign.s* };
 define block RAM_TEXT with alignment = 16, fixed order
 {
+    section .xip.ram.sign.s*,
     section .xip.text*,
     section .text*
 };

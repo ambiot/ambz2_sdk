@@ -184,7 +184,13 @@ static void print_scan_result( rtw_scan_result_t* record )
             ( record->security == RTW_SECURITY_WPA2_AES_PSK ) ? "WPA2 AES" :
             ( record->security == RTW_SECURITY_WPA2_TKIP_PSK ) ? "WPA2 TKIP" :
             ( record->security == RTW_SECURITY_WPA2_MIXED_PSK ) ? "WPA2 Mixed" :
-            ( record->security == RTW_SECURITY_WPA_WPA2_MIXED ) ? "WPA/WPA2 AES" : "Unknown",
+            ( record->security == RTW_SECURITY_WPA_WPA2_MIXED ) ? "WPA/WPA2 AES" : 
+			( record->security == RTW_SECURITY_WPA2_ENTERPRISE ) ? "WPA2 Enterprise" : 
+			( record->security == RTW_SECURITY_WPA_WPA2_ENTERPRISE ) ? "WPA/WPA2 Enterprise" : 
+#ifdef CONFIG_SAE_SUPPORT
+			( record->security == RTW_SECURITY_WPA3_AES_PSK) ? "WP3-SAE AES" :
+#endif
+			"Unknown",
             record->signal_strength, MAC_ARG(record->BSSID.octet)   );
 #else
     RTW_API_INFO("%s\t ", ( record->bss_type == RTW_BSS_TYPE_ADHOC ) ? "Adhoc" : "Infra");
@@ -200,6 +206,8 @@ static void print_scan_result( rtw_scan_result_t* record )
                                  ( record->security == RTW_SECURITY_WPA2_TKIP_PSK ) ? "WPA2 TKIP" :
                                  ( record->security == RTW_SECURITY_WPA2_MIXED_PSK ) ? "WPA2 Mixed" :
                                  ( record->security == RTW_SECURITY_WPA_WPA2_MIXED ) ? "WPA/WPA2 AES" :
+								 ( record->security == RTW_SECURITY_WPA2_ENTERPRISE ) ? "WPA2 Enterprise" :
+								 ( record->security == RTW_SECURITY_WPA_WPA2_ENTERPRISE ) ? "WPA/WPA2 Enterprise" : 
 #ifdef CONFIG_SAE_SUPPORT
 								 ( record->security == RTW_SECURITY_WPA3_AES_PSK) ? "WP3-SAE AES" :
 #endif
@@ -621,11 +629,16 @@ void fATWx(void *arg){
 void fATW0(void *arg){
 	volatile int ret = RTW_SUCCESS;
 	(void) ret;
-        if(!arg){
-          printf("[ATW0]Usage: ATW0=SSID\n\r");
+	if(!arg){
+		printf("[ATW0]Usage: ATW0=SSID\n\r");
 		ret = RTW_BADARG;
 		goto exit;
-        }
+	}
+	if(strlen((char*)arg) > 32){
+		printf("[ATW0]Error: SSID length can't exceed 32\n\r");
+		ret = RTW_BADARG;
+		goto exit;
+	}
 	printf("[ATW0]: _AT_WLAN_SET_SSID_ [%s]\n\r", (char*)arg);
 	strcpy((char *)wifi.ssid.val, (char*)arg);
 	wifi.ssid.len = strlen((char*)arg);
@@ -645,14 +658,6 @@ void fATW1(void *arg){
 		goto exit;
 	}	
 	printf("[ATW1]: _AT_WLAN_SET_PASSPHRASE_ [%s]\n\r", (char*)arg); 
-	
-#ifdef CONFIG_SAE_SUPPORT
-	if(strlen((char*)arg) > 63)
-	{
-		 printf("[ATW1]: Error: password input(%d) > 63 \n\r", strlen((char*)arg));
-		 goto exit; 
-	}
-#endif		
 
 	strcpy((char *)password, (char*)arg);	
 	wifi.password = password;
@@ -866,6 +871,14 @@ void fATWA(void *arg){
 	pnetif->flags |= NETIF_FLAG_IPSWITCH;
 #endif
 #endif
+	
+#if defined(CONFIG_PLATFORM_8710C) && (defined(CONFIG_BT) && CONFIG_BT)
+	if (wifi_set_mode(RTW_MODE_AP) < 0){
+	    printf("\n\rERROR: Wifi on failed!");
+	    ret = RTW_ERROR;
+	    goto exit;
+	}
+#else
 	wifi_off();
 	vTaskDelay(20);
 	if (wifi_on(RTW_MODE_AP) < 0){
@@ -873,6 +886,7 @@ void fATWA(void *arg){
 		ret = RTW_ERROR;
 		goto exit;
 	}
+#endif
 	printf("\n\rStarting AP ...");
 
 #if defined(CONFIG_ENABLE_WPS_AP) && CONFIG_ENABLE_WPS_AP
@@ -1014,13 +1028,21 @@ void fATWC(void *arg){
 #if CONFIG_LWIP_LAYER
 		dhcps_deinit();
 #endif
+#if defined(CONFIG_PLATFORM_8710C) && (defined(CONFIG_BT) && CONFIG_BT)
+		if (wifi_set_mode(RTW_MODE_STA) < 0){
+		    printf("\n\rERROR: Wifi on failed!");
+		    ret = RTW_ERROR;
+		    goto EXIT;
+		}
+#else	
 		wifi_off();
 		vTaskDelay(20);
 		if (wifi_on(RTW_MODE_STA) < 0){
-			printf("\n\rERROR: Wifi on failed!");
-                        ret = RTW_ERROR;
-			goto EXIT;
-		}
+		    printf("\n\rERROR: Wifi on failed!");
+		    ret = RTW_ERROR;
+		    goto EXIT;
+		}	
+#endif
 	}
 
 #if CONFIG_INIC_EN //get security mode from scan list
@@ -1734,7 +1756,7 @@ exit:
 void fATWGRP(void *arg){
 
     unsigned char grp_id = 0 , i = 0, error = 0;
-	int target_grp_id[10] = {15, 16, 17, 18, 19, 20, 21,28,29,30};
+	int target_grp_id[10] = {19, 20};
 
 	if(!arg)
 	{
@@ -1744,11 +1766,11 @@ void fATWGRP(void *arg){
 	{
 		grp_id = atoi((const char *)(arg));
 		
-		for(i = 0; i < 10; i++)
+		for(i = 0; i < 2; i++)
 			if(grp_id == target_grp_id[i])
 				break;
 		
-		if(i == 10)
+		if(i == 2)
 			error = 1;
 	}
 	
@@ -1757,7 +1779,7 @@ void fATWGRP(void *arg){
 		printf("[ATGP]error cmd  !!\n\r");
 		printf("[ATGP]Usage: ATGP = group_id \n\r");
 		printf("      *************************************************\n\r");
-		printf("      ECC group: 19, 20, 21, 28, 29, 30 \n\r      DH group: 15, 16, 17, 18\r\n");
+		printf("      ECC group: 19, 20 \n\r");
 		printf("      *************************************************\n\r");
 	}
 	else
@@ -1911,6 +1933,13 @@ void fATPA(void *arg)
 
 	wifi_unreg_event_handler(WIFI_EVENT_DISCONNECT, atcmd_wifi_disconn_hdl);
 
+#if defined(CONFIG_PLATFORM_8710C) && (defined(CONFIG_BT) && CONFIG_BT)
+	if (wifi_set_mode(wifi_mode_copy) < 0){
+	    //at_printf("\r\n[ATPA] ERROR : Wifi on failed");
+	    error_no = 3;
+	    goto exit;
+	}
+#else
 	wifi_off();
 	vTaskDelay(20);
 
@@ -1919,6 +1948,7 @@ void fATPA(void *arg)
 		error_no = 3;
 		goto exit;
 	}
+#endif
 
 	if(hidden_ssid){
 		if(wifi_start_ap_with_hidden_ssid((char*)ap.ssid.val, ap.security_type, (char*)ap.password, ap.ssid.len, ap.password_len, ap.channel) < 0) {
@@ -2144,6 +2174,13 @@ void fATPN(void *arg)
 #if CONFIG_LWIP_LAYER
 		dhcps_deinit();
 #endif
+#if defined(CONFIG_PLATFORM_8710C) && (defined(CONFIG_BT) && CONFIG_BT)
+		if (wifi_set_mode(RTW_MODE_STA) < 0){
+		    //at_printf("\r\n[ATPN] ERROR: Wifi on failed");
+		    error_no = 3;
+		    goto exit;
+		}
+#else
 		wifi_off();
 		vTaskDelay(20);
 		if (wifi_on(RTW_MODE_STA) < 0){
@@ -2151,6 +2188,7 @@ void fATPN(void *arg)
 			error_no = 3;
 			goto exit;
 		}
+#endif
 	}
 
 #if 1
@@ -2824,7 +2862,7 @@ void fATWL(void *arg){
           return;
         }
         if((argc = parse_param(arg, argv)) > 1){
-          if(argc != 2) {
+          if(argc != 2 && argc != 3) {
             printf("ATWL=SSL_SERVER_HOST\n\r");
             return;
           }

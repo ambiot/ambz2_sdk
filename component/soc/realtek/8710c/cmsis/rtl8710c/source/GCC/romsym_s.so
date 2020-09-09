@@ -55,4 +55,7 @@ SECTIONS
 	__rom_stubs_utility = 0x8c0;
 	Image$$_STUB_UTILITY$$Base = 0x8c0;
 	utility_stubs = 0x8c0;
+	__rom_stubs_ssl = 0x910;
+	Image$$_STUB_SSL$$Base = 0x910;
+	ssl_func_stubs = 0x910;
 }

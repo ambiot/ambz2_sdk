@@ -68,6 +68,7 @@ static void mbedtls_zeroize( void *v, size_t n ) {
 
 
 #if defined(MBEDTLS_ENTROPY_HARDWARE_ALT)
+#include "osdep_service.h"
 int mbedtls_hardware_poll( void *data,
                            unsigned char *output, size_t len, size_t *olen )
 {

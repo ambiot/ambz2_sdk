@@ -78,7 +78,7 @@ typedef	struct sk_buff		_pkt;
 typedef unsigned char		_buffer;
 typedef unsigned int        systime;
 
-#ifndef __LIST_H
+#ifndef __LIST_H__
 #warning "DLIST_NOT_DEFINE!!!!!!"
 struct list_head {
 	struct list_head *next, *prev;

@@ -80,6 +80,9 @@ if not exist Debug\Exe\firmware_is.bin (
 	goto error_exit
 )
 
+:: generate firmware ota image
+%tooldir%\checksum.exe Debug\Exe\firmware_is.bin
+
 ::generate flash image, including partition + bootloader + firmware
 %tooldir%\elf2bin.exe combine Debug/Exe/flash_is.bin PTAB=Debug\Exe\partition.bin,BOOT=Debug\Exe\bootloader.bin,FW1=Debug\Exe\firmware_is.bin >> postbuild_is_log.txt
 if not exist Debug\Exe\flash_is.bin (
@@ -111,6 +114,9 @@ if not exist Debug\Exe\application_is.dbg.out (
 
 :: disassembly, very long time, turn on if needed
 %iartooldir%\bin\ielfdumparm.exe --code Debug\Exe\application_is.dbg.out Debug\Exe\application_is.asm
+
+%tooldir%\objcopy.exe -I elf32-little -j "BTTRACE rw" -Obinary Debug\Exe\application_is.dbg.out Debug\Exe\APP.trace
+
 ::pause
 
 exit 0 /b

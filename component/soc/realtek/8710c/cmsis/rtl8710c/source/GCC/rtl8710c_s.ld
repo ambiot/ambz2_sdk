@@ -105,6 +105,7 @@ SECTIONS
 		KEEP(*system_rtl8710c.o(.text*))
 		KEEP(*(.startup.text))
 		KEEP(*(.vector.text))
+		KEEP(*rtl8710c_irq.o(.text*))
 		KEEP(*(.sys_misc.text))
 		KEEP(*(.rom.irq.rodata*))
 
@@ -221,7 +222,8 @@ SECTIONS
 		*_arm_cmpsf2.o(.text*)
 		*eqsf2.o(.text*)
 		*gesf2.o(.text*)
-		*lesf2.o(.text*)		
+		*lesf2.o(.text*)
+		*_lshrdi3.o(.text*)
 		__lib_gcc_end = .;
 		
 		KEEP(*(.init))
@@ -271,6 +273,13 @@ SECTIONS
 		KEEP(*rtl8710c_sce.o(.rodata*))		
 
 		KEEP(*(.eh_frame*))
+
+		/**** SSL ROM code ****/
+		KEEP(*(.rom.ssl.text))
+		KEEP(*(.rom.ssl.rodata))
+		KEEP(*(.rom.ssl.itcm))
+		KEEP(*(.rom.ssl.dtcm))
+		KEEP(*rom_mbedtls_bignum.o(.rodata.str1*))
 	} > ITCM_ROM
 
 	.ARM.extab :
@@ -400,6 +409,10 @@ SECTIONS
 		. = ALIGN(0x10);
 		__rom_stubs_utility = .;
 		KEEP(*(.rom.utility.stubs))	
+
+		. = ALIGN(0x10);
+		__rom_stubs_ssl = .;
+		KEEP(*(.rom.ssl.stubs))
 	} > ROM_STUB
 
 
@@ -469,6 +482,7 @@ SECTIONS
 		KEEP(*strproc.o(.bss*))
 		KEEP(*(.rom.wlan.bss))
 		KEEP(*(.rom.hal_crypto_s.bss))
+		KEEP(*(.rom.ssl.bss))
 		__rom_bss_end__ = .;
 
 	} > ROM_USED_RAM

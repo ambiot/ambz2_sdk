@@ -10,21 +10,6 @@ AMEBAZ2_ROMSYMDIR = $(AMEBAZ2_BSPDIR)/ROM
 
 OS := $(shell uname)
 
-ifeq ($(findstring CYGWIN, $(OS)), CYGWIN)
-	ARM_GCC_TOOLCHAIN = ../../../tools/arm-none-eabi-gcc/asdk/cygwin/newlib/bin
-	ELF2BIN = $(AMEBAZ2_TOOLDIR)/elf2bin.exe
-endif
-
-ifeq ($(findstring MINGW32, $(OS)), MINGW32)
-	ARM_GCC_TOOLCHAIN = ../../../tools/arm-none-eabi-gcc/asdk/mingw32/newlib/bin
-	ELF2BIN = $(AMEBAZ2_TOOLDIR)/elf2bin.exe
-endif
-
-ifeq ($(findstring Linux, $(OS)), Linux)
-	ARM_GCC_TOOLCHAIN = ../../../tools/arm-none-eabi-gcc/asdk/linux/newlib/bin
-	ELF2BIN = $(AMEBAZ2_GCCTOOLDIR)/elf2bin.linux	
-endif
-
 CROSS_COMPILE = $(ARM_GCC_TOOLCHAIN)/arm-none-eabi-
 
 # Compilation tools
@@ -40,6 +25,7 @@ OBJDUMP = $(CROSS_COMPILE)objdump
 OS := $(shell uname)
 
 LDSCRIPT := ./rtl8710c_ram.ld
+
 
 # Initialize target name and target object files
 # -------------------------------------------------------------------
@@ -57,6 +43,11 @@ BOOT_BIN_DIR=bootloader/Debug/bin
 
 
 ROMIMG = 
+
+# Decide if 64 bit time wrapper is to be included
+# -------------------------------------------------------------------
+#SYSTEM_TIME64_MAKE_OPTION = 1
+
 # Include folder list
 # -------------------------------------------------------------------
 
@@ -322,6 +313,7 @@ SRC_C += ../../../component/os/os_dep/device_lock.c
 SRC_C += ../../../component/os/freertos/freertos_cb.c
 SRC_C += ../../../component/os/freertos/freertos_service.c
 SRC_C += ../../../component/os/os_dep/osdep_service.c
+SRC_C += ../../../component/os/freertos/freertos_pmu.c
 
 #os - freertos
 SRC_C += ../../../component/os/freertos/freertos_v10.0.1/Source/croutine.c
@@ -441,15 +433,22 @@ DEPENDENCY_LIST = $(addprefix $(OBJ_DIR)/,$(patsubst %.c,%_$(TARGET).d,$(SRC_C_L
 # -------------------------------------------------------------------
 
 CFLAGS =
-CFLAGS += -march=armv8-m.main+dsp -mthumb -mcmse -mfloat-abi=soft -D__thumb2__ -g -gdwarf-3 -O2
+CFLAGS += -march=armv8-m.main+dsp -mthumb -mcmse -mfloat-abi=soft -D__thumb2__ -g -gdwarf-3 -Os
 CFLAGS += -D__ARM_ARCH_8M_MAIN__=1 -gdwarf-3 -fstack-usage -fdata-sections -ffunction-sections 
 CFLAGS += -fdiagnostics-color=always -Wall -Wpointer-arith -Wstrict-prototypes -Wundef -Wno-write-strings 
 CFLAGS += -Wno-maybe-uninitialized --save-temps -c -MMD
 CFLAGS += -DCONFIG_PLATFORM_8710C -DCONFIG_BUILD_RAM=1
 CFLAGS += -DV8M_STKOVF
+#for time64 
+ifdef SYSTEM_TIME64_MAKE_OPTION
+CFLAGS += -DCONFIG_SYSTEM_TIME64=1
+CFLAGS += -include time64.h
+else
+CFLAGS += -DCONFIG_SYSTEM_TIME64=0
+endif
 
 LFLAGS = 
-LFLAGS += -O2 -march=armv8-m.main+dsp -mthumb -mcmse -mfloat-abi=soft -nostartfiles -nodefaultlibs -nostdlib -specs=nosys.specs
+LFLAGS += -Os -march=armv8-m.main+dsp -mthumb -mcmse -mfloat-abi=soft -nostartfiles -nodefaultlibs -nostdlib -specs=nosys.specs
 LFLAGS += -Wl,--gc-sections -Wl,--warn-section-align -Wl,--cref -Wl,--build-id=none -Wl,--use-blx
 LFLAGS += -Wl,-Map=$(BIN_DIR)/$(TARGET).map
 # libc api wrapper
@@ -465,6 +464,7 @@ LFLAGS += -Wl,-wrap,atoui   -Wl,-wrap,atol     -Wl,-wrap,atoul
 LFLAGS += -Wl,-wrap,atoull  -Wl,-wrap,atof
 LFLAGS += -Wl,-wrap,malloc  -Wl,-wrap,realloc
 LFLAGS += -Wl,-wrap,calloc  -Wl,-wrap,free
+LFLAGS += -Wl,-wrap,_malloc_r  -Wl,-wrap,_calloc_r
 LFLAGS += -Wl,-wrap,memcmp  -Wl,-wrap,memcpy
 LFLAGS += -Wl,-wrap,memmove -Wl,-wrap,memset
 LFLAGS += -Wl,-wrap,printf  -Wl,-wrap,sprintf
@@ -478,15 +478,23 @@ LFLAGS += -Wl,-wrap,rom_psk_CalcPTK
 LFLAGS += -Wl,-wrap,aes_80211_encrypt
 LFLAGS += -Wl,-wrap,aes_80211_decrypt
 
+ifdef SYSTEM_TIME64_MAKE_OPTION
+LFLAGS += -Wl,-wrap,localtime -Wl,-wrap,mktime -Wl,-wrap,ctime
+endif
+
 LIBFLAGS =
 LIBFLAGS += -L$(AMEBAZ2_ROMSYMDIR)
 LIBFLAGS += -Wl,--start-group ../../../component/soc/realtek/8710c/fwlib/lib/lib/hal_pmc.a -Wl,--end-group
-LIBFLAGS += -L../../../component/soc/realtek/8710c/misc/bsp/lib/common/GCC -l_soc_is -l_http -l_dct -l_eap -l_p2p -l_websocket -l_wps
-all: LIBFLAGS += -l_wlan
-mp: LIBFLAGS += -l_wlan_mp
+all: LIBFLAGS += -Wl,--start-group -L../../../component/soc/realtek/8710c/misc/bsp/lib/common/GCC -l_soc_is -l_wlan -Wl,--end-group
+mp: LIBFLAGS += -Wl,--start-group -L../../../component/soc/realtek/8710c/misc/bsp/lib/common/GCC -l_soc_is -l_wlan_mp -Wl,--end-group
+LIBFLAGS += -L../../../component/soc/realtek/8710c/misc/bsp/lib/common/GCC -l_http -l_dct -l_eap -l_p2p -l_websocket -l_wps
+#LIBFLAGS += -L../../../component/soc/realtek/8710c/misc/bsp/lib/common/GCC -l_coap
+ 
 
 RAMALL_BIN =
 OTA_BIN = 
+
+include toolchain.mk
 
 # Compile
 # -------------------------------------------------------------------
@@ -500,18 +508,19 @@ application_is: prerequirement $(SRC_O) $(SRAM_O) $(ERAM_O)
 # -------------------------------------------------------------------
 
 .PHONY: manipulate_images
-manipulate_images:
+manipulate_images: | application_is
 	@echo ===========================================================
 	@echo Image manipulating
 	@echo ===========================================================
 	cp $(AMEBAZ2_BOOTLOADERDIR)/bootloader.axf $(BOOT_BIN_DIR)/bootloader.axf
 ifeq ($(findstring Linux, $(OS)), Linux)
-	chmod 0774 $(ELF2BIN)
+	chmod 0774 $(ELF2BIN) $(CHKSUM)
 endif
 	$(ELF2BIN) keygen keycfg.json
 	$(ELF2BIN) convert amebaz2_bootloader.json BOOTLOADER secure_bit=0
 	$(ELF2BIN) convert amebaz2_bootloader.json PARTITIONTABLE secure_bit=0
 	$(ELF2BIN) convert amebaz2_firmware_is.json FIRMWARE secure_bit=0
+	$(CHKSUM) $(BIN_DIR)/firmware_is.bin
 	$(ELF2BIN) combine $(BIN_DIR)/flash_is.bin PTAB=partition.bin,BOOT=$(BOOT_BIN_DIR)/bootloader.bin,FW1=$(BIN_DIR)/firmware_is.bin
 
 # Generate build info
@@ -553,7 +562,7 @@ prerequirement:
 	mkdir -p $(BOOT_BIN_DIR)
 	mkdir -p $(INFO_DIR)
 
-$(SRC_O): %_$(TARGET).o : %.c
+$(SRC_O): %_$(TARGET).o : %.c | prerequirement
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -MM -MT $@ -MF $(OBJ_DIR)/$(notdir $(patsubst %.o,%.d,$@))
 	cp $@ $(OBJ_DIR)/$(notdir $@)
@@ -561,7 +570,7 @@ $(SRC_O): %_$(TARGET).o : %.c
 	mv $(notdir $*.s) $(INFO_DIR)
 	chmod 777 $(OBJ_DIR)/$(notdir $@)
 
-$(SRAM_O): %_$(TARGET).o : %.c
+$(SRAM_O): %_$(TARGET).o : %.c | prerequirement
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 	$(OBJCOPY) --prefix-alloc-sections .sram $@
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -MM -MT $@ -MF $(OBJ_DIR)/$(notdir $(patsubst %.o,%.d,$@))
@@ -570,7 +579,7 @@ $(SRAM_O): %_$(TARGET).o : %.c
 	mv $(notdir $*.s) $(INFO_DIR)
 	chmod 777 $(OBJ_DIR)/$(notdir $@)
 
-$(ERAM_O): %_$(TARGET).o : %.c
+$(ERAM_O): %_$(TARGET).o : %.c | prerequirement
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 	$(OBJCOPY) --prefix-alloc-sections .psram $@
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -MM -MT $@ -MF $(OBJ_DIR)/$(notdir $(patsubst %.o,%.d,$@))

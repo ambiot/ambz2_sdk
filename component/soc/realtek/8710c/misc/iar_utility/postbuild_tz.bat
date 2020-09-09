@@ -86,6 +86,9 @@ if not exist Debug\Exe\firmware_tz.bin (
 	goto error_exit
 )
 
+:: generate firmware ota image
+%tooldir%\checksum.exe Debug\Exe\firmware_tz.bin
+
 ::generate flash image, including partition + bootloader + firmware
 %tooldir%\elf2bin.exe combine Debug/Exe/flash_tz.bin PTAB=Debug/Exe/partition.bin,BOOT=Debug/Exe/bootloader.bin,FW1=Debug/Exe/firmware_tz.bin >> postbuild_tz_log.txt
 if not exist Debug\Exe\flash_tz.bin (

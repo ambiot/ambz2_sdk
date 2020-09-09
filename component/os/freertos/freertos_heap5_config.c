@@ -119,6 +119,11 @@ NS_ENTRY void secure_heap_init( void )
 #endif
 		vPortDefineHeapRegions( xHeapRegions );	
 }
+
+NS_ENTRY size_t xPortGetFreeHeapSizeNSC( void )
+{
+	return xPortGetFreeHeapSize();
+}
 #endif	
 #if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1)
 NS_ENTRY void secure_heap_init( void );

@@ -2,8 +2,22 @@
 #include "task.h"
 #include "platform_stdlib.h"
 #include "osdep_service.h"
-
+#include <lwip/sockets.h>
 #include "httpc.h"
+
+int httpc_setsockopt_rcvtimeo(struct httpc_conn* conn, int recv_timeout)
+{
+	int ret = 0;
+#if defined(LWIP_SO_SNDRCVTIMEO_NONSTANDARD) && (LWIP_SO_SNDRCVTIMEO_NONSTANDARD == 0)	//lwip 2.0.2
+	struct timeval timeout;
+	timeout.tv_sec  = recv_timeout / 1000;
+	timeout.tv_usec = ( recv_timeout % 1000 ) * 1000;
+	ret = setsockopt(conn->sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+#else	//lwip 1.4.1
+	ret = setsockopt(conn->sock, SOL_SOCKET, SO_RCVTIMEO, &recv_timeout, sizeof(recv_timeout));
+#endif
+	return ret;
+}
 
 #if (HTTPC_USE_TLS == HTTPC_TLS_POLARSSL)
 #include "polarssl/ssl.h"

@@ -36,6 +36,7 @@
 #define CHIP_A_CUT                          0
 #define CHIP_B_CUT                          1
 #define CHIP_C_CUT                          2
+#define CHIP_D_CUT                          3
 
 #if CONFIG_FPGA
 // FPGA
@@ -43,17 +44,17 @@
 //#define XTAL                                (12500000U)      /* Oscillator frequency */
 #define CONFIG_CPU_CLK                      (XTAL)
 #define PLATFORM_SCLK                       (8000000)
-#define CHIP_VER                            (CHIP_B_CUT)
+#define CHIP_VER                            (CHIP_D_CUT)
 #else
 // ASIC
 #define CONFIG_PLL_CLK                      (200000000U)
 #define CONFIG_CPU_CLK                      (CONFIG_PLL_CLK/2)
 #define PLATFORM_SCLK                       (40000000U)
-#define CHIP_VER                            (CHIP_B_CUT)
+#define CHIP_VER                            (CHIP_D_CUT)
 #endif
 
 /* ROM code version */
-#define ROM_VER_MAIN                        (2)
+#define ROM_VER_MAIN                        (3)
 #define ROM_VER_SUB                         (0)
 
 /* Peripheral device configuration */

@@ -226,6 +226,13 @@ int wifi_disconnect(void);
 int wifi_is_connected_to_ap(void);
 
 /**
+* @brief  Set partial scan retry times when PSCAN_FAST_SURVEY is set. Default is 7.
+* @param[in]  partial scan retry times
+* @return  None.
+*/
+void wifi_set_partial_scan_retry_times(unsigned char times);
+
+/**
   * @brief  Check if the specified interface is up.
   * @param[in]  interface: The interface can be set as RTW_STA_INTERFACE or RTW_AP_INTERFACE. (@ref rtw_interface_t)
   * @return  If the function succeeds, the return value is 1. Otherwise, return 0.
@@ -990,6 +997,14 @@ int wifi_get_antenna_info(unsigned char *antenna);
   * @note None
   */
 void wifi_set_indicate_mgnt(int enable);
+
+/*
+* set lowrssi use bg enable and set the rssi
+* @param enable if use the function or not
+* @param rssi when < rssi use bg mode else use bgn mode, default is -60,you¡®d better set it less than -60,e.g. -65, -70
+* @return NULL
+*/
+void wifi_set_lowrssi_use_b(int enable,int rssi);
 
 
 /**

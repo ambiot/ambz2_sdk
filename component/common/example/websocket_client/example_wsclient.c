@@ -42,7 +42,7 @@ static void example_wsclient_thread(void *param)
         //wsclient_context *wsclient = create_wsclient("wss://echo.websocket.org", 0, NULL, NULL, 1500, 3);
         
         //Please set SSL_MAX_CONTENT_LEN to 5120 for maximum input msglen 4849 Bytes
-	wsclient_context *wsclient = create_wsclient("wss://sandbox.kaazing.net", 0, "echo", NULL, 1500, 3);
+	wsclient_context *wsclient = create_wsclient("wss://echo.websocket.org", 0, NULL, NULL, 1500, 3);
 	if(wsclient != NULL){
 
 		if(wsclient->use_ssl == 1){

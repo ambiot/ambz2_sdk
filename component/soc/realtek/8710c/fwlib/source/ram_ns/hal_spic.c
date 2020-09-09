@@ -2,7 +2,7 @@
  * @file     hal_spic.c
  * @brief    Functions to implement the flash controller operation.
  * @version  1.00
- * @date     2017-08-22
+ * @date     2019-12-13
  *
  * @note
  *
@@ -343,7 +343,8 @@ void spic_flush_fifo(SPIC_Type *spic_dev)
  *   \return hal_status_t.
  */
 hal_status_t spic_pinmux_ctl(phal_spic_adaptor_t phal_spic_adaptor, u8 ctl)
-{
+{   
+    hal_status_t ret;
     u8 quad_pin_sel = phal_spic_adaptor->quad_pin_sel;
     pflash_pin_sel_t pflash_pin_sel = &(phal_spic_adaptor->flash_pin_sel);
 #if !defined(CONFIG_BUILD_NONSECURE)
@@ -371,29 +372,29 @@ hal_status_t spic_pinmux_ctl(phal_spic_adaptor_t phal_spic_adaptor, u8 ctl)
 #endif
 
     if (ctl == ENABLE) {    
-        spic_pinmux_register(pflash_pin_sel->pin_cs, PID_FLASH);
-        spic_pinmux_register(pflash_pin_sel->pin_clk, PID_FLASH);
-        spic_pinmux_register(pflash_pin_sel->pin_d0, PID_FLASH);
-        spic_pinmux_register(pflash_pin_sel->pin_d1, PID_FLASH);
+        ret = spic_pinmux_register(pflash_pin_sel->pin_cs, PID_FLASH);
+        ret |= spic_pinmux_register(pflash_pin_sel->pin_clk, PID_FLASH);
+        ret |= spic_pinmux_register(pflash_pin_sel->pin_d0, PID_FLASH);
+        ret |= spic_pinmux_register(pflash_pin_sel->pin_d1, PID_FLASH);
 
         if (quad_pin_sel) {
-            spic_pinmux_register(pflash_pin_sel->pin_d2, PID_FLASH);
-            spic_pinmux_register(pflash_pin_sel->pin_d3, PID_FLASH);
+            ret |= spic_pinmux_register(pflash_pin_sel->pin_d2, PID_FLASH);
+            ret |= spic_pinmux_register(pflash_pin_sel->pin_d3, PID_FLASH);
         }
     } else {
-        spic_pinmux_unregister(pflash_pin_sel->pin_cs, PID_FLASH);
-        spic_pinmux_unregister(pflash_pin_sel->pin_clk, PID_FLASH);
-        spic_pinmux_unregister(pflash_pin_sel->pin_d0, PID_FLASH);
-        spic_pinmux_unregister(pflash_pin_sel->pin_d1, PID_FLASH);
+        ret = spic_pinmux_unregister(pflash_pin_sel->pin_cs, PID_FLASH);
+        ret |= spic_pinmux_unregister(pflash_pin_sel->pin_clk, PID_FLASH);
+        ret |= spic_pinmux_unregister(pflash_pin_sel->pin_d0, PID_FLASH);
+        ret |= spic_pinmux_unregister(pflash_pin_sel->pin_d1, PID_FLASH);
         
         if (quad_pin_sel) {
-            spic_pinmux_unregister(pflash_pin_sel->pin_d2, PID_FLASH);
-            spic_pinmux_unregister(pflash_pin_sel->pin_d3, PID_FLASH);
+            ret |= spic_pinmux_unregister(pflash_pin_sel->pin_d2, PID_FLASH);
+            ret |= spic_pinmux_unregister(pflash_pin_sel->pin_d3, PID_FLASH);
             phal_spic_adaptor->quad_pin_sel = 0;
         }
     }
 
-    return HAL_OK;
+    return ret;
 }
 
 /** \brief Description of spic_init
@@ -973,7 +974,7 @@ void spic_recover_setting(phal_spic_adaptor_t phal_spic_adaptor, phal_spic_resto
 
     spic_config_user_mode(phal_spic_adaptor);
     hal_flash_release_from_power_down(phal_spic_adaptor);
-    hal_flash_support_new_type(phal_spic_adaptor);    
+    hal_flash_support_new_type(phal_spic_adaptor);
     hal_flash_return_spi(phal_spic_adaptor);
     spic_pinmux_ctl(phal_spic_adaptor, DISABLE);
     spic_init(phal_spic_adaptor, spic_bit_mode, (pflash_pin_sel_t)&(phal_spic_setting->flash_pin_sel));
