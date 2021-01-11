@@ -3,7 +3,7 @@ FlashControllerReset()
 	__var reg0;
 	reg0 = __readMemory32(0x40000230, "Memory");
 	reg0 = reg0 & (~(0x1<<8));
-	__writeMemory32(reg0, 0x40000230, "Memory");
+	__writeMemory32(reg0, 0x40000238, "Memory");
 	reg0 = __readMemory32(0x40000210, "Memory");
 	reg0 = reg0 & (~(0x1<<4));
 	__writeMemory32(reg0, 0x40000210, "Memory");
@@ -12,7 +12,7 @@ FlashControllerReset()
 	__writeMemory32(reg0, 0x40000210, "Memory");
 	reg0 = __readMemory32(0x40000230, "Memory");
 	reg0 = reg0 | (0x1<<8);
-	__writeMemory32(reg0, 0x40000230, "Memory");
+	__writeMemory32(reg0, 0x40000238, "Memory");
 }
 
 WDTReset()

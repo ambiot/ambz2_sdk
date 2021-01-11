@@ -396,6 +396,17 @@ enum {
 typedef unsigned long rtw_adaptivity_mode_t;
 
 /**
+  * @brief  The enumeration lists the trp_tis types.
+  */
+enum {
+	RTW_TRP_TIS_DISABLE = 0,
+	RTW_TRP_TIS_NORMAL,
+	RTW_TRP_TIS_DYNAMIC,				// enable dynamic mechanism
+	RTW_TRP_TIS_FIX_ACK_RATE,			// fix ack rate to 6M
+};
+typedef unsigned long rtw_trp_tis_mode_t;
+
+/**
   * @brief  The enumeration lists the supported operation mode by WIFI driver,
   *			including station and AP mode.
   */
@@ -580,6 +591,7 @@ enum _WIFI_EVENT_INDICATE{
 	WIFI_EVENT_AP_STOP = 22,
 	WIFI_EVENT_STA_GOT_IP = 23,
 	WIFI_EVENT_STA_LOST_IP = 24,
+	WIFI_EVENT_NO_BEACON = 25,
 	WIFI_EVENT_MAX,
 };
 typedef unsigned long rtw_event_indicate_t;

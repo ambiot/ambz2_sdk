@@ -32,6 +32,7 @@ typedef struct
   */
 uint32_t _pmu_yield_os_check(void);
 uint32_t pmu_yield_os_check(void);
+uint32_t _pmu_sysactive_timer_init(void);
 uint32_t pmu_sysactive_timer_init(void);
 uint32_t _pmu_set_sysactive_time(uint32_t timeout_ms);
 void _pmu_register_sleep_callback(u32 nDeviceId, PSM_HOOK_FUN sleep_hook_fun, void* sleep_param_ptr, PSM_HOOK_FUN wakeup_hook_fun, void* wakeup_param_ptr);
@@ -52,4 +53,19 @@ uint32_t pmu_clear_wakeup_event(uint32_t event, uint32_t option);
 
 extern u32 tickless_debug;
 extern u32 tick_last_tcp;
+
+/**
+  * @brief  set roaming awake or not
+  * @param  enable/threshhold:
+  			1: enable roaming awake and set the threshhold 
+  			0: disable roaming awake and ignore the threshhold
+  * @retval none
+  */
+void pmu_set_roaming_awake(u8 enable, u8 threshhold);
+void pmu_set_broadcast_awake(u32 NewStatus);
+u8 pmu_get_broadcast_awake(void);
+void pmu_set_broadcast_awake_port(u16 AwakePort);
+u16 pmu_get_broadcast_awake_port(void);
+void pmu_set_broadcast_arp_awake(u32 NewStatus);
+
 #endif

@@ -224,13 +224,25 @@ standard names - or at least those used in the unmodified vector table. */
 #if defined(configUSE_TICKLESS_IDLE) && configUSE_TICKLESS_IDLE
 #if !defined(__IASMARM__) || (__IASMARM__ != 1)
 #if !defined(CONFIG_BUILD_SECURE) || (CONFIG_BUILD_SECURE == 0)
+/* At least n further complete tick periods will pass before the kernel is due to transition an application task out of the Blocked state */
+#define configEXPECTED_IDLE_TIME_BEFORE_SLEEP   2
 /* use realtek customized low power tickless mode */
-#define configUSE_CUSTOMIZED_TICKLESS_IDLE                 0 //NOT READY!!!!!!
+#define configUSE_CUSTOMIZED_TICKLESS_IDLE                 0
 #if defined(configUSE_CUSTOMIZED_TICKLESS_IDLE) && configUSE_CUSTOMIZED_TICKLESS_IDLE
 extern void freertos_pre_sleep_processing(unsigned int *expected_idle_time);
 extern void freertos_post_sleep_processing(unsigned int *expected_idle_time);
 extern int  freertos_ready_to_sleep(void);
 extern void freertos_suppress_ticks_and_sleep(unsigned int xExpectedIdleTime);
+
+/* configEXPECTED_IDLE_TIME_BEFORE_SLEEP is used for native tickless support
+configEXPECTED_IDLE_TIME_BEFORE_CUSTOMIZED_SLEEP is used for realtek customized low power tickless mode
+if xExpectedIdleTime < configEXPECTED_IDLE_TIME_BEFORE_CUSTOMIZED_SLEEP, system will go for native tickless mode
+if xExpectedIdleTime >= configEXPECTED_IDLE_TIME_BEFORE_CUSTOMIZED_SLEEP, system will got for realtek customized tickless mode
+In wlan usage, this value is suggested to use value less than 80 milliseconds */
+#define configEXPECTED_IDLE_TIME_BEFORE_CUSTOMIZED_SLEEP   2
+#if configEXPECTED_IDLE_TIME_BEFORE_CUSTOMIZED_SLEEP < configEXPECTED_IDLE_TIME_BEFORE_SLEEP
+	#error configEXPECTED_IDLE_TIME_BEFORE_CUSTOMIZED_SLEEP must not be less than configEXPECTED_IDLE_TIME_BEFORE_SLEEP
+#endif
 
 /* Enable tickless power saving. */
 #define configPRE_SUPPRESS_TICKS_AND_SLEEP_PROCESSING( x )  do { \
@@ -242,9 +254,6 @@ extern void freertos_suppress_ticks_and_sleep(unsigned int xExpectedIdleTime);
 #define portSUPPRESS_TICKS_AND_SLEEP( xExpectedIdleTime )  do { \
                                                                                                                  freertos_suppress_ticks_and_sleep(xExpectedIdleTime); \
                                                                                                              } while(0)
-
-/* In wlan usage, this value is suggested to use value less than 80 milliseconds */
-#define configEXPECTED_IDLE_TIME_BEFORE_SLEEP   2
 
 /* It's magic trick that let us can use our own sleep function */
 #define configPRE_SLEEP_PROCESSING( x )        do { \

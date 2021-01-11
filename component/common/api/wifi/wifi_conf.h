@@ -788,7 +788,8 @@ int wifi_restart_ap(
 
 /**
  * @brief  Set reconnection mode with configuration.
- * @param[in]  mode: Set 1/0 to enalbe/disable the reconnection mode.
+ * @param[in]  mode: Set 1/0 to enable/disable the reconnection mode, set 2 to enable infinite reconnection mode.
+ *			Refer to rtw_autoreconnect_mode_t enum in "wifi_constants.h".
  * @param[in]  retry_times: The number of retry limit.
  * @param[in]  timeout: The timeout value (in seconds).
  * @return  0 if success, otherwise return -1.
@@ -802,7 +803,8 @@ int wifi_config_autoreconnect(__u8 mode, __u8 retry_times, __u16 timeout);
 
 /**
   * @brief  Set reconnection mode with 3 retry limit and 5 seconds timeout as default.
-  * @param[in]  mode: Set 1/0 to enalbe/disable the reconnection mode.
+  * @param[in]  mode: Set 1/0 to enable/disable the reconnection mode, set 2 to enable infinite reconnection mode.
+  *			Refer to rtw_autoreconnect_mode_t enum in "wifi_constants.h".
   * @return  0 if success, otherwise return -1.
   * @note  Defining CONFIG_AUTO_RECONNECT in "autoconf.h" needs to be done before compiling,
   *			or this API won't be effective.
@@ -1001,7 +1003,7 @@ void wifi_set_indicate_mgnt(int enable);
 /*
 * set lowrssi use bg enable and set the rssi
 * @param enable if use the function or not
-* @param rssi when < rssi use bg mode else use bgn mode, default is -60,you¡®d better set it less than -60,e.g. -65, -70
+* @param rssi when < rssi use bg mode else use bgn mode, default is -60,youÂ¡Â®d better set it less than -60,e.g. -65, -70
 * @return NULL
 */
 void wifi_set_lowrssi_use_b(int enable,int rssi);

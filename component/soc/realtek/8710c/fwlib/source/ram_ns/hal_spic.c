@@ -116,7 +116,6 @@ void spic_clock_ctrl(u8 ctl)
  *    If flash ID cannot be identified, a release from deep power down command is executed to wake the flash.
  *    A return to SPI command is executed followed by the release from deep power down command to ensure flash is under SPI mode.
  *    After these commands, a read ID command is issued to identify the flash type.
- *    For Adesto flash type, we should unlock flash so that the flash can be accessed correctly at the end of the functioin.
  *
  *   \param phal_spic_adaptor_t phal_spic_adaptor:      The pointer of the flash controller adaptor.
  *   \param u8 spic_bit_mode:      The target IO mode the flash controller is going to operate.
@@ -174,9 +173,10 @@ void spic_config_auto_mode(phal_spic_adaptor_t phal_spic_adaptor)
         case SpicQuadOutputMode:        /*Enable 1-1-4*/
             spic_dev->read_quad_data = cmd->qread;
             spic_dev->valid_cmd_b.rd_quad_o = ENABLE;
-            if ((flash_type == FLASH_TYPE_WINBOND) 
+            if ((flash_type == FLASH_TYPE_WINBOND)
                 || (flash_type == FLASH_TYPE_GD)
                 || (flash_type == FLASH_TYPE_GD32)
+                || (flash_type == FLASH_TYPE_ZBIT)
                 || (flash_type == FLASH_TYPE_XTX)) {
                 hal_flash_set_quad_enable(phal_spic_adaptor);
             }
@@ -197,7 +197,7 @@ void spic_config_auto_mode(phal_spic_adaptor_t phal_spic_adaptor)
         default:
             DBG_SPIF_ERR("spic_config_auto_mode_rtl8710c : Invalid Bit Mode\r\n");
     }
-    
+
     phal_spic_adaptor->addr_byte_num = ThreeBytesLength;
 
     spic_dev->auto_length_b.auto_addr_length = phal_spic_adaptor->addr_byte_num;
@@ -343,7 +343,7 @@ void spic_flush_fifo(SPIC_Type *spic_dev)
  *   \return hal_status_t.
  */
 hal_status_t spic_pinmux_ctl(phal_spic_adaptor_t phal_spic_adaptor, u8 ctl)
-{   
+{
     hal_status_t ret;
     u8 quad_pin_sel = phal_spic_adaptor->quad_pin_sel;
     pflash_pin_sel_t pflash_pin_sel = &(phal_spic_adaptor->flash_pin_sel);
@@ -371,7 +371,7 @@ hal_status_t spic_pinmux_ctl(phal_spic_adaptor_t phal_spic_adaptor, u8 ctl)
     }
 #endif
 
-    if (ctl == ENABLE) {    
+    if (ctl == ENABLE) {
         ret = spic_pinmux_register(pflash_pin_sel->pin_cs, PID_FLASH);
         ret |= spic_pinmux_register(pflash_pin_sel->pin_clk, PID_FLASH);
         ret |= spic_pinmux_register(pflash_pin_sel->pin_d0, PID_FLASH);
@@ -386,7 +386,7 @@ hal_status_t spic_pinmux_ctl(phal_spic_adaptor_t phal_spic_adaptor, u8 ctl)
         ret |= spic_pinmux_unregister(pflash_pin_sel->pin_clk, PID_FLASH);
         ret |= spic_pinmux_unregister(pflash_pin_sel->pin_d0, PID_FLASH);
         ret |= spic_pinmux_unregister(pflash_pin_sel->pin_d1, PID_FLASH);
-        
+
         if (quad_pin_sel) {
             ret |= spic_pinmux_unregister(pflash_pin_sel->pin_d2, PID_FLASH);
             ret |= spic_pinmux_unregister(pflash_pin_sel->pin_d3, PID_FLASH);
@@ -432,12 +432,12 @@ hal_status_t spic_init(phal_spic_adaptor_t phal_spic_adaptor, u8 spic_bit_mode, 
     //(phal_spic_adaptor->flash_pin_sel) = flash_pin_sel;
     rt_memcpy(&phal_spic_adaptor->flash_pin_sel, &flash_pin_sel, sizeof(flash_pin_sel_t));
 
-    if ((spic_bit_mode == SpicQuadOutputMode) 
-        || (spic_bit_mode == SpicQuadIOMode) 
+    if ((spic_bit_mode == SpicQuadOutputMode)
+        || (spic_bit_mode == SpicQuadIOMode)
         || (spic_bit_mode == SpicQpiMode)) {
         phal_spic_adaptor->quad_pin_sel = 1;
     }
-    
+
     if (spic_pinmux_ctl(phal_spic_adaptor, ENABLE) == HAL_OK) {
         if (spic_init_setting(phal_spic_adaptor, spic_bit_mode) != HAL_OK) {
             return HAL_ERR_HW;
@@ -463,10 +463,15 @@ hal_status_t spic_init(phal_spic_adaptor_t phal_spic_adaptor, u8 spic_bit_mode, 
         hal_flash_return_spi(phal_spic_adaptor);
     }
 
-    /*Store pad delay information for auto mode write*/
+    /*Disable auto mode write relevant commands*/
     spic_dev = phal_spic_adaptor->spic_dev;
     spic_disable_rtl8710c(spic_dev);
-    spic_dev->auto_length_b.auto_dum_len = pspic_data->rd_dummy_cycle - default_dummy_cycle*(pspic_data->baud_rate)*2;
+    spic_dev->write_single = 0x0;
+    spic_dev->write_dual_data = 0x0;
+    spic_dev->write_dual_addr_data = 0x0;
+    spic_dev->write_quad_data = 0x0;
+    spic_dev->write_quad_addr_data = 0x0;
+    spic_dev->write_enable = 0x0;
     spic_enable_rtl8710c(spic_dev);
 
     /*Set user relevant parameters according to bit mode*/
@@ -545,7 +550,7 @@ BOOL spic_calibration(phal_spic_adaptor_t phal_spic_adaptor, u32 default_dummy_c
     } else {
         min_baud_rate = MIN_BAUD_RATE;
     }
-    
+
     for (baudr = min_baud_rate; baudr <= MAX_BAUD_RATE; baudr++) {
         spic_disable_rtl8710c(spic_dev);
         spic_set_baudr_rtl8710c(spic_dev, baudr);
@@ -571,7 +576,7 @@ BOOL spic_calibration(phal_spic_adaptor_t phal_spic_adaptor, u32 default_dummy_c
                         }
                     }
                 }
-                
+
                 last_pass = 1;
             } else {
                 if (last_pass) {
@@ -590,7 +595,7 @@ BOOL spic_calibration(phal_spic_adaptor_t phal_spic_adaptor, u32 default_dummy_c
                         }
                     }
                 }
-                
+
                 last_pass = 0;
             }
 
@@ -677,7 +682,7 @@ BOOL spic_calibration(phal_spic_adaptor_t phal_spic_adaptor, u32 default_dummy_c
     } else {
         min_baud_rate = MIN_BAUD_RATE;
     }
-    
+
     for (baudr = min_baud_rate; baudr <= MAX_BAUD_RATE; baudr++) {
         spic_disable_rtl8710c(spic_dev);
         spic_set_baudr_rtl8710c(spic_dev, baudr);
@@ -906,7 +911,6 @@ void spic_store_setting(phal_spic_adaptor_t phal_spic_adaptor, phal_spic_restore
     phal_spic_setting->flash_type = phal_spic_adaptor->flash_type;
     //phal_spic_setting->spic_init_data = phal_spic_adaptor->spic_init_data[spic_bit_mode][cpu_type];
     rt_memcpy(&phal_spic_setting->spic_init_data, &phal_spic_adaptor->spic_init_data[spic_bit_mode][cpu_type], sizeof(phal_spic_setting->spic_init_data));
-    rt_memcpy(phal_spic_setting->flash_id, phal_spic_adaptor->flash_id, sizeof(phal_spic_setting->flash_id));      
     phal_spic_setting->cmd = phal_spic_adaptor->cmd;
     phal_spic_setting->quad_pin_sel = phal_spic_adaptor->quad_pin_sel;
     phal_spic_setting->recored = SPIC_RESTORE_VALID;
@@ -936,7 +940,6 @@ void spic_recover_setting(phal_spic_adaptor_t phal_spic_adaptor, phal_spic_resto
     phal_spic_adaptor->flash_type = phal_spic_setting->flash_type;
     //phal_spic_adaptor->spic_init_data[spic_bit_mode][cpu_type] = (phal_spic_setting->spic_init_data);
     rt_memcpy(&phal_spic_adaptor->spic_init_data[spic_bit_mode][cpu_type], &phal_spic_setting->spic_init_data, sizeof(phal_spic_setting->spic_init_data));
-    rt_memcpy(phal_spic_adaptor->flash_id, phal_spic_setting->flash_id, sizeof(phal_spic_setting->flash_id));    
     phal_spic_adaptor->cmd = phal_spic_setting->cmd;
     phal_spic_adaptor->quad_pin_sel = phal_spic_setting->quad_pin_sel;
 
@@ -962,7 +965,7 @@ void spic_recover_setting(phal_spic_adaptor_t phal_spic_adaptor, phal_spic_resto
 
     /*Disable Interrupt*/
     spic_dev->imr = 0;
-    
+
     /*Disable PRM mode to prevent from flash entering this mode unexpectedly*/
     spic_dev->read_quad_addr_data_b.prm_value = 0x00;
 
@@ -974,7 +977,6 @@ void spic_recover_setting(phal_spic_adaptor_t phal_spic_adaptor, phal_spic_resto
 
     spic_config_user_mode(phal_spic_adaptor);
     hal_flash_release_from_power_down(phal_spic_adaptor);
-    hal_flash_support_new_type(phal_spic_adaptor);
     hal_flash_return_spi(phal_spic_adaptor);
     spic_pinmux_ctl(phal_spic_adaptor, DISABLE);
     spic_init(phal_spic_adaptor, spic_bit_mode, (pflash_pin_sel_t)&(phal_spic_setting->flash_pin_sel));

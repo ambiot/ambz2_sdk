@@ -120,6 +120,18 @@ typedef unsigned long UBaseType_t;
 extern void vPortEnterCritical( void );
 extern void vPortExitCritical( void );
 
+#if defined(configUSE_CUSTOMIZED_TICKLESS_IDLE) && configUSE_CUSTOMIZED_TICKLESS_IDLE
+#define portDISABLE_INTERRUPTS()							\
+{															\
+	 /* Errata work around. */								\
+	uint32_t primask = __get_PRIMASK();						\
+	__disable_interrupt();									\
+	__set_BASEPRI( configMAX_SYSCALL_INTERRUPT_PRIORITY );	\
+	__DSB();												\
+	__ISB();												\
+	__set_PRIMASK(primask);									\
+}
+#else
 #define portDISABLE_INTERRUPTS()							\
 {															\
 	 /* Errata work around. */								\
@@ -129,6 +141,7 @@ extern void vPortExitCritical( void );
 	__ISB();												\
 	__enable_interrupt();									\
 }
+#endif
 
 #define portENABLE_INTERRUPTS()					__set_BASEPRI( 0 )
 #define portENTER_CRITICAL()					vPortEnterCritical()

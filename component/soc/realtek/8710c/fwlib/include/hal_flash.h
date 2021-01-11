@@ -47,6 +47,12 @@ extern "C"
 #define FLASH_TYPE_EON 7
 #define FLASH_TYPE_BOYA 8
 #define FLASH_TYPE_XMC 9
+#define FLASH_TYPE_ZBIT 10
+
+#define FLASH_CMD_ENSO      0xB1            // enter secured OTP
+#define FLASH_CMD_EXSO      0xC1            // exit secured OTP
+#define FLASH_CMD_RDSCUR    0x2B            // read security register
+#define FLASH_CMD_WRSCUR    0x2F            // write security register
 
 /**
 
@@ -92,6 +98,7 @@ void hal_flash_read_write_flash (phal_spic_adaptor_t phal_spic_adaptor, u32 leng
 void hal_flash_page_program (phal_spic_adaptor_t phal_spic_adaptor, u32 length, u32 addr, u8 *data);
 void hal_flash_reset_to_spi (phal_spic_adaptor_t phal_spic_adaptor);
 void hal_flash_support_new_type (phal_spic_adaptor_t phal_spic_adaptor);
+u8 hal_flash_get_size (phal_spic_adaptor_t phal_spic_adaptor);
 
 
 /** *@} */ /* End of group hs_hal_flash_ram_func */

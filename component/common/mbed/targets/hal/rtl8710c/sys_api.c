@@ -26,6 +26,7 @@
 #define FLASH_SECTOR_SIZE				0x1000
 
 extern hal_uart_adapter_t log_uart;
+extern hal_spic_adaptor_t *pglob_spic_adaptor;
 extern void log_uart_port_init (int log_uart_tx, int log_uart_rx, uint32_t baud_rate);
 extern void log_uart_flush_wait(void);
 extern void hci_tp_close(void);
@@ -36,14 +37,17 @@ SECTION_NS_ENTRY_FUNC void NS_ENTRY get_fw_info_nsc(uint32_t *targetFWaddr, uint
 SECTION_NS_ENTRY_FUNC uint32_t NS_ENTRY get_cur_fw_idx_nsc(void);
 SECTION_NS_ENTRY_FUNC uint32_t NS_ENTRY get_number_of_fw_valid_nsc(void);
 SECTION_NS_ENTRY_FUNC void NS_ENTRY hal_sys_set_fast_boot_nsc(uint32_t pstart_tbl, uint32_t func_idx);
+SECTION_NS_ENTRY_FUNC void uart_download_mode_nsc(void);
 #define get_fw_info get_fw_info_nsc
 #define get_number_of_fw_valid get_number_of_fw_valid_nsc
 #define get_cur_fw_idx get_cur_fw_idx_nsc
 #define hal_sys_set_fast_boot hal_sys_set_fast_boot_nsc
+#define uart_download_mode uart_download_mode_nsc
 #else
 extern void get_fw_info(uint32_t *targetFWaddr, uint32_t *currentFWaddr, uint32_t *fw1_sn, uint32_t *fw2_sn);
 extern uint32_t get_number_of_fw_valid(void);
 extern uint32_t get_cur_fw_idx(void);
+extern void uart_download_mode(void);
 #endif
 
 #if defined(CONFIG_BUILD_SECURE) && (CONFIG_BUILD_SECURE==1)
@@ -60,6 +64,10 @@ SECTION_NS_ENTRY_FUNC uint32_t NS_ENTRY get_cur_fw_idx_nsc(void){
 
 SECTION_NS_ENTRY_FUNC void NS_ENTRY hal_sys_set_fast_boot_nsc(uint32_t pstart_tbl, uint32_t func_idx){
 	hal_sys_set_fast_boot(pstart_tbl, func_idx);
+}
+
+SECTION_NS_ENTRY_FUNC void NS_ENTRY uart_download_mode_nsc(void){
+	uart_download_mode();
 }
 #endif
 
@@ -228,8 +236,8 @@ uint32_t sys_update_ota_prepare_addr(void)
 	uint32_t fw2_sn;
 	get_fw_info(&targetFWaddr, &currentFWaddr, &fw1_sn, &fw2_sn);
 	NewFWAddr = targetFWaddr;
-	printf("\n\r[%s]fw1 sn is %d, fw2 sn is %d\r\n", __FUNCTION__, fw1_sn,fw2_sn);
-	printf("\n\r[%s] NewFWAddr %08X\n\r", __FUNCTION__, NewFWAddr);
+	printf("\n\r[%s]fw1 sn is %u, fw2 sn is %u\r\n", __FUNCTION__, fw1_sn,fw2_sn);
+	printf("\n\r[%s] NewFWAddr 0x%08X\n\r", __FUNCTION__, NewFWAddr);
 	return NewFWAddr;
 }
 
@@ -302,3 +310,25 @@ void sys_log_uart_off(void)
 	hal_gpio_pull_ctrl (log_uart.rx_pin, Pin_PullNone);
 	hal_uart_deinit(&log_uart);
 }
+
+/**
+  * @brief  Enter uart download mode.
+  * @retval none
+  */
+void sys_uart_download_mode(void)
+{
+	sys_log_uart_off();
+	sys_disable_fast_boot();
+	hci_tp_close();  
+	hal_wlan_pwr_off();
+	crypto_deinit();
+#if defined(CONFIG_FLASH_XIP_EN) && (CONFIG_FLASH_XIP_EN == 1)
+	__disable_irq();
+	if (pglob_spic_adaptor != NULL) {
+		hal_flash_return_spi (pglob_spic_adaptor);
+	}
+	__enable_irq();
+#endif
+	uart_download_mode();
+}
+

@@ -81,6 +81,8 @@
 #define CONFIG_TRANSPORT	0//on or off the at command for transport socket
 #define CONFIG_ALINK		0//on or off for alibaba alink
 #define CONFIG_MIIO		0//on or off for alibaba alink
+#define CONFIG_RIC		0//on or off for RICloud
+#define CONFIG_LINKKIT_AWSS 0//on or off for ali feiyan cloud
 
 /* For WPS and P2P */
 #define CONFIG_ENABLE_WPS		0
@@ -152,9 +154,18 @@
 
 #endif
 
+/* For Azure iot hub telemetry example*/
+#define CONFIG_EXAMPLE_AZURE_IOTHUB_TELEMETRY      0
+
+/* For Azure iot hub x509 example*/
+#define CONFIG_EXAMPLE_AZURE_IOTHUB_X509     0
 
 /* for CoAP example*/
 #define CONFIG_EXAMPLE_COAP              0
+
+/* for lib CoAP example*/ 
+#define CONFIG_EXAMPLE_COAP_SERVER       0
+#define CONFIG_EXAMPLE_COAP_CLIENT       0
 
 /* For WIFI GET BEACON FRAME example */
 #define CONFIG_EXAMPLE_GET_BEACON_FRAME  0
@@ -195,6 +206,15 @@
 /* For httpc example */
 #define CONFIG_EXAMPLE_HTTPC			0
 
+/* For Amazon ffs example */
+#define CONFIG_EXAMPLE_FFS                      0
+#if CONFIG_EXAMPLE_FFS
+#undef CONFIG_EXAMPLE_WLAN_FAST_CONNECT
+#define CONFIG_EXAMPLE_WLAN_FAST_CONNECT 0
+#undef CONFIG_FAST_DHCP
+#define CONFIG_FAST_DHCP 0
+#endif
+
 /* For httpd example */
 #define CONFIG_EXAMPLE_HTTPD			0
 
@@ -209,6 +229,32 @@
 
 /* For DCT example*/
 #define CONFIG_EXAMPLE_DCT				0
+
+/****************** For EAP method example *******************/
+#define CONFIG_EXAMPLE_EAP	0
+
+// on/off specified eap method
+#define CONFIG_ENABLE_PEAP	0
+#define CONFIG_ENABLE_TLS	0
+#define CONFIG_ENABLE_TTLS	0
+
+// optional feature: whether to verify the cert of radius server
+#define ENABLE_EAP_SSL_VERIFY_SERVER	0
+
+#if CONFIG_ENABLE_PEAP || CONFIG_ENABLE_TLS || CONFIG_ENABLE_TTLS
+#define CONFIG_ENABLE_EAP
+#undef CONFIG_EXAMPLE_WLAN_FAST_CONNECT
+#undef CONFIG_FAST_DHCP
+#define CONFIG_EXAMPLE_WLAN_FAST_CONNECT 0
+#define CONFIG_FAST_DHCP 0
+#endif
+
+#if CONFIG_ENABLE_TLS
+#define ENABLE_EAP_SSL_VERIFY_CLIENT	1
+#else
+#define ENABLE_EAP_SSL_VERIFY_CLIENT	0
+#endif
+/******************End of EAP configurations*******************/
 
 /* For FATFS example*/
 #define CONFIG_EXAMPLE_FATFS			0
@@ -264,11 +310,17 @@
 /*For secure boot example */
 #define CONFIG_EXAMPLE_SECURE_BOOT 0
 
+/*For secure storage example */
+#define CONFIG_EXAMPLE_SECURE_STORAGE	0
+
 /* For ota update http example */
 #define CONFIG_EXAMPLE_OTA_HTTP			0
 
 /*For wifi roaming example*/
 #define CONFIG_EXAMPLE_WIFI_ROAMING		0
+
+/*  for tickless roaming    */
+#define CONFIG_EXAMPLE_TICKLESS_WIFI_ROAMING 0
 
 /*For ipv6 example*/
 #define CONFIG_EXAMPLE_IPV6			0
@@ -321,6 +373,10 @@
 #define CONFIG_LOG_SERVICE_LOCK				1
 #undef CONFIG_EXAMPLE_WLAN_FAST_CONNECT
 #define CONFIG_EXAMPLE_WLAN_FAST_CONNECT	0
+#endif
+
+#if (SUPPORT_MP_MODE && CONFIG_MIIO)
+#define CONFIG_MIIO_MP		0 //miio mp test and rw private data
 #endif
 
 #endif
