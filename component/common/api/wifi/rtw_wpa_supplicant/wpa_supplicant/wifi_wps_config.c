@@ -12,6 +12,7 @@
 #include "wps/wps_defs.h"
 #include <platform/platform_stdlib.h>
 
+
 // The maximum number of WPS credentials. The value should be in range of 1~10.
 int wps_max_cred_count = 10;
 
@@ -927,8 +928,19 @@ int wps_start(u16 wps_config, char *pin, u8 channel, char *ssid)
 		wifi_set_wps_phase(DISABLE);
 #if defined(CONFIG_WIFI_IND_USE_THREAD) && CONFIG_WIFI_IND_USE_THREAD
 		vTaskDelay(10); //Wait WIFI_DISCONNECT_EVENT and WIFI_EVENT_WPS_FINISH to be processed which sent by OnDeauth
-#endif		
-		ret = wps_connect_to_AP_by_certificate(&wifi);
+#endif
+
+#ifdef  CONFIG_SAE_SUPPORT
+		if(wext_get_support_wpa3()==1) {
+			wext_set_support_wpa3(DISABLE);
+			ret = wps_connect_to_AP_by_certificate(&wifi);
+			wext_set_support_wpa3(ENABLE);
+		}
+		else
+#endif
+		{
+			ret = wps_connect_to_AP_by_certificate(&wifi);
+		}
 		os_free(dev_cred,0);
 		goto exit1;
 	} else {

@@ -249,11 +249,36 @@ void flash_individual_unlock(uint32_t address);
   */
 int flash_read_individual_lock_state(uint32_t address);
 
+/**
+* @brief  Enter OTP region
+* @param  none
+* @retval none.
+
+*/
+void flash_mxic_enter_otp(void);
+
+/**
+* @brief  Exit OTP region
+* @param  none
+* @retval none.
+
+*/
+void flash_mxic_exit_otp(void);
+
+/**
+* @brief  Lock OTP region
+* @param  none
+* @retval none.
+
+*/
+void flash_mxic_lock_otp(void);
+
+
 ///@}
 
 #if (defined(CONFIG_PLATFORM_8711B) && (CONFIG_PLATFORM_8711B)) \
     || (defined(CONFIG_PLATFORM_8710C) && (CONFIG_PLATFORM_8710C))
-///@name AmebaZ Only 
+///@name AmebaZ/AmebaZ2 
 ///@{
 /**
   * @brief  Erase the whole flash chip

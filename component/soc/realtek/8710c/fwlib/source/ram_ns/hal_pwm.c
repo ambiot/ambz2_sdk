@@ -30,7 +30,6 @@
 #include "hal_pwm.h"
 #include "hal_pinmux.h"
 #include "hal_timer.h"
-
 // TODO: modification for 8710c: pin mux control/register for init/deinit
 #if CONFIG_PWM_EN && CONFIG_GTIMER_EN
 
@@ -136,6 +135,33 @@ hal_status_t hal_pwm_init (hal_pwm_adapter_t *ppwm_adp, pin_name_t pin_name, u16
  */
 void hal_pwm_deinit (hal_pwm_adapter_t *ppwm_adp)
 {
+    #if 1
+    hal_pwm_adapter_t *ptmp_pwm_adp;
+    u8 pwm_id;
+    hal_pwm_comm_adapter_t *ppwm_comm_adapter = *(hal_pwm_stubs.pppwm_comm_adp);
+    if ((ppwm_adp->pwm_clk_sel != PwmClkSrc_None) && (ppwm_adp->pwm_clk_sel != PwmClkSrc_SClk)) {
+        // a G-timer has been assign to this PWM already, we should free this timer and reallocate a new timer
+        for (pwm_id = 0; pwm_id < MaxPwmNum; pwm_id++) {
+            ptmp_pwm_adp = ppwm_comm_adapter->pwm_adapter[pwm_id];
+            if ((ptmp_pwm_adp != NULL) && 
+                (ptmp_pwm_adp != ppwm_adp)) {
+                if (ptmp_pwm_adp->pwm_clk_sel == ppwm_adp->pwm_clk_sel) {
+                    // other PWM still using the same G-Timer, cannot disable this timer
+                    break;  // break for loop
+                }
+            }
+        }
+    
+        if (pwm_id == MaxPwmNum) {
+            // no other PWM use the same G-timer, so we can disable it
+            if ((ppwm_adp->pwm_clk_sel) < PwmClkSrc_SClk) {
+                hal_timer_event_deinit ((ppwm_adp->pwm_clk_sel));        
+            }
+            //DBG_PWM_ERR ("gtimer_to_disable = (%d)\r\n", ppwm_adp->pwm_clk_sel);
+            ppwm_adp->pwm_clk_sel = PwmClkSrc_None;            
+        }
+    }
+    #endif
     hal_pinmux_unregister(ppwm_adp->pin_name, PID_PWM0+ppwm_adp->pwm_id);
     hal_pwm_stubs.hal_pwm_deinit (ppwm_adp);
 }

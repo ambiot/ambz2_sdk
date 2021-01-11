@@ -188,6 +188,24 @@ BaseType_t xReturn;
 
 /*-----------------------------------------------------------*/
 
+#if defined(configUSE_CUSTOMIZED_TICKLESS_IDLE) && configUSE_CUSTOMIZED_TICKLESS_IDLE
+portFORCE_INLINE static void vPortRaiseBASEPRI( void )
+{
+uint32_t ulPriMask, ulNewBASEPRI;
+
+	__asm volatile
+	(
+		"	mrs %0, primask											\n" \
+		"	mov %1, %2												\n" \
+		"	cpsid i													\n" \
+		"	msr basepri, %1											\n" \
+		"	isb														\n" \
+		"	dsb														\n" \
+		"	msr primask, %0											\n" \
+		:"=r" (ulPriMask), "=r" (ulNewBASEPRI) : "i" ( configMAX_SYSCALL_INTERRUPT_PRIORITY ) : "memory"
+	);
+}
+#else
 portFORCE_INLINE static void vPortRaiseBASEPRI( void )
 {
 uint32_t ulNewBASEPRI;
@@ -203,6 +221,7 @@ uint32_t ulNewBASEPRI;
 		:"=r" (ulNewBASEPRI) : "i" ( configMAX_SYSCALL_INTERRUPT_PRIORITY ) : "memory"
 	);
 }
+#endif
 
 /*-----------------------------------------------------------*/
 

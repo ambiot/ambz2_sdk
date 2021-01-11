@@ -9,20 +9,21 @@
  *
  ******************************************************************************
  *
- * Copyright(c) 2007 - 2016 Realtek Corporation. All rights reserved.
+ * Copyright(c) 2007 - 2017 Realtek Corporation. All rights reserved.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
+ * SPDX-License-Identifier: Apache-2.0
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
+ * Licensed under the Apache License, Version 2.0 (the License); you may
+ * not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an AS IS BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  ******************************************************************************/
 
@@ -540,6 +541,25 @@ void flash_reset_status(flash_t *obj)
 
 /*
 Function Description:
+This function aims to get the density of the flash.
+* @brief  Get flash density
+* @param  obj: Specifies the parameter of flash object.
+* @retval None.
+*/
+void flash_get_size(flash_t *obj)
+{
+    phal_spic_adaptor_t phal_spic_adaptor;
+    u8 size = 0;
+
+    flash_init(obj);
+    phal_spic_adaptor = (obj->phal_spic_adaptor);
+    size = hal_flash_get_size(phal_spic_adaptor);
+
+    dbg_printf("Flash Size = %d Mbit\r\n", size);
+}
+
+/*
+Function Description:
 This function is only for Micron/Winbond 512Mbit flash to access beyond 128Mbit by switching between four 128 Mbit area.
 Please refer to flash datasheet for more information about memory mapping.
 * @brief  Set the fourth address byte to switch among different 128Mbit region
@@ -589,7 +609,7 @@ plase refer to data sheets of the target flashes.
 void flash_set_lock_mode(uint32_t mode)
 {
     if (pglob_spic_adaptor == NULL) {
-        spic_init(&hal_spic_adaptor, SpicDualIOMode, &flash_pin_sel);
+        spic_init(&hal_spic_adaptor, SpicQuadIOMode, &flash_pin_sel);
     }
     
     flash_resource_lock();
@@ -601,7 +621,7 @@ void flash_set_lock_mode(uint32_t mode)
 void flash_global_lock(void)
 {
     if (pglob_spic_adaptor == NULL) {
-        spic_init(&hal_spic_adaptor, SpicDualIOMode, &flash_pin_sel);
+        spic_init(&hal_spic_adaptor, SpicQuadIOMode, &flash_pin_sel);
     }
     
     flash_resource_lock();
@@ -613,7 +633,7 @@ void flash_global_lock(void)
 void flash_global_unlock(void)
 {
     if (pglob_spic_adaptor == NULL) {
-        spic_init(&hal_spic_adaptor, SpicDualIOMode, &flash_pin_sel);
+        spic_init(&hal_spic_adaptor, SpicQuadIOMode, &flash_pin_sel);
     }
     
     flash_resource_lock();
@@ -622,7 +642,7 @@ void flash_global_unlock(void)
 }
 
 /***********************************************************************************
-The following functions are compatile with Adesto and some of Winbond flash only. 
+The following functions are compatile with some of Winbond flash only. 
 Not all Winbond flash supports these functions,
 plase refer to data sheets of the target flashes.
 ************************************************************************************/
@@ -631,7 +651,7 @@ plase refer to data sheets of the target flashes.
 void flash_individual_lock(uint32_t address)
 {
     if (pglob_spic_adaptor == NULL) {
-        spic_init(&hal_spic_adaptor, SpicDualIOMode, &flash_pin_sel);
+        spic_init(&hal_spic_adaptor, SpicQuadIOMode, &flash_pin_sel);
     }
     
     flash_resource_lock();
@@ -643,7 +663,7 @@ void flash_individual_lock(uint32_t address)
 void flash_individual_unlock(uint32_t address)
 {
     if (pglob_spic_adaptor == NULL) {
-        spic_init(&hal_spic_adaptor, SpicDualIOMode, &flash_pin_sel);
+        spic_init(&hal_spic_adaptor, SpicQuadIOMode, &flash_pin_sel);
     }
     
     flash_resource_lock();
@@ -658,7 +678,7 @@ void flash_individual_unlock(uint32_t address)
 int flash_read_individual_lock_state(uint32_t address)
 {
     if (pglob_spic_adaptor == NULL) {
-        spic_init(&hal_spic_adaptor, SpicDualIOMode, &flash_pin_sel);
+        spic_init(&hal_spic_adaptor, SpicQuadIOMode, &flash_pin_sel);
     }
     
     phal_spic_adaptor_t phal_spic_adaptor;
@@ -686,4 +706,71 @@ int flash_read_individual_lock_state(uint32_t address)
     return 1;    
 }
 
+/***********************************************************************************
+The following functions are compatile with MXIC flash only. 
+Not all MXIC flash supports these functions,
+plase refer to data sheets of the target flashes.
+************************************************************************************/
+
+/*
+Function Description:
+This function sends the command to enter OTP region.
+Standard write / command commands can be performed on the OTP region.
+* @brief  Enter OTP region
+* @param  none
+* @retval none.
+
+*/
+void flash_mxic_enter_otp(void)
+{
+    if (pglob_spic_adaptor == NULL) {
+        spic_init(&hal_spic_adaptor, SpicQuadIOMode, &flash_pin_sel);
+    }
+    
+    spic_tx_cmd_no_check(pglob_spic_adaptor, FLASH_CMD_ENSO, 0, 0);
+}
+
+/*
+Function Description:
+This function sends the command to exit OTP region.
+* @brief  Exit OTP region
+* @param  none
+* @retval none.
+
+*/
+void flash_mxic_exit_otp(void)
+{
+    if (pglob_spic_adaptor == NULL) {
+        spic_init(&hal_spic_adaptor, SpicQuadIOMode, &flash_pin_sel);
+    }
+    
+    spic_tx_cmd_no_check(pglob_spic_adaptor, FLASH_CMD_EXSO, 0, 0);
+}
+
+/*
+Function Description:
+This function locks the otp region permanently, the data on the OTP region cannot be updated.
+* @brief  Lock OTP region
+* @param  none
+* @retval none.
+
+*/
+void flash_mxic_lock_otp(void)
+{
+    phal_spic_adaptor_t phal_spic_adaptor;
+
+    if (pglob_spic_adaptor == NULL) {
+        spic_init(&hal_spic_adaptor, SpicQuadIOMode, &flash_pin_sel);
+    }
+
+    phal_spic_adaptor = pglob_spic_adaptor;
+        
+    hal_flash_set_write_enable(phal_spic_adaptor);
+    
+    do {
+        spic_tx_cmd_no_check(phal_spic_adaptor, FLASH_CMD_WRSCUR, 0, 0);
+    } while ((hal_flash_get_status(phal_spic_adaptor, FLASH_CMD_RDSCUR) & 0x2) != 0x2);
+
+    spic_tx_cmd_no_check(phal_spic_adaptor, (phal_spic_adaptor->cmd)->wrdi, 0, 0);
+}
 

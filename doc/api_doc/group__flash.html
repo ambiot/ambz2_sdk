@@ -113,9 +113,15 @@ typedef struct flash_s&#160;</td><td class="memItemRight" valign="bottom"><b>fla
 <tr class="memitem:ga1c5ccb2f6a0f9cec2dc139894ecb24ec"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__flash.html#ga1c5ccb2f6a0f9cec2dc139894ecb24ec">flash_get_status</a> (flash_t *obj)</td></tr>
 <tr class="memdesc:ga1c5ccb2f6a0f9cec2dc139894ecb24ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of status register1.  <a href="#ga1c5ccb2f6a0f9cec2dc139894ecb24ec">More...</a><br /></td></tr>
 <tr class="separator:ga1c5ccb2f6a0f9cec2dc139894ecb24ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga14d11751daae1554257f4e014fe41231"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__flash.html#ga14d11751daae1554257f4e014fe41231">flash_get_status2</a> (flash_t *obj)</td></tr>
+<tr class="memdesc:ga14d11751daae1554257f4e014fe41231"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read Status register 2 to check flash status.  <a href="#ga14d11751daae1554257f4e014fe41231">More...</a><br /></td></tr>
+<tr class="separator:ga14d11751daae1554257f4e014fe41231"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga8a41e95c78069e69c1cd4a1ebd83de6e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__flash.html#ga8a41e95c78069e69c1cd4a1ebd83de6e">flash_set_status</a> (flash_t *obj, uint32_t data)</td></tr>
 <tr class="memdesc:ga8a41e95c78069e69c1cd4a1ebd83de6e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set Status register to enable desired operation.  <a href="#ga8a41e95c78069e69c1cd4a1ebd83de6e">More...</a><br /></td></tr>
 <tr class="separator:ga8a41e95c78069e69c1cd4a1ebd83de6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gadf53900d422d48742aedc3fa4aab74b8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__flash.html#gadf53900d422d48742aedc3fa4aab74b8">flash_set_status2</a> (flash_t *obj, uint32_t data)</td></tr>
+<tr class="memdesc:gadf53900d422d48742aedc3fa4aab74b8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set Status register 2 to enable desired operation.  <a href="#gadf53900d422d48742aedc3fa4aab74b8">More...</a><br /></td></tr>
+<tr class="separator:gadf53900d422d48742aedc3fa4aab74b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gad990aea38eef9a60af5fb6f2657b7c4a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__flash.html#gad990aea38eef9a60af5fb6f2657b7c4a">flash_reset_status</a> (flash_t *obj)</td></tr>
 <tr class="memdesc:gad990aea38eef9a60af5fb6f2657b7c4a"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function aims to reset the status register, please make sure the operation is appropriate.  <a href="#gad990aea38eef9a60af5fb6f2657b7c4a">More...</a><br /></td></tr>
 <tr class="separator:gad990aea38eef9a60af5fb6f2657b7c4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -441,6 +447,36 @@ AmebaZ Only</h2></td></tr>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
     <tr><td class="paramname"></td><td>The value of status register1. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ga14d11751daae1554257f4e014fe41231"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int flash_get_status2 </td>
+          <td>(</td>
+          <td class="paramtype">flash_t *&#160;</td>
+          <td class="paramname"><em>obj</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Read Status register 2 to check flash status. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">obj</td><td>Specifies the parameter of flash object. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">status</td><td>the value of status register. </td></tr>
   </table>
   </dd>
 </dl>
@@ -892,6 +928,47 @@ AmebaZ Only</h2></td></tr>
   </dd>
 </dl>
 <dl class="section note"><dt>Note</dt><dd>Please refer to the datatsheet of flash for more details of the content of status register. The block protected area and the corresponding control bits are provided in the flash datasheet. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gadf53900d422d48742aedc3fa4aab74b8"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int flash_set_status2 </td>
+          <td>(</td>
+          <td class="paramtype">flash_t *&#160;</td>
+          <td class="paramname"><em>obj</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>data</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set Status register 2 to enable desired operation. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">obj</td><td>Specifies the parameter of flash object. </td></tr>
+    <tr><td class="paramname">data</td><td>Specifies which bit users like to set ex: if users want to set the third bit, data = 0x8. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">status</td><td>Success:1 or Failure: Others. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

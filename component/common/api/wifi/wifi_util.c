@@ -1143,7 +1143,9 @@ void wext_wlan_indicate(unsigned int cmd, union iwreq_data *wrqu, char *extra)
 					wifi_indication(WIFI_EVENT_STA_DISASSOC, wrqu->addr.sa_data, sizeof(null_mac), 0);
 				else if(!memcmp(IW_EVT_STR_SEND_ACTION_DONE, extra, strlen(IW_EVT_STR_SEND_ACTION_DONE)))
 					wifi_indication(WIFI_EVENT_SEND_ACTION_DONE, NULL, 0, wrqu->data.flags);
-#endif				
+#endif
+				else if(!memcmp(IW_EVT_STR_NO_BEACON, extra, strlen(IW_EVT_STR_NO_BEACON)))
+					wifi_indication(WIFI_EVENT_NO_BEACON, extra, strlen(IW_EVT_STR_NO_BEACON), 0);
 			}
 			break;
 		case SIOCGIWSCAN:
@@ -1228,6 +1230,10 @@ int wext_set_autoreconnect(const char *ifname, __u8 mode, __u8 retry_times, __u1
 	__u8 *para = NULL;
 	int cmd_len = 0;
 
+	__u8 split_timeout[2]; //split u16 timeout into 2 u8
+	split_timeout[0] = timeout & 0xff;
+	split_timeout[1] = (timeout >> 8);
+
 	memset(&iwr, 0, sizeof(iwr));
 	cmd_len = sizeof("SetAutoRecnt");
 	para = rtw_malloc((4) + cmd_len);//size:para_len+cmd_len
@@ -1238,7 +1244,8 @@ int wext_set_autoreconnect(const char *ifname, __u8 mode, __u8 retry_times, __u1
 	//length
 	*(para+cmd_len) = mode;	//para1
 	*(para+cmd_len+1) = retry_times; //para2
-	*(para+cmd_len+2) = timeout; //para3
+	*(para+cmd_len+2) = split_timeout[0]; //para3
+	*(para+cmd_len+3) = split_timeout[1]; //para4
 	
 	iwr.u.data.pointer = para;
 	iwr.u.data.length = (4) + cmd_len;
@@ -1489,18 +1496,38 @@ int wext_set_adaptivity_th_l2h_ini(__u8 l2h_threshold)
 	return 0;
 }
 
+int wext_set_anti_interference(__u8 enable)
+{
+	extern u8 rtw_anti_interference_en;
+
+	if(enable == ENABLE){
+		rtw_anti_interference_en = 1;
+	}else{
+		rtw_anti_interference_en = 0;
+	}
+
+	return 0;
+}
+
 int wext_set_trp_tis(__u8 enable)
 {
 	extern u8 rtw_tx_pwr_lmt_enable;
 	extern u8 rtw_tx_pwr_by_rate;
 	extern u8 rtw_trp_tis_test_en;
 
-	if(enable == ENABLE){
+	if(enable != RTW_TRP_TIS_DISABLE){
 		//close the tx power limit and pwr by rate incase the efficiency of Antenna is not good enough.
 		rtw_tx_pwr_lmt_enable = 2;//set 0 to disable, set 2 to use efuse value
 		rtw_tx_pwr_by_rate = 2;//set 0 to disable, set 2 to use efuse value
 		//disable some dynamic mechanism
-		rtw_trp_tis_test_en = 1;
+		if(enable == RTW_TRP_TIS_NORMAL){
+			//disable some dynamic mechanism
+			rtw_trp_tis_test_en = BIT0;
+		}else if(enable == RTW_TRP_TIS_DYNAMIC){
+			rtw_trp_tis_test_en = BIT1 | BIT0;
+		}else if(enable == RTW_TRP_TIS_FIX_ACK_RATE){
+			rtw_trp_tis_test_en = BIT2 | BIT0;
+		}
 		//you can change autoreconnct mode to RTW_AUTORECONNECT_INFINITE in init_thread function
 	}
 	return 0;
@@ -1511,6 +1538,12 @@ int wext_set_support_wpa3(__u8 enable)
 	extern u8 rtw_cmd_tsk_spt_wap3;
 	rtw_cmd_tsk_spt_wap3 = enable;
 	return 0;
+}
+
+u8 wext_get_support_wpa3(void)
+{
+	extern u8 rtw_cmd_tsk_spt_wap3;
+	return rtw_cmd_tsk_spt_wap3;
 }
 
 extern int rltk_get_auto_chl(const char *ifname, unsigned char *channel_set, unsigned char channel_num);
@@ -1619,6 +1652,20 @@ void wext_set_indicate_mgnt(int enable)
 	rtw_set_indicate_mgnt(enable);
 	return;
 }
+
+#ifdef CONFIG_AP_MODE
+extern void rltk_suspend_softap(const char *ifname);
+extern void rltk_suspend_softap_beacon(const char *ifname);
+void wext_suspend_softap(const char *ifname)
+{
+	rltk_suspend_softap(ifname);
+}
+
+void wext_suspend_softap_beacon(const char *ifname)
+{
+	rltk_suspend_softap_beacon(ifname);
+}
+#endif
 
 #ifdef CONFIG_SW_MAILBOX_EN
 int wext_mailbox_to_wifi(const char *ifname, char *buf, __u16 buf_len)

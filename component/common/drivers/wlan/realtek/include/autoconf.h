@@ -269,6 +269,9 @@
 #define CONFIG_CONCURRENT_MODE
 #ifdef CONFIG_CONCURRENT_MODE
 //#define CONFIG_MCC_MODE
+    #ifdef CONFIG_MCC_MODE
+      #define CONFIG_MCC_STA_AP_MODE
+    #endif
   #if defined(CONFIG_PLATFORM_8195A) || defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8710C)
     #define CONFIG_RUNTIME_PORT_SWITCH
   #endif
@@ -641,6 +644,7 @@ extern unsigned int g_ap_sta_num;
 		//#define CONFIG_MAC_LOOPBACK_DRIVER_RTL8710C 1 // 1: HAL+MAC LOOPBACK, 2: HAL+MAC+BB LOOPBACK 3: DRV+HAL+MAC LOOPBACK
 		#if defined(CONFIG_MAC_LOOPBACK_DRIVER_RTL8710C) && (CONFIG_MAC_LOOPBACK_DRIVER_RTL8710C == 3)
 		#define CONFIG_MAC_LOOPBACK_DRIVER_AMEBA
+		#define CONFIG_NO_FW
 		#endif
 		#define CONFIG_UNSUPPORT_PLCPHDR_RPT 1
 
@@ -861,5 +865,13 @@ extern unsigned int g_ap_sta_num;
 #define WLAN_WRAPPER_VERSION 1
 
 #define TIME_THRES	20
+
+/* 80211 - K V R */
+//#define CONFIG_IEEE80211K
+//#define CONFIG_LAYER2_ROAMING
+#ifdef CONFIG_LAYER2_ROAMING
+    //#define CONFIG_RTW_WNM
+    //#define CONFIG_IEEE80211R
+#endif
 
 #endif //WLANCONFIG_H

@@ -117,8 +117,11 @@ Functions</h2></td></tr>
 <tr class="memitem:gab20f3a4f75881d051dc8f2950ce426a3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__httpc.html#gab20f3a4f75881d051dc8f2950ce426a3">httpc_setup_debug</a> (uint8_t debug)</td></tr>
 <tr class="memdesc:gab20f3a4f75881d051dc8f2950ce426a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function is used to setup httpc debug.  <a href="#gab20f3a4f75881d051dc8f2950ce426a3">More...</a><br /></td></tr>
 <tr class="separator:gab20f3a4f75881d051dc8f2950ce426a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gafd5b0754513933d2a866f2e206ca6822"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__httpc.html#gafd5b0754513933d2a866f2e206ca6822">httpc_enable_ignore_content_len</a> (struct <a class="el" href="structhttpc__conn.html">httpc_conn</a> *conn)</td></tr>
+<tr class="memdesc:gafd5b0754513933d2a866f2e206ca6822"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function is used to enable ignoring content_len eqauls 0.  <a href="#gafd5b0754513933d2a866f2e206ca6822">More...</a><br /></td></tr>
+<tr class="separator:gafd5b0754513933d2a866f2e206ca6822"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga2a91dd4c3973149814fa3dbad64619d3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__httpc.html#ga2a91dd4c3973149814fa3dbad64619d3">httpc_free</a> (void *ptr)</td></tr>
-<tr class="memdesc:ga2a91dd4c3973149814fa3dbad64619d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function is used to free memory allocated by httpc API, such as <a class="el" href="group__httpc.html#gae908ff84ede541b3f2c5ab87f66fc768" title="This function is used to get a header field from HTTP header of connection context. ">httpc_response_get_header_field()</a>.  <a href="#ga2a91dd4c3973149814fa3dbad64619d3">More...</a><br /></td></tr>
+<tr class="memdesc:ga2a91dd4c3973149814fa3dbad64619d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function is used to free memory allocated by httpc API, such as <a class="el" href="group__httpc.html#gae908ff84ede541b3f2c5ab87f66fc768" title="This function is used to get a header field(case-insensitive) from HTTP header of connection context...">httpc_response_get_header_field()</a>.  <a href="#ga2a91dd4c3973149814fa3dbad64619d3">More...</a><br /></td></tr>
 <tr class="separator:ga2a91dd4c3973149814fa3dbad64619d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaa7370c608bdf4ff9e6bb021557cea0c2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__httpc.html#gaa7370c608bdf4ff9e6bb021557cea0c2">httpc_conn_dump_header</a> (struct <a class="el" href="structhttpc__conn.html">httpc_conn</a> *conn)</td></tr>
 <tr class="memdesc:gaa7370c608bdf4ff9e6bb021557cea0c2"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function is used to dump the parsed HTTP header of response in connection context.  <a href="#gaa7370c608bdf4ff9e6bb021557cea0c2">More...</a><br /></td></tr>
@@ -145,7 +148,7 @@ Functions</h2></td></tr>
 <tr class="memdesc:gae3cb9644a42e5008eac86a7233b7fb1c"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function is used to read data from HTTP/HTTPS connection.  <a href="#gae3cb9644a42e5008eac86a7233b7fb1c">More...</a><br /></td></tr>
 <tr class="separator:gae3cb9644a42e5008eac86a7233b7fb1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gae908ff84ede541b3f2c5ab87f66fc768"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__httpc.html#gae908ff84ede541b3f2c5ab87f66fc768">httpc_response_get_header_field</a> (struct <a class="el" href="structhttpc__conn.html">httpc_conn</a> *conn, char *field, char **value)</td></tr>
-<tr class="memdesc:gae908ff84ede541b3f2c5ab87f66fc768"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function is used to get a header field from HTTP header of connection context.  <a href="#gae908ff84ede541b3f2c5ab87f66fc768">More...</a><br /></td></tr>
+<tr class="memdesc:gae908ff84ede541b3f2c5ab87f66fc768"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function is used to get a header field(case-insensitive) from HTTP header of connection context.  <a href="#gae908ff84ede541b3f2c5ab87f66fc768">More...</a><br /></td></tr>
 <tr class="separator:gae908ff84ede541b3f2c5ab87f66fc768"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
@@ -409,6 +412,31 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="gafd5b0754513933d2a866f2e206ca6822"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void httpc_enable_ignore_content_len </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structhttpc__conn.html">httpc_conn</a> *&#160;</td>
+          <td class="paramname"><em>conn</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>This function is used to enable ignoring content_len eqauls 0. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">conn</td><td>pointer to connection context. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>None </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="ga2a91dd4c3973149814fa3dbad64619d3"></a>
 <div class="memitem">
 <div class="memproto">
@@ -423,7 +451,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>This function is used to free memory allocated by httpc API, such as <a class="el" href="group__httpc.html#gae908ff84ede541b3f2c5ab87f66fc768" title="This function is used to get a header field from HTTP header of connection context. ">httpc_response_get_header_field()</a>. </p>
+<p>This function is used to free memory allocated by httpc API, such as <a class="el" href="group__httpc.html#gae908ff84ede541b3f2c5ab87f66fc768" title="This function is used to get a header field(case-insensitive) from HTTP header of connection context...">httpc_response_get_header_field()</a>. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">ptr</td><td>pointer to memory to be deallocated </td></tr>
@@ -636,11 +664,11 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>This function is used to get a header field from HTTP header of connection context. </p>
+<p>This function is used to get a header field(case-insensitive) from HTTP header of connection context. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">conn</td><td>pointer to connection context </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">field</td><td>header field string to search </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">field</td><td>header field string to search(case-insensitive) </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">value</td><td>search result stored in memory allocated </td></tr>
   </table>
   </dd>

@@ -826,12 +826,12 @@ __STATIC_INLINE
 void hal_delay_us (uint32_t time_us)
 {
     phal_timer_adapter_t psys_timer = (phal_timer_adapter_t)(*(hal_gtimer_stubs.ppsys_timer));
-    if(psys_timer == NULL){
-        DBG_TIMER_ERR("system timer is not initialized\r\n");
+    if (psys_timer == NULL) {
+        DBG_TIMER_ERR ("system timer is not initialized\r\n");
         return;
     }
-    if((u32)(psys_timer->tg_ba) != TG0_BASE && (u32)(psys_timer->tg_ba) != TG1_BASE){
-        DBG_TIMER_ERR("system timer is not initialized properly\r\n");
+    if ((u32)(psys_timer->tg_ba) != TG0_BASE && (u32)(psys_timer->tg_ba) != TG1_BASE) {
+        DBG_TIMER_ERR ("system timer is not initialized properly\r\n");
         return;
     }
     if (time_us>6) {
@@ -856,6 +856,20 @@ __STATIC_INLINE
 BOOLEAN hal_is_timeout (uint64_t start_us, uint32_t timeout_us)
 {
     return hal_gtimer_stubs.hal_is_timeout (start_us, timeout_us);
+}
+
+/** 
+ *  @brief To disable a HW timer which is used as the tick source for ADC or PWM.
+ *
+ *  @param[in] tid The timer index.
+ *
+ *  @returns void
+ */
+
+__STATIC_INLINE
+void hal_timer_event_deinit (timer_id_t tid)
+{
+    hal_gtimer_stubs.hal_timer_event_deinit (tid);
 }
 
 /** @} */ /* End of group hs_hal_timer */

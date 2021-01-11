@@ -1230,4 +1230,5 @@ struct iw_event
 #define IW_EVT_STR_NO_NETWORK "No Assoc Network After Scan Done"
 #define IW_EVT_STR_ICV_ERROR "ICV Eror"
 #define IW_EVT_STR_CHALLENGE_FAIL "Auth Challenge Fail"
+#define IW_EVT_STR_NO_BEACON "No Beacon"
 #endif	/* _LINUX_WIRELESS_H */

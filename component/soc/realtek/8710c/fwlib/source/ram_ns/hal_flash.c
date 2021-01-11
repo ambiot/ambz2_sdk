@@ -30,6 +30,7 @@
 #include "hal_spic.h"
 #include "rtl8710c_spic_type.h"
 #include "hal_sce.h"
+#include "hal_efuse.h"
 
 extern const hal_flash_func_stubs_t hal_flash_stubs;
 
@@ -474,6 +475,7 @@ void hal_flash_set_quad_enable (phal_spic_adaptor_t phal_spic_adaptor)
         case FLASH_TYPE_GD32:
         case FLASH_TYPE_BOYA:
         case FLASH_TYPE_XMC:
+        case FLASH_TYPE_ZBIT:
             status_value = hal_flash_get_status(phal_spic_adaptor, cmd->rdsr2);
             hal_flash_set_status(phal_spic_adaptor, cmd->wrsr2, 0x2 | status_value);
             break;
@@ -521,6 +523,7 @@ void hal_flash_unset_quad_enable (phal_spic_adaptor_t phal_spic_adaptor)
         case FLASH_TYPE_GD32:
         case FLASH_TYPE_BOYA:
         case FLASH_TYPE_XMC:
+        case FLASH_TYPE_ZBIT:
             status_value = hal_flash_get_status(phal_spic_adaptor, cmd->rdsr2);
             hal_flash_set_status(phal_spic_adaptor, cmd->wrsr2, ~0x2 & status_value);
             break;
@@ -551,7 +554,7 @@ void hal_flash_unset_quad_enable (phal_spic_adaptor_t phal_spic_adaptor)
  *
  *    hal_flash_enable_qpi is used to switch flash to QPI mode (4-4-4).
  *    Quad enable bit is set before SPIC sends enter QPI mode command.
- *    Only Adesto, Winbond and MXIC supports this function.
+ *    Only Winbond and MXIC supports this function.
  *    Must ensure flash is under SPI mode before CPU enters this function.
  *
  *   \param void *adaptor:      The pointer of the flash adaptor.
@@ -569,7 +572,7 @@ void hal_flash_enable_qpi (phal_spic_adaptor_t phal_spic_adaptor)
  *    Unlike flash_reset_to_spi_rtl8195bhp function recovering flash back to SPI mode from abnormal state,
  *    this funciton is a bridge to switch between different IO mode when flash is under control.
  *    Every IO mode should call this function to switch back to SPI mode before flash enters the other IO mode.
- *    Only Adesto, Winbond and MXIC support this function.
+ *    Only Winbond and MXIC support this function.
  *
  *   \param void *adaptor:      The pointer of the flash adaptor.
  *
@@ -595,7 +598,7 @@ void hal_flash_return_spi (phal_spic_adaptor_t phal_spic_adaptor)
     /*Disable SPIC to set control register*/
     spic_disable_rtl8710c(spic_dev);
 
-    /*Send cmd to switch from QPI to SPI mode, if QPI works, change with check for non-adesto*/
+    /*Send cmd to switch from QPI to SPI mode*/
     if ((spic_send_cmd_mode == QuadChnl)) {
         spic_tx_cmd_no_check(phal_spic_adaptor, cmd->en_spi, 0, 0);
     }
@@ -1000,10 +1003,43 @@ void hal_flash_support_new_type (phal_spic_adaptor_t phal_spic_adaptor)
             phal_spic_adaptor->flash_type = FLASH_TYPE_EON;
             break;
                    
+        case 0x5E:
+           phal_spic_adaptor->cmd = &new_flash_cmd;
+           phal_spic_adaptor->flash_type = FLASH_TYPE_ZBIT;
+           break;
+           
         default:
             break;
     }
 }
+
+/** \brief Description of hal_flash_get_size
+ *
+ *    hal_flash_get_size returns the density of the flash.
+ *    
+ *   \param void *adaptor:      The pointer of the flash adaptor.
+ *
+ *   \return u8: the density of the flash, unit is Mbit.
+ */
+u8 hal_flash_get_size (phal_spic_adaptor_t phal_spic_adaptor)
+{
+    u8 efuse_value;
+    u8 size_id = phal_spic_adaptor->flash_id[2];
+    u32 size = 0;
+
+    size = ((1 << size_id) >> 20) * 8;
+
+    /*Read efuse to get the package type*/
+    hal_efuse_read(0x1F8, &efuse_value, 0);
+    
+    /*CF returns 16Mbit, others return real density*/
+    if (efuse_value == 0xFE) {
+        return 16;
+    } else {
+        return size;
+    }
+}
+
 
 /** *@} */ /* End of group hs_hal_flash_ram_func */
 

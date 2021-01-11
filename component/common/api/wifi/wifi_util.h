@@ -78,6 +78,7 @@ int wext_set_autoreconnect(const char *ifname, __u8 mode, __u8 retry_times, __u1
 int wext_get_autoreconnect(const char *ifname, __u8 *mode);
 int wext_set_adaptivity(rtw_adaptivity_mode_t adaptivity_mode);
 int wext_set_adaptivity_th_l2h_ini(__u8 l2h_threshold);
+int wext_set_anti_interference(__u8 enable);
 int wext_set_trp_tis(__u8 enable);
 int wext_set_support_wpa3(__u8 enable);
 int wext_get_auto_chl(const char *ifname, unsigned char *channel_set, unsigned char channel_num);
