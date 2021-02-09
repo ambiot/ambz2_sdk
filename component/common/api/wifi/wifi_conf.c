@@ -1007,14 +1007,19 @@ int wifi_enable_powersave(void)
 	return wext_enable_powersave(WLAN0_NAME, 1, 1);
 }
 
+/* wext_resume_powersave() will result in calling sscanf,
+ sscanf have stack size usage different on IAR and GCC.
+ use rltk_wlan_resume_powersave() to avoid calling of sscanf */
+extern int rltk_wlan_resume_powersave(void);
+extern int rltk_wlan_disable_powersave(void);
 int wifi_resume_powersave(void)
 {
-	return wext_resume_powersave(WLAN0_NAME);
+	return rltk_wlan_resume_powersave();
 }
 
 int wifi_disable_powersave(void)
 {
-	return wext_disable_powersave(WLAN0_NAME);
+	return rltk_wlan_disable_powersave();
 }
 
 void wifi_btcoex_set_bt_on(void)
@@ -1093,6 +1098,7 @@ int wifi_get_ap_info(rtw_bss_info_t * ap_info, rtw_security_t* security)
 	const char * ifname = WLAN0_NAME;
 	int ret = 0;
 	char buf[24];
+	int tmp = 0;
 
 	if(wifi_mode == RTW_MODE_STA_AP) {
 		ifname = WLAN1_NAME;
@@ -1104,7 +1110,8 @@ int wifi_get_ap_info(rtw_bss_info_t * ap_info, rtw_security_t* security)
 
 	snprintf(buf, 24, "get_security");
 	ret = wext_private_command_with_retval(ifname, buf, buf, 24);
-	sscanf(buf, "%d", (int *)security);
+	sscanf(buf, "%d", tmp);
+	*security = tmp;
 
 	return ret;
 }
@@ -1648,7 +1655,8 @@ int wifi_start_ap(
 			ret = RTW_INVALID_KEY;
 			goto exit;
 		}
-	}else{
+	}
+	if(security_type != RTW_SECURITY_OPEN){
 		if(password_len <= RTW_MAX_PSK_LEN &&
 			password_len >= RTW_MIN_PSK_LEN){
 			if(password_len == RTW_MAX_PSK_LEN){//password_len=64 means pre-shared key, pre-shared key should be 64 hex characters
@@ -1772,7 +1780,8 @@ int wifi_start_ap_with_hidden_ssid(
 			ret = RTW_INVALID_KEY;
 			goto exit;
 		}
-	}else{
+	}
+	if(security_type != RTW_SECURITY_OPEN){
 		if(password_len <= RTW_MAX_PSK_LEN &&
 			password_len >= RTW_MIN_PSK_LEN){
 			if(password_len == RTW_MAX_PSK_LEN){//password_len=64 means pre-shared key, pre-shared key should be 64 hex characters
@@ -2487,31 +2496,62 @@ static void wifi_autoreconnect_thread(void *param)
 	int ret = RTW_ERROR;
 	struct wifi_autoreconnect_param *reconnect_param = (struct wifi_autoreconnect_param *) param;
 	RTW_API_INFO("\n\rauto reconnect ...\n");
+	char empty_bssid[6] = {0}, assoc_by_bssid = 0;
+	extern unsigned char* rltk_wlan_get_saved_bssid(void);
+	unsigned char* saved_bssid = rltk_wlan_get_saved_bssid();
+
+	if(memcmp(saved_bssid, empty_bssid, ETH_ALEN)){
+		assoc_by_bssid = 1;
+	}
 #ifdef CONFIG_SAE_SUPPORT
 	if(reconnect_param->security_type == RTW_SECURITY_WPA2_AES_PSK) {
 		if(wext_get_support_wpa3() == 1) {
 			wext_set_support_wpa3(DISABLE);
-			ret = wifi_connect(reconnect_param->ssid, reconnect_param->security_type, reconnect_param->password,
-						reconnect_param->ssid_len, reconnect_param->password_len, reconnect_param->key_id, NULL);
+						if(assoc_by_bssid){
+								ret = wifi_connect_bssid(saved_bssid, reconnect_param->ssid, reconnect_param->security_type,
+															reconnect_param->password, ETH_ALEN, reconnect_param->ssid_len, reconnect_param->password_len, reconnect_param->key_id, NULL);
+						}
+						else{
+								ret = wifi_connect(reconnect_param->ssid, reconnect_param->security_type, reconnect_param->password,
+														reconnect_param->ssid_len, reconnect_param->password_len, reconnect_param->key_id, NULL);
+						}
 			wext_set_support_wpa3(ENABLE);
 		} else {
-			ret = wifi_connect(reconnect_param->ssid, reconnect_param->security_type, reconnect_param->password,
-						reconnect_param->ssid_len, reconnect_param->password_len, reconnect_param->key_id, NULL);
+						if(assoc_by_bssid){
+								ret = wifi_connect_bssid(saved_bssid, reconnect_param->ssid, reconnect_param->security_type,
+																reconnect_param->password, ETH_ALEN, reconnect_param->ssid_len, reconnect_param->password_len, reconnect_param->key_id, NULL);
+						}
+						else{
+								ret = wifi_connect(reconnect_param->ssid, reconnect_param->security_type, reconnect_param->password,
+														reconnect_param->ssid_len, reconnect_param->password_len, reconnect_param->key_id, NULL);
+						}
 		}
 	}
 #ifdef CONFIG_PMKSA_CACHING
 	else if(reconnect_param->security_type == RTW_SECURITY_WPA3_AES_PSK) {
 		wifi_set_pmk_cache_enable(0);
-		ret = wifi_connect(reconnect_param->ssid, reconnect_param->security_type, reconnect_param->password,
-					reconnect_param->ssid_len, reconnect_param->password_len, reconnect_param->key_id, NULL);
-		wifi_set_pmk_cache_enable(1);
+				if(assoc_by_bssid){
+						ret = wifi_connect_bssid(saved_bssid, reconnect_param->ssid, reconnect_param->security_type,
+														reconnect_param->password, ETH_ALEN, reconnect_param->ssid_len, reconnect_param->password_len, reconnect_param->key_id, NULL);
+				}
+				else{
+						ret = wifi_connect(reconnect_param->ssid, reconnect_param->security_type, reconnect_param->password,
+												reconnect_param->ssid_len, reconnect_param->password_len, reconnect_param->key_id, NULL);
+				}
+				wifi_set_pmk_cache_enable(1);
 	}
 #endif
 	else
 #endif
 	{
-		ret = wifi_connect(reconnect_param->ssid, reconnect_param->security_type, reconnect_param->password,
-					reconnect_param->ssid_len, reconnect_param->password_len, reconnect_param->key_id, NULL);
+				if(assoc_by_bssid){
+						ret = wifi_connect_bssid(saved_bssid, reconnect_param->ssid, reconnect_param->security_type,
+														reconnect_param->password, ETH_ALEN, reconnect_param->ssid_len, reconnect_param->password_len, reconnect_param->key_id, NULL);                  
+				}
+				else{
+						ret = wifi_connect(reconnect_param->ssid, reconnect_param->security_type, reconnect_param->password,
+												reconnect_param->ssid_len, reconnect_param->password_len, reconnect_param->key_id, NULL);
+				}
 	}
 
 #if CONFIG_LWIP_LAYER
