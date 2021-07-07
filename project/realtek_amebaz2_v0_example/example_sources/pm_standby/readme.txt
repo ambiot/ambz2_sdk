@@ -51,3 +51,6 @@ Note
     5, Please off JTAG/SWD, when using PA_0, PA_1, PA_2, PA_3, and PA_4.
     6, Please off log UART, when using PA_15, and PA_16.
     7, PA_7, PA_8, PA_9, PA_10, PA_11 and PA_12 only available on RTL8720CF.
+    8, In UART, Gimer and PWM
+	Interrupt will not execute, the system will resume after entering Standby mode by 5s.
+

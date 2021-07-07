@@ -252,15 +252,17 @@ int wifi_is_ready_to_transceive(rtw_interface_t interface);
 
 /**
  * @brief  This function sets the current Media Access Control (MAC) address of the 802.11 device.
- * @param[in] mac: Wi-Fi MAC address.
+ * @param[in] mac: Wi-Fi MAC address to set to. Format of MAC address do not need to include colons/separators (Eg: "a1b2c3d4e5f6")
  * @return    RTW_SUCCESS or RTW_ERROR
+ * note:  This MAC address will be applied to WLAN0
  */
 int wifi_set_mac_address(char * mac);
 
 /**
  * @brief  Retrieves the current Media Access Control (MAC) address
  *			(or Ethernet hardware address) of the 802.11 device.
- * @param[in]  mac: Point to the result of the mac address will be get.
+ * @param[in]  mac: Pointer to the obtained mac address. Memory allocated for "mac" must be at least 18 bytes. 
+ *			The output format of "mac" will be the obtained MAC address in a string, with separators (Eg. "a1:b2:c3:d4:e5:f6") 
  * @return    RTW_SUCCESS or RTW_ERROR
  */
 int wifi_get_mac_address(char * mac);
@@ -305,8 +307,10 @@ int wifi_set_txpower(int poweridx);
 
 /**
  * @brief  Get the associated clients with SoftAP.
- * @param[out]  client_list_buffer: The location where the client list will be stored.
- * @param[in]  buffer_length: The buffer length.
+ * @param[out]  client_list_buffer: The location where the client
+ * 	list will be stored.
+ * @param[in]  buffer_length: The buffer length is reserved for future use.
+ * 	Currently, buffer length is set to a fixed value: 25.
  * @return  RTW_SUCCESS: The result is successfully got.
  * @return  RTW_ERROR: The result is not successfully got.
  */
@@ -323,23 +327,25 @@ int wifi_get_ap_bssid(unsigned char *bssid);
 /**
  * @brief  Get the SoftAP information.
  * @param[out]  ap_info: The location where the AP info will be stored.
- * @param[out]  security: The security type.
+ * @param[out]  security: The location where the security type will be stored.
  * @return  RTW_SUCCESS: The result is successfully got.
  * @return  RTW_ERROR: The result is not successfully got.
  */
 int wifi_get_ap_info(rtw_bss_info_t * ap_info, rtw_security_t* security);
 
 /**
- * @brief  Set the country code to driver to determine the channel set.
+ * @brief  Set the country code to driver
+ *	which is used to determine the channel set.
  * @param[in]  country_code: Specify the country code.
- * @return  RTW_SUCCESS: If result is successfully set.
- * @return  RTW_ERROR: If result is not successfully set.
+ * @return  RTW_SUCCESS: The country code is successfully set.
+ * @return  RTW_ERROR: The country code is not successfully set.
  */
 int wifi_set_country(rtw_country_code_t country_code);
 
 /**
- * @brief  retrieved sta mode MAX data rate.
- * @param[out]  inidata_rate: MAX data rate.
+ * @brief  get sta mode MAX data rate.
+ * @param[out]  inidata_rate: the location will the MAX data rate
+ * 	will be stored.
  * @return  RTW_SUCCESS: If the INIDATA_RATE is successfully retrieved.
  * @return  RTW_ERROR: If the INIDATA_RATE is not retrieved.
  * note: inidata_rate = 2 * (data rate), you need inidata_rate/2.0 to get the real rate
@@ -364,6 +370,8 @@ int wifi_get_rssi(int *pRSSI);
  
  /**
  * @brief  Set the listening channel for promiscuous mode.
+ * 	Promiscuous mode will receive all the packets in
+ * 	this channel.
  * @param[in]  channel: The desired channel.
  * @return  RTW_SUCCESS: If the channel is successfully set.
  * @return  RTW_ERROR: If the channel is not successfully set.
@@ -372,7 +380,7 @@ int wifi_get_rssi(int *pRSSI);
 int wifi_set_channel(int channel);
 
 /**
- * @brief  Get the current channel on STA interface.
+ * @brief  Get the current channel on STA interface(WLAN0_NAME).
  * @param[out] channel: A pointer to the variable where the 
  *  				channel value will be written
  * @return  RTW_SUCCESS: If the channel is successfully read.
@@ -436,33 +444,34 @@ int wifi_rf_off(void);
 
 /**
  * @brief  Enable Wi-Fi.
- * - Bring the Wireless interface "Up"
+ * - Bring the Wireless interface "Up".
  * - Initialize the driver thread which arbitrates access
- *   to the SDIO/SPI bus
- *
- * @param[in]  mode: Decide to enable WiFi in which mode. The optional modes are enumerated in @ref rtw_mode_t.
- * @return  RTW_SUCCESS: if the WiFi chip was initialized successfully.
- * @return  RTW_ERROR: if the WiFi chip was not initialized successfully.
+ * 	to the SDIO/SPI bus.
+ * @param[in]  mode: Decide to enable WiFi in which mode.
+ * 	The optional modes are RTW_MODE_STA, RTW_MODE_AP,
+ * 	RTW_MODE_STA_AP, RTW_MODE_PROMISC and RTW_MODE_P2P.
+ * @return  RTW_SUCCESS: if the WiFi chip initialized successfully.
+ * @return  RTW_ERROR: if the WiFi chip initialization failed.
  */
 int wifi_on(rtw_mode_t mode);
 
 /**
  * @brief  Disable Wi-Fi.
- *  
  * @param  None
- * @return  RTW_SUCCESS: if deinitialization is successful.
+ * @return  RTW_SUCCESS: deinit success,
+ * 	wifi mode is changed to RTW_MODE_NONE.
  * @return  RTW_ERROR: otherwise.
  */
 int wifi_off(void);
 
 /**
  * @brief  Switch Wifi Mode
- * 
  * - Switch Wifi Mode to @param[in]
- *
- * @param[in]  mode: Decide to switch WiFi to which mode. The optional modes are RTW_MODE_STA or RTW_MODE_AP.
- * @return  RTW_SUCCESS:    if the WiFi switch mode successful.
- * @return  RTW_ERROR:      if the WiFi swithc mdoe not successful.
+ * @param[in]  mode: Decide to switch WiFi to which mode.
+ * 	The optional modes are RTW_MODE_STA, RTW_MODE_AP,
+ * 	RTW_MODE_STA_AP, RTW_MODE_PROMISC.
+ * @return  RTW_SUCCESS: WiFi switch mode success.
+ * @return  RTW_ERROR: WiFi switch mdoe fail.
  */
 int wifi_set_mode(rtw_mode_t mode);
 
@@ -480,32 +489,48 @@ int wifi_off_fastly(void);
 
 /**
  * @brief  Set IPS/LPS mode.
- * @param[in] ips_mode: The desired IPS mode. It becomes effective when wlan enter ips.\n
- *		@ref ips_mode is inactive power save mode. Wi-Fi automatically turns RF off if it is not associated to AP. Set 1 to enable inactive power save mode.
- * @param[in] lps_mode: The desired LPS mode. It becomes effective when wlan enter lps.\n
- *		@ref lps_mode is leisure power save mode. Wi-Fi automatically turns RF off during the association to AP is traffic is not busy while it also automatically turns RF on to listen to beacon. Set 1 to enable leisure power save mode.
- * @return  RTW_SUCCESS if setting LPS mode successful.
+ * @param[in]  ips_mode: The desired IPS mode. It becomes effective
+ * 	when wlan enter IPS.
+ * 	ips_mode is the abbreviation of Inactive Power Save mode.
+ * 	Wi-Fi automatically turns RF off if it is not associated to AP.
+ * 	- Set 1 to enable inactive power save mode.
+ * @param[in]  lps_mode: The desired LPS mode. It becomes effective
+ * 	when wlan enter LPS.
+ * 	lps_mode is the abbreviation of Leisure Power Save mode.
+ * 	Wi-Fi automatically turns RF off during the association to AP
+ * 	if traffic is not busy, while it also automatically turns RF on
+ * 	to listen to the beacon of the associated AP.
+ * 	- Set 1 to enable leisure power save mode.
+ * @return  RTW_SUCCESS if setting the corresponding mode successful.
  * @return  RTW_ERROR otherwise.
  */
- 
 int wifi_set_power_mode(unsigned char ips_mode, unsigned char lps_mode);
 
 /**
- * Set TDMA parameters
- *
- * @param[in] slot_period  : We separate TBTT into 2 or 3 slots.
- *                           If we separate TBTT into 2 slots, then slot_period should be larger or equal to 50ms.
- *                           It means 2 slot period is
- *                               slot_period, 100-slot_period
- *                           If we separate TBTT into 3 slots, then slot_period should be less or equal to 33ms.
- *                           It means 3 slot period is
- *                               100 - 2 * slot_period, slot_period, slot_period
- * @param[in] rfon_period_len_1: rf on period of slot 1
- * @param[in] rfon_period_len_2: rf on period of slot 2
- * @param[in] rfon_period_len_3: rf on period of slot 3
- *
+ * @brief  Set TDMA parameters
+ * @param[in]  slot_period: We separate TBTT into 2 or 3 slots.
+ * 	- If we separate TBTT into 2 slots,
+ * 	then slot_period should be larger or equal to 50ms.
+ * 	It means 2 slot period is (slot_period) and (100-slot_period).
+ * 	- If we separate TBTT into 3 slots,
+ * 	then slot_period should be less or equal to 33ms.
+ * 	It means 3 slot period is (100 - 2 * slot_period),
+ * 	(slot_period) and (slot_period)
+ * @param[in]  rfon_period_len_1: rf will turn on for
+ * 	(rfon_period_len_1)ms in slot 1
+ * @param[in]  rfon_period_len_2: rf will turn on for
+ * 	(rfon_period_len_2)ms in slot 2
+ * @param[in]  rfon_period_len_3: rf will turn on for
+ * 	(rfon_period_len_3)ms in slot 3
  * @return RTW_SUCCESS if setting TDMA parameters successful
  *         RTW_ERROR otherwise
+ * @e.g.
+ * slot_period = 60, rfon_period_len_1 = 10, rfon_period_len_2 = 20,
+ * 	rfon_period_len_3 = 0
+ * slot_period >= 50ms, so the TBTT is separated into 2 slots as follows:
+ * |----TDMA period 1----|--TDMA period 2--|
+ * |-10ms-|-----50ms-----|--20ms--|--20ms--|
+ * |rf on-|----rf off----|--rf on-|-rf off-|
  */
 int wifi_set_tdma_param(unsigned char slot_period, unsigned char rfon_period_len_1, unsigned char rfon_period_len_2, unsigned char rfon_period_len_3);
 
@@ -536,7 +561,12 @@ typedef unsigned char rtw_lps_thresh_t;
 
 /**
  * @brief  Set LPS threshold.
- * @param[in] mode: LPS threshold mode LPS_THRESH_PKT_COUNT/LPS_THRESH_DIRECT_ENTER/LPS_THRESH_TP
+ * @param[in] mode: LPS threshold mode can be
+ * 	0) LPS_THRESH_PKT_COUNT: enter power save or not,
+ * 	   according to packet num,
+ * 	1) LPS_THRESH_DIRECT_ENTER: enter power save directly,
+ * 	2) LPS_THRESH_TP: enter power save or not, according
+ * 	   to throughput.
  * @return  RTW_SUCCESS if set LPS threshold successful.
  * @return  RTW_ERROR otherwise.
  */
@@ -544,8 +574,10 @@ int wifi_set_lps_thresh(rtw_lps_thresh_t mode);
 
 /**
  * @brief Set LPS LEVEL
- * @param[in] lps_level: 0 is LPS_NORMAL, 1 is LPS_LCLK, 2 is LPS_PG
- *
+ * @param[in] lps_level can be
+ * 	0) LPS_NORMAL: only turn off RF
+ * 	1) LPS_LCLK: turn off RF and stop the clock of MAC
+ * 	2) LPS_PG: turn off almost all the power of MAC circuit
  * @return  RTW_SUCCESS if setting LPS level successful.
  * @return  RTW_ERROR otherwise
  */
@@ -564,22 +596,26 @@ int wifi_set_mfp_support(unsigned char value);
 
 /**
  * @brief  Trigger Wi-Fi driver to start an infrastructure Wi-Fi network.
- * @warning If a STA interface is active when this function is called, the softAP will
- *          start on the same channel as the STA. It will NOT use the channel provided!
- * @param[in]  ssid: A null terminated string containing the SSID name of the network.
+ * @param[in]  ssid: A null terminated string containing the SSID name
+ * 	of the network.
  * @param[in]  security_type: 
- *                         - RTW_SECURITY_OPEN           - Open Security
- *                         - RTW_SECURITY_WPA_TKIP_PSK   - WPA Security
- *                         - RTW_SECURITY_WPA2_AES_PSK   - WPA2 Security using AES cipher
- *                         - RTW_SECURITY_WPA2_MIXED_PSK - WPA2 Security using AES and/or TKIP ciphers
- *                         - WEP security is NOT IMPLEMENTED. It is NOT SECURE!
- * @param[in]  password: A byte array containing the cleartext security key for the network.
+ * 	RTW_SECURITY_OPEN:           - Open Security
+ * 	RTW_SECURITY_WPA_TKIP_PSK:   - WPA Security
+ * 	RTW_SECURITY_WPA2_AES_PSK:   - WPA2 Security using AES cipher
+ * 	RTW_SECURITY_WPA2_MIXED_PSK: - WPA2 Security using AES and/or TKIP ciphers
+ * 	WEP security is NOT IMPLEMENTED. It is NOT SECURE!
+ * @param[in]  password: A byte array containing the cleartext security
+ * 	key for the network.
  * @param[in]  ssid_len: The length of the SSID in bytes.
  * @param[in]  password_len: The length of the security_key in bytes.
  * @param[in]  channel: 802.11 channel number.
+ * @warning  If a STA interface is active when this function is called,
+ * 	the softAP will start on the same channel as the STA.
+ * 	It will NOT use the channel provided!
  * @return  RTW_SUCCESS: If successfully creates an AP.
  * @return  RTW_ERROR: If an error occurred.
- * @note  Please make sure the Wi-Fi is enabled before invoking this function. (@ref wifi_on())
+ * @note  Please make sure the Wi-Fi is enabled before invoking this function.
+ * 	(@ref wifi_on())
  */
 int wifi_start_ap(
 	char 				*ssid,
@@ -591,23 +627,22 @@ int wifi_start_ap(
 
 /**
  * @brief  Start an infrastructure Wi-Fi network with hidden SSID.
- * @warning If a STA interface is active when this function is called, the softAP will
- *          start on the same channel as the STA. It will NOT use the channel provided!
- *
  * @param[in]  ssid: A null terminated string containing
  *  	 the SSID name of the network to join.
- * @param[in]  security_type: Authentication type: \n
- *                         - RTW_SECURITY_OPEN           - Open Security
- *                         - RTW_SECURITY_WPA_TKIP_PSK   - WPA Security
- *                         - RTW_SECURITY_WPA2_AES_PSK   - WPA2 Security using AES cipher
- *                         - RTW_SECURITY_WPA2_MIXED_PSK - WPA2 Security using AES and/or TKIP ciphers
- *                         - WEP security is NOT IMPLEMENTED. It is NOT SECURE!
+ * @param[in]  security_type: Authentication type:
+ * 	RTW_SECURITY_OPEN           - Open Security
+ * 	RTW_SECURITY_WPA_TKIP_PSK   - WPA Security
+ * 	RTW_SECURITY_WPA2_AES_PSK   - WPA2 Security using AES cipher
+ * 	RTW_SECURITY_WPA2_MIXED_PSK - WPA2 Security using AES and/or TKIP ciphers
+ * 	WEP security is NOT IMPLEMENTED. It is NOT SECURE!
  * @param[in]  password: A byte array containing the cleartext
  *  	 security key for the network.
  * @param[in]  ssid_len: The length of the SSID in bytes.
  * @param[in]  password_len: The length of the security_key in bytes.
  * @param[in]  channel: 802.11 channel number
- *
+ * @warning  If a STA interface is active when this function is called,
+ * 	the softAP will start on the same channel as the STA.
+ * 	It will NOT use the channel provided!
  * @return  RTW_SUCCESS: If successfully creates an AP.
  * @return  RTW_ERROR: If an error occurred.
  */
@@ -680,13 +715,29 @@ int wifi_scan_networks(rtw_scan_result_handler_t results_handler, void* user_dat
 int wifi_scan_networks_with_ssid(int (results_handler)(char*, int, char *, void *), void* user_data, int scan_buflen, char* ssid, int ssid_len);
 
 /**
+ * @brief  Initiate a scan to search for 802.11 networks with specified SSID.
+ * @param[in]  results_handler: The callback function which will receive and process the result data.
+ * @param[in]  user_data: User specified data that will be passed directly to the callback function.
+ * @param[in]  scan_buflen: The length of the result storage structure.
+ * @param[in]  ssid: The SSID of target network.
+ * @param[in]  ssid_len: The length of the target network SSID.
+ * @return  RTW_SUCCESS or RTW_ERROR
+ * @note  Callback must not use blocking functions, since it is called from the context of the RTW thread. 
+ *			The callback, user_data variables will be referenced after the function returns. 
+ *			Those variables must remain valid until the scan is completed.
+ */
+int wifi_scan_networks_with_ssid_by_extended_security(int (results_handler)(char*, int, char *, void *), void* user_data, int scan_buflen, char* ssid, int ssid_len);
+/**
 * @brief  Set the channel used to be partial scanned.
-* @param[in]  channel_list: An array stores the channel list.
+* @param[out]  channel_list: The location where the channel list
+* 	will be stored.
 * @param[in]  pscan_config: the pscan_config of the channel set.
 * @param[in]  length: The length of the channel_list.
 * @return  RTW_SUCCESS or RTW_ERROR.
-* @note  This function should be used with wifi_scan function. First, use @ref wifi_set_pscan_chan to
-*			indicate which channel will be scanned, and then use @ref wifi_scan to get scanned results.
+* @note  This function should be used with wifi_scan function.
+* 	First, use @ref wifi_set_pscan_chan to indicate which
+* 	channel will be scanned, and then use @ref wifi_scan
+* 	to get scanned results.
 */
 int wifi_set_pscan_chan(__u8 * channel_list,__u8 * pscan_config, __u8 length);
 
@@ -751,10 +802,11 @@ int wifi_set_promisc(rtw_rcr_level_t enabled, void (*callback)(unsigned char*, u
  */
 void wifi_enter_promisc_mode(void);
 
-/** Set the wps phase
- *  
- * @param is_trigger_wps[in]   : to trigger wps function or not
- *
+/**
+ * @brief  Set the wps phase
+ * 	wps: Wi-Fi Protected Setup
+ * @param[in]  is_trigger_wps: to trigger wps function or not
+ * 	is_trigger_wps value should only be 0 or 1
  * @return    RTW_SUCCESS or RTW_ERROR
  */
 int wifi_set_wps_phase(unsigned char is_trigger_wps);
@@ -827,12 +879,13 @@ int wifi_get_autoreconnect(__u8 *mode);
   * @brief  Present the device disconnect reason while connecting.
   * @param  None
   * @return  @ref rtw_connect_error_flag_t
-  *			- 0: RTW_NO_ERROR
-  *			- 1: RTW_NONE_NETWORK
-  *			- 2: RTW_CONNECT_FAIL
-  *			- 3: RTW_WRONG_PASSWORD
-  *			- 4: RTW_DHCP_FAIL
-  *			- 5: RTW_UNKNOWN (initial status)
+ * 	0) RTW_NO_ERROR
+ * 	1) RTW_NONE_NETWORK
+ * 	2) RTW_CONNECT_FAIL
+ * 	3) RTW_WRONG_PASSWORD
+ * 	4) RTW_4WAY_HANDSHAKE_TIMEOUT
+ * 	5) RTW_DHCP_FAIL
+ * 	6) RTW_UNKNOWN (initial status)
   */
 int wifi_get_last_error(void);
 
@@ -876,32 +929,34 @@ typedef struct _cus_ie{
 #endif /* _CUS_IE_ */
 
 /**
-  * @brief  Setup custom ie list.
-  * @warning  This API can't be executed twice before deleting the previous custom ie list.
+ * @brief  Setup custom ie list. (Information Element)
+ * @warning  This API can't be executed twice before deleting
+ * 	the previous custom ie list.
   * @param[in]  cus_ie: Pointer to WIFI CUSTOM IE list.
   * @param[in]  ie_num: The number of WIFI CUSTOM IE list.
   * @return  0 if success, otherwise return -1.
-  * @note  Defininig CONFIG_CUSTOM_IE in "autoconf.h" needs to be done before compiling,
-  *			or this API won't be effective.
+ * @note  Defininig CONFIG_CUSTOM_IE in "autoconf.h" needs to be done
+ * 	before compiling, or this API won't be effective.
   */
 int wifi_add_custom_ie(void *cus_ie, int ie_num);
 
 /**
   * @brief  Update the item in WIFI CUSTOM IE list.
+ * 	(Information Element)
   * @param[in]  cus_ie: Pointer to WIFI CUSTOM IE address.
   * @param[in]  ie_index: Index of WIFI CUSTOM IE list.
   * @return  0 if success, otherwise return -1.
-  * @note  Defininig CONFIG_CUSTOM_IE in "autoconf.h" needs to be done before compiling,
-  *			or this API won't be effective.
+ * @note  Defininig CONFIG_CUSTOM_IE in "autoconf.h" needs to be
+ * 	done before compiling, or this API won't be effective.
   */
 int wifi_update_custom_ie(void *cus_ie, int ie_index);
 
 /**
-  * @brief  Delete WIFI CUSTOM IE list.
+ * @brief  Delete WIFI CUSTOM IE list. (Information Element)
   * @param  None
   * @return  0 if success, otherwise return -1.
-  * @note  Defininig CONFIG_CUSTOM_IE in "autoconf.h" needs to be done before compiling,
-  *			or this API won't be effective.
+ * @note  Defininig CONFIG_CUSTOM_IE in "autoconf.h" needs to be
+ * 	done before compiling, or this API won't be effective.
   */
 int wifi_del_custom_ie(void);
 #endif
@@ -918,6 +973,7 @@ void wifi_init_packet_filter(void);
 /**
   * @brief  Add packet filter.
   * @param[in]  filter_id: The filter id.
+ * 	filter id can be num between 0 to 4.
   * @param[in]  patt: Point to the filter pattern.
   * @param[in]  rule: Point to the filter rule.
   * @return  0 if success, otherwise return -1.
@@ -928,6 +984,7 @@ int wifi_add_packet_filter(unsigned char filter_id, rtw_packet_filter_pattern_t 
 /**
   * @brief  Enable the packet filter.
   * @param[in]  filter_id: The filter id.
+ * 	filter id can be num between 0 to 4.
   * @return  0 if success, otherwise return -1.
   * @note  The filter can be used only if it has been enabled.
   */
@@ -936,6 +993,7 @@ int wifi_enable_packet_filter(unsigned char filter_id);
 /**
   * @brief  Disable the packet filter.
   * @param[in]  filter_id: The filter id.
+ * 	filter id can be num between 0 to 4.
   * @return  0 if success, otherwise return -1.
   */
 int wifi_disable_packet_filter(unsigned char filter_id);
@@ -943,19 +1001,26 @@ int wifi_disable_packet_filter(unsigned char filter_id);
 /**
   * @brief  Remove the packet filter.
   * @param[in]  filter_id: The filter id.
+ * 	filter id can be num between 0 to 4.
   * @return  0 if success, otherwise return -1.
   */
 int wifi_remove_packet_filter(unsigned char filter_id);
 
 /**
   * @brief: Filter out the retransmission MIMO packet in promisc mode.
-  * @param[in]  enable: set 1 to enable filter retransmission pkt function, set 0 to disable this filter function.
-  * @param[in]  filter_interval_ms: if 'enable' equals 0, it's useless; if 'enable' equals 1, this value 
-  *				indicate the time(ms) below which an adjacent pkt received will be claimed a retransmission pkt
-  *				if it has the same length with the previous pkt, and driver will drop all retransmission pkts.
-  *				For example, if the packet transmission time interval is 10ms, but driver receives two packets with
-  *				the same length within 3ms then the second packet will be dropped if configed as wifi_retransmit_packet_filter(1,3).
+ * @param[in]  enable: set 1 to enable filter retransmission pkt function,
+ * 	set 0 to disable this filter function.
+ * @param[in]  filter_interval_ms: if 'enable' equals 0, it's useless;
+ * 	if 'enable' equals 1, this value:
+ * 	- indicate the time(ms) below which an adjacent pkt received
+ * 	will be claimed a retransmission pkt;
+ * 	- if it has the same length with the previous pkt, and driver
+ * 	will drop all retransmission pkts;
   * @return 0 if success, otherwise return -1.
+ * @e.g.  For example, if the packet transmission time interval is 10ms,
+ * 	but driver receives two packets with the same length within 3ms
+ * 	then the second packet will be dropped if configed as
+ * 	wifi_retransmit_packet_filter(1,3).
   */
 int wifi_retransmit_packet_filter(u8 enable, u8 filter_interval_ms);
 
@@ -1033,23 +1098,26 @@ int wifi_get_channel_plan(uint8_t *channel_plan);
 #ifdef CONFIG_AP_MODE
 /**
  * @brief  Enable packets forwarding in ap mode
- * @return  RTW_SUCCESS
+ * @return  RTW_SUCCESS or RTW_ERROR
  */
 int wifi_enable_forwarding(void);
 
 /**
  * @brief  Disable packets forwarding in ap mode
- * @return  RTW_SUCCESS
+ * @return  RTW_SUCCESS or RTW_ERROR
  */
 int wifi_disable_forwarding(void);
 #endif
 
 #ifdef CONFIG_CONCURRENT_MODE
 /**
- * @brief  Set flag for concurrent mode wlan1 issue_deauth when channel switched by wlan0
- *          usage: wifi_set_ch_deauth(0) -> wlan0 wifi_connect -> wifi_set_ch_deauth(1)
- * @param[in]  enable : 0 for disable and 1 for enable
- * @return  RTW_SUCCESS
+ * @brief  Set flag for concurrent mode wlan1 issue_deauth
+ * 	when channel switched by wlan0
+ * @usage  wifi_set_ch_deauth(0) -> wlan0 wifi_connect -> wifi_set_ch_deauth(1)
+ * @param[in]  enable :
+ * 	0 for disable (do not want wlan1 to issue deauth)
+ * 	1 for enable (wlan1 can issue deauth)
+ * @return  RTW_SUCCESS or RTW_ERROR
  */
 int wifi_set_ch_deauth(__u8 enable);
 #endif
@@ -1086,7 +1154,7 @@ int mailbox_to_wifi(u8 *data, u8 len);
  * @param[in]  content : tcp payload
  * @param[in]  len : tcp payload size
  * @param[in]  interval_ms : send this packeter every interval_ms milliseconds
- * @return  RTW_SUCCESS
+ * @return  RTW_SUCCESS or RTW_ERROR
  */
 int wifi_set_tcp_keep_alive_offload(int socket_fd, uint8_t *content, size_t len, uint32_t interval_ms);
 #endif
@@ -1103,7 +1171,20 @@ typedef struct {
 	unsigned char *pattern;
 } wowlan_pattern_param_t;
 
+/**
+ * @brief  control wowlan mode enable and disable
+ * @param[in]  enable:
+ * 	0 means WOWLAN_DISABLE
+ * 	1 means WOWLAN_ENABLE
+ * @return  RTW_SUCCESS or RTW_ERROR
+ */
 int wifi_wowlan_ctrl(int enable);
+
+/**
+ * @brief  set wowlan customer pattern
+ * @param[in]  pattern: refer to struct wowlan_pattern_t
+ * @return  RTW_SUCCESS or RTW_ERROR
+ */
 int wifi_wowlan_set_pattern(wowlan_pattern_t pattern);
 #endif
 //-------------------------------------------------------------//

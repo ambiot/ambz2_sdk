@@ -2542,7 +2542,18 @@ void fATSG(void *arg)
 		goto exit;
 	}
 
+#if defined(CONFIG_PLATFORM_8710C)
+	static u32 pinmux_manager=0;
+	if((0 == port) && (num <= PIN_A23)){	// If Port A, and pin num is in range
+		if (!(pinmux_manager & (1<<num))){
+			gpio_init(&gpio_ctrl, pin);
+			pinmux_manager |= (1<<num);
+		}
+	}
+#else
 	gpio_init(&gpio_ctrl, pin);
+#endif
+
 	if(argv[4]){
 		int dir = atoi(argv[4]);
 		AT_DBG_MSG(AT_FLAG_GPIO, AT_DBG_ALWAYS, "DIR: %s", argv[4]);
@@ -2554,7 +2565,6 @@ void fATSG(void *arg)
 		gpio_mode(&gpio_ctrl, pull);
 	}
 	if(argv[1][0] == 'R'){
-		gpio_dir(&gpio_ctrl, PIN_INPUT);
 		val = gpio_read(&gpio_ctrl);
 	}
 	else if(argv[1][0] == 'W'){
@@ -2661,6 +2671,18 @@ void fATSL(void *arg)
 				pmu_tickless_debug(var);
 			}
 			AT_DBG_MSG(AT_FLAG_OS, AT_DBG_ALWAYS, "[ATSL] debug: %d", var);
+			break;
+		case 'b':
+			if (argc == 4) {
+				var = strtoul(argv[2], NULL, 10);
+				pmu_set_broadcast_awake(var);
+				var = strtoul(argv[3], NULL, 10);
+				pmu_set_broadcast_awake_port(var);
+			} else if (argc == 3) {
+				var = strtoul(argv[2], NULL, 10);
+				pmu_set_broadcast_arp_awake(var);
+			}
+			AT_DBG_MSG(AT_FLAG_OS, AT_DBG_ALWAYS, "[ATSL] broadcast awake: %d", pmu_get_broadcast_awake());
 			break;
 #endif
 		default:

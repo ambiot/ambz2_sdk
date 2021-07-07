@@ -265,12 +265,19 @@
 #define CONFIG_MULTICAST
 #endif
 
+#define CONFIG_RX_PACKET_APPEND_FCS
+
 /* For STA+AP Concurrent MODE */
 #define CONFIG_CONCURRENT_MODE
 #ifdef CONFIG_CONCURRENT_MODE
 //#define CONFIG_MCC_MODE
     #ifdef CONFIG_MCC_MODE
-      #define CONFIG_MCC_STA_AP_MODE
+    //#define CONFIG_MCC_STA_AP_MODE
+    #ifdef CONFIG_MCC_STA_AP_MODE
+      #ifndef CONFIG_RX_PACKET_APPEND_FCS
+        #define CONFIG_RX_PACKET_APPEND_FCS
+      #endif
+    #endif
     #endif
   #if defined(CONFIG_PLATFORM_8195A) || defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8710C)
     #define CONFIG_RUNTIME_PORT_SWITCH
@@ -431,6 +438,7 @@ extern unsigned int g_ap_sta_num;
 		//#define CONFIG_SW_MAILBOX_EN
 		//#define NEW_BT_COEX
 		#define CONFIG_BT_COEXIST_SOC
+		#define CONFIG_BT_SCOREBOARD_ISR
 	#endif
 #endif // #ifdef CONFIG_MP_INCLUDED
 

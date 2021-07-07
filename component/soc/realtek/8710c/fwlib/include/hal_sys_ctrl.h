@@ -2,7 +2,7 @@
  * @file     hal_sys_ctrl.h
  * @brief    The system control functions declaration.
  * @version  v1.00
- * @date     2019/11/25
+ * @date     2020/11/24
  *
  * @note
  *
@@ -29,6 +29,11 @@
 #define HAL_SYS_CTRL_H
 
 #include "cmsis.h"
+
+#define SYS_CTRL_CORE_PWR_MAX_LEVEL             (0x9)
+#define SYS_CTRL_SET_CORE_PWR_STBL_TIME         (10)        // unit: ms
+#define SYS_CTRL_SET_CORE_PWR_RECOVER_STBL_TIME (1) 
+#define SYS_CTRL_CORE_PWR_EFUSE_PG_BOOST_LEVL   (0x2)
 
 #define SYS_DATA_FLASH_BASE                 (0x1000)
 #define SYS_DATA_OFFSET_FORCE_OLD_IMG       (SYS_DATA_FLASH_BASE + 0x08)
@@ -230,8 +235,18 @@ uint8_t hal_get_chip_ver (void);
  */
 flash_port_sel_t hal_get_flash_port_cfg (void);
 
+uint8_t hal_sys_ctrl_core_pwr_get_sts();
+void hal_sys_ctrl_core_pwr_set(uint8_t pwr_sts, uint32_t stbl_time);
+void hal_sys_ctrl_core_pwr_boost(uint8_t pwr_sts, uint8_t boost_levl, uint32_t stbl_time);
+void hal_sys_ctrl_core_pwr_efuse_pg_set(uint8_t pwr_sts);
+void hal_sys_ctrl_core_pwr_efuse_pg_recover(uint8_t pwr_sts);
+
 #if !defined(CONFIG_BUILD_NONSECURE)
 // Build for Secure/Ignore-Secure
+
+void hal_sys_life_cycle_state_read (uint8_t *pstate);
+
+hal_status_t hal_sys_life_cycle_state_write (const uint8_t w_state);
 
 /** 
  *  @brief Configures debuger port setting.
@@ -248,12 +263,21 @@ hal_status_t hal_dbg_port_cfg(dbg_port_mode_t dbg_mode);
 
 #else   // else of "#if !defined(CONFIG_BUILD_NONSECURE)"
 
+#define hal_sys_life_cycle_state_read   hal_sys_life_cycle_state_read_nsc
+#define hal_sys_life_cycle_state_write  hal_sys_life_cycle_state_write_nsc
+
 // Build for Non-Secure
 hal_status_t hal_dbg_port_cfg_nsc (dbg_port_mode_t dbg_mode);
 
 #define hal_dbg_port_cfg             hal_dbg_port_cfg_nsc
 
 #endif  // end of else of "#if !defined(CONFIG_BUILD_NONSECURE)"
+
+#if defined(CONFIG_BUILD_SECURE)
+void NS_ENTRY hal_sys_life_cycle_state_read_nsc(uint8_t *pstate);
+
+hal_status_t NS_ENTRY hal_sys_life_cycle_state_write_nsc(const uint8_t w_state);
+#endif
 
 /** 
  *  @brief Get device reset reason.

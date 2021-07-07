@@ -94,7 +94,13 @@ uint32_t hal_efuse_read (uint16_t addr, uint8_t *pdata, uint8_t l25out_voltage)
  */
 uint32_t hal_efuse_write (uint16_t addr, uint8_t data, uint8_t l25out_voltage)
 {
-    return hal_efuse_stubs.hal_efuse_write(EFUSE_CTRL_SETTING, addr, data, l25out_voltage);
+    uint32_t ret;
+    uint8_t pwr_sts = 0x0;
+    pwr_sts = hal_sys_ctrl_core_pwr_get_sts();
+    hal_sys_ctrl_core_pwr_efuse_pg_set(pwr_sts);
+    ret = hal_efuse_stubs.hal_efuse_write(EFUSE_CTRL_SETTING, addr, data, l25out_voltage);
+    hal_sys_ctrl_core_pwr_efuse_pg_recover(pwr_sts);
+    return ret; 
 }
 
 /**
@@ -124,7 +130,13 @@ uint32_t hal_sec_efuse_read(uint16_t addr, uint8_t *pdata, uint8_t l25out_voltag
  */
 uint32_t hal_sec_efuse_write(uint16_t addr, uint8_t data, uint8_t l25out_voltage)
 {
-    return hal_efuse_stubs.hal_sec_efuse_write(EFUSE_CTRL_SETTING, addr, data, l25out_voltage);
+    uint32_t ret;
+    uint8_t pwr_sts = 0x0;
+    pwr_sts = hal_sys_ctrl_core_pwr_get_sts();
+    hal_sys_ctrl_core_pwr_efuse_pg_set(pwr_sts);
+    ret = hal_efuse_stubs.hal_sec_efuse_write(EFUSE_CTRL_SETTING, addr, data, l25out_voltage);
+    hal_sys_ctrl_core_pwr_efuse_pg_recover(pwr_sts);
+    return ret;
 }
 
 /**
@@ -154,8 +166,14 @@ uint32_t hal_sec_key_get(uint8_t *psec_key, uint8_t key_num, uint32_t length)
  */
 uint32_t hal_sec_key_write(uint8_t *psec_key, uint8_t key_num)
 {
+    uint32_t ret;
+    uint8_t pwr_sts = 0x0;
     uint8_t l25out_voltage = LDO_OUT_DEFAULT_VOLT;
-    return hal_efuse_stubs.hal_sec_key_write(EFUSE_CTRL_SETTING, psec_key, key_num, l25out_voltage);
+    pwr_sts = hal_sys_ctrl_core_pwr_get_sts();
+    hal_sys_ctrl_core_pwr_efuse_pg_set(pwr_sts);
+    ret = hal_efuse_stubs.hal_sec_key_write(EFUSE_CTRL_SETTING, psec_key, key_num, l25out_voltage);
+    hal_sys_ctrl_core_pwr_efuse_pg_recover(pwr_sts);
+    return ret; 
 }
 
 /**
@@ -182,36 +200,54 @@ uint32_t hal_susec_key_get(uint8_t *psusec_key)
  */
 uint32_t hal_susec_key_write(uint8_t *psusec_key)
 {
+    uint32_t ret;
+    uint8_t pwr_sts = 0x0;
     uint8_t l25out_voltage = LDO_OUT_DEFAULT_VOLT;
-    return hal_efuse_stubs.hal_susec_key_write(EFUSE_CTRL_SETTING, psusec_key, l25out_voltage);
+    pwr_sts = hal_sys_ctrl_core_pwr_get_sts();
+    hal_sys_ctrl_core_pwr_efuse_pg_set(pwr_sts);
+    ret = hal_efuse_stubs.hal_susec_key_write(EFUSE_CTRL_SETTING, psusec_key, l25out_voltage);
+    hal_sys_ctrl_core_pwr_efuse_pg_recover(pwr_sts);
+    return ret;
 }
 
-/** 
+/**
  *  @brief To write a 128-bit key to the efuse for the Secure S-JTAG.
  *
  *  @param[in]  pkey            address of 16-byte S-JTAG key.
- * 
+ *
  *  @return  TRUE
  *  @return  FALSE
  */
 uint32_t hal_s_jtag_key_write(uint8_t *pkey)
 {
+    uint32_t ret;
+    uint8_t pwr_sts = 0x0;
     uint8_t l25out_voltage = LDO_OUT_DEFAULT_VOLT;
-    return hal_efuse_stubs.hal_s_jtag_key_write(EFUSE_CTRL_SETTING, pkey, l25out_voltage);
+    pwr_sts = hal_sys_ctrl_core_pwr_get_sts();
+    hal_sys_ctrl_core_pwr_efuse_pg_set(pwr_sts);
+    ret = hal_efuse_stubs.hal_s_jtag_key_write(EFUSE_CTRL_SETTING, pkey, l25out_voltage);
+    hal_sys_ctrl_core_pwr_efuse_pg_recover(pwr_sts);
+    return ret; 
 }
 
-/** 
+/**
  *  @brief To write a 128-bit key to the efuse for the Secure NS-JTAG.
  *
  *  @param[in]  pkey            address of 16-byte NS-JTAG key.
- * 
+ *
  *  @return  TRUE
  *  @return  FALSE
  */
 uint32_t hal_ns_jtag_key_write(uint8_t *pkey)
 {
+    uint32_t ret;
+    uint8_t pwr_sts = 0x0;
     uint8_t l25out_voltage = LDO_OUT_DEFAULT_VOLT;
-    return hal_efuse_stubs.hal_ns_jtag_key_write(EFUSE_CTRL_SETTING, pkey, l25out_voltage);
+    pwr_sts = hal_sys_ctrl_core_pwr_get_sts();
+    hal_sys_ctrl_core_pwr_efuse_pg_set(pwr_sts);
+    ret = hal_efuse_stubs.hal_ns_jtag_key_write(EFUSE_CTRL_SETTING, pkey, l25out_voltage);
+    hal_sys_ctrl_core_pwr_efuse_pg_recover(pwr_sts);
+    return ret;
 }
 
 /**
@@ -238,8 +274,14 @@ uint32_t hal_user_otp_get(uint8_t *puser_otp)
  */
 uint32_t hal_user_otp_set(uint8_t *puser_otp)
 {
+    uint32_t ret;
+    uint8_t pwr_sts = 0x0;
     uint8_t l25out_voltage = LDO_OUT_DEFAULT_VOLT;
-    return hal_efuse_stubs.hal_user_otp_set(EFUSE_CTRL_SETTING, puser_otp, l25out_voltage);
+    pwr_sts = hal_sys_ctrl_core_pwr_get_sts();
+    hal_sys_ctrl_core_pwr_efuse_pg_set(pwr_sts);
+    ret = hal_efuse_stubs.hal_user_otp_set(EFUSE_CTRL_SETTING, puser_otp, l25out_voltage);
+    hal_sys_ctrl_core_pwr_efuse_pg_recover(pwr_sts);
+    return ret; 
 }
 
 /**
@@ -250,7 +292,13 @@ uint32_t hal_user_otp_set(uint8_t *puser_otp)
  */
 uint32_t hal_efuse_disable_sec_jtag (void)
 {
-    return hal_efuse_stubs.hal_efuse_write(EFUSE_CTRL_SETTING, 0x00, 0xF3, LDO_OUT_DEFAULT_VOLT);
+    uint32_t ret;
+    uint8_t pwr_sts = 0x0;
+    pwr_sts = hal_sys_ctrl_core_pwr_get_sts();
+    hal_sys_ctrl_core_pwr_efuse_pg_set(pwr_sts);
+    ret = hal_efuse_stubs.hal_efuse_write(EFUSE_CTRL_SETTING, 0x00, 0xF3, LDO_OUT_DEFAULT_VOLT);
+    hal_sys_ctrl_core_pwr_efuse_pg_recover(pwr_sts);
+    return ret;
 }
 
 /**
@@ -261,7 +309,13 @@ uint32_t hal_efuse_disable_sec_jtag (void)
  */
 uint32_t hal_efuse_disable_nonsec_jtag (void)
 {
-    return hal_efuse_stubs.hal_efuse_write(EFUSE_CTRL_SETTING, 0x00, 0xCF, LDO_OUT_DEFAULT_VOLT);
+    uint32_t ret;
+    uint8_t pwr_sts = 0x0;
+    pwr_sts = hal_sys_ctrl_core_pwr_get_sts();
+    hal_sys_ctrl_core_pwr_efuse_pg_set(pwr_sts);
+    ret = hal_efuse_stubs.hal_efuse_write(EFUSE_CTRL_SETTING, 0x00, 0xCF, LDO_OUT_DEFAULT_VOLT);
+    hal_sys_ctrl_core_pwr_efuse_pg_recover(pwr_sts);
+    return ret;
 }
 
 /** @} */ /* End of group hs_hal_efuse */

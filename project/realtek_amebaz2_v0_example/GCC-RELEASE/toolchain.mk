@@ -72,7 +72,7 @@ endif
 	@if [ ! -d ../../../tools/arm-none-eabi-gcc/asdk ]; then mkdir ../../../tools/arm-none-eabi-gcc/asdk; fi
 	@if [ ! -d ../../../tools/arm-none-eabi-gcc/asdk/$(ASDK_PLATFORM) ] ; then \
 		if [ -f ../../../tools/arm-none-eabi-gcc/$(TOOLCHAIN_FILENAME) ] ; then \
-			if [ "$(EXT)" == ".tar" ] ; then \
+			if [ "$(EXT)" = ".tar" ] ; then \
 				tar -jxf ../../../tools/arm-none-eabi-gcc/$(TOOLCHAIN_FILENAME) -C ../../../tools/arm-none-eabi-gcc/ ; \
 				if [ -d ../../../tools/arm-none-eabi-gcc/$(EXTRACT_FOLDER1) ]; then \
 					mv ../../../tools/arm-none-eabi-gcc/$(EXTRACT_FOLDER1)/$(ASDK_PLATFORM) ../../../tools/arm-none-eabi-gcc/asdk/$(ASDK_PLATFORM) ; \
@@ -81,7 +81,7 @@ endif
 					mv ../../../tools/arm-none-eabi-gcc/$(EXTRACT_FOLDER2)/$(ASDK_PLATFORM) ../../../tools/arm-none-eabi-gcc/asdk/$(ASDK_PLATFORM) ; \
 					rmdir ../../../tools/arm-none-eabi-gcc/$(EXTRACT_FOLDER2); \
 				fi; \
-			elif [ "$(EXT)" == ".zip" ] ; then \
+			elif [ "$(EXT)" = ".zip" ] ; then \
 				unzip -q -u ../../../tools/arm-none-eabi-gcc/$(TOOLCHAIN_FILENAME); \
 				if [ -d $(EXTRACT_FOLDER1) ]; then \
 					mv $(EXTRACT_FOLDER1)/$(ASDK_PLATFORM) ../../../tools/arm-none-eabi-gcc/asdk/$(ASDK_PLATFORM) ; \
