@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <project>
     <fileVersion>3</fileVersion>
     <configuration>
@@ -902,8 +902,6 @@
                     <state>--redirect atoul=__wrap_atoul</state>
                     <state>--redirect atoull=__wrap_atoull</state>
                     <state>--redirect atof=__wrap_atof</state>
-                    <!-- <state>--redirect __localtime64=__wrap_localtime</state> -->
-                    <!-- <state>--redirect __mktime64=__wrap_mktime</state> -->
                     <state>--skip_dynamic_initialization</state>
                     <state>--redirect aesccmp_construct_mic_iv=aesccmp_construct_mic_iv_ram</state>
                     <state>--redirect aesccmp_construct_mic_header1=aesccmp_construct_mic_header1_ram</state>
@@ -2506,13 +2504,7 @@
         <group>
             <name>wlan</name>
             <file>
-                <name>$PROJ_DIR$\..\..\..\component\common\drivers\wlan\realtek\src\core\option\rtw_opt_power_by_rate.c</name>
-                <excluded>
-                    <configuration>Debug</configuration>
-                </excluded>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\..\..\component\common\drivers\wlan\realtek\src\core\option\rtw_opt_power_limit.c</name>
+                <name>$PROJ_DIR$\..\..\..\component\common\drivers\wlan\realtek\src\core\option\rtw_opt_rf_para_rtl8710c.c</name>
                 <excluded>
                     <configuration>Debug</configuration>
                 </excluded>

@@ -363,6 +363,9 @@ SRC_C += ../../../component/soc/realtek/8710c/fwlib/source/ram_ns/hal_sdio_dev.c
 SRC_C += ../../../component/soc/realtek/8710c/fwlib/source/ram_ns/hal_ssi.c
 SRC_C += ../../../component/soc/realtek/8710c/fwlib/source/ram/hal_uart.c
 
+#peripheral - wlan
+#SRC_C += ../../../component/common/drivers/wlan/realtek/src/core/option/rtw_opt_rf_para_rtl8710c.c
+
 #file_system - fatfs
 SRC_C += ../../../component/common/file_system/fatfs/fatfs_ext/src/ff_driver.c
 SRC_C += ../../../component/common/file_system/fatfs/r0.10c/src/diskio.c
@@ -408,6 +411,7 @@ SRC_C += ../../../component/common/example/fatfs/example_fatfs.c
 
 #user
 SRC_C += ../src/main.c
+#SRC_CPP = ../src/main.cpp
 
 #SRAM
 # -------------------------------------------------------------------
@@ -429,16 +433,24 @@ SRC_C_LIST = $(notdir $(SRC_C)) $(notdir $(SRAM_C)) $(notdir $(ERAM_C))
 OBJ_LIST = $(addprefix $(OBJ_DIR)/,$(patsubst %.c,%_$(TARGET).o,$(SRC_C_LIST)))
 DEPENDENCY_LIST = $(addprefix $(OBJ_DIR)/,$(patsubst %.c,%_$(TARGET).d,$(SRC_C_LIST)))
 
+SRC_OO += $(patsubst %.cpp,%_$(TARGET).oo,$(SRC_CPP))
+
+SRC_CPP_LIST = $(notdir $(SRC_CPP))
+OBJ_CPP_LIST = $(addprefix $(OBJ_DIR)/,$(patsubst %.cpp,%_$(TARGET).oo,$(SRC_CPP_LIST)))
+DEPENDENCY_LIST += $(addprefix $(OBJ_DIR)/,$(patsubst %.cpp,%_$(TARGET).d,$(SRC_CPP_LIST)))
 # Compile options
 # -------------------------------------------------------------------
 
 CFLAGS =
 CFLAGS += -march=armv8-m.main+dsp -mthumb -mcmse -mfloat-abi=soft -D__thumb2__ -g -gdwarf-3 -Os
 CFLAGS += -D__ARM_ARCH_8M_MAIN__=1 -gdwarf-3 -fstack-usage -fdata-sections -ffunction-sections 
-CFLAGS += -fdiagnostics-color=always -Wall -Wpointer-arith -Wstrict-prototypes -Wundef -Wno-write-strings 
-CFLAGS += -Wno-maybe-uninitialized --save-temps -c -MMD
+CFLAGS += -fdiagnostics-color=always -Wall -Wpointer-arith -Wundef -Wno-write-strings --save-temps
+CFLAGS += -Wno-maybe-uninitialized -c -MMD
 CFLAGS += -DCONFIG_PLATFORM_8710C -DCONFIG_BUILD_RAM=1
 CFLAGS += -DV8M_STKOVF
+
+CPPFLAGS := $(CFLAGS)
+
 #for time64 
 ifdef SYSTEM_TIME64_MAKE_OPTION
 CFLAGS += -DCONFIG_SYSTEM_TIME64=1
@@ -446,6 +458,9 @@ CFLAGS += -include time64.h
 else
 CFLAGS += -DCONFIG_SYSTEM_TIME64=0
 endif
+
+CFLAGS += -Wstrict-prototypes 
+CPPFLAGS += -std=c++11 -fno-use-cxa-atexit
 
 LFLAGS = 
 LFLAGS += -Os -march=armv8-m.main+dsp -mthumb -mcmse -mfloat-abi=soft -nostartfiles -nodefaultlibs -nostdlib -specs=nosys.specs
@@ -500,8 +515,8 @@ include toolchain.mk
 # -------------------------------------------------------------------
 
 .PHONY: application_is
-application_is: prerequirement $(SRC_O) $(SRAM_O) $(ERAM_O)
-	$(LD) $(LFLAGS) -o $(BIN_DIR)/$(TARGET).axf  $(OBJ_LIST) $(ROMIMG) $(LIBFLAGS) -T$(LDSCRIPT)  
+application_is: prerequirement $(SRC_O) $(SRAM_O) $(ERAM_O) $(SRC_OO)
+	$(LD) $(LFLAGS) -o $(BIN_DIR)/$(TARGET).axf $(OBJ_CPP_LIST) -lstdc++ $(OBJ_LIST) $(ROMIMG) $(LIBFLAGS) -T$(LDSCRIPT) 
 	$(OBJDUMP) -d $(BIN_DIR)/$(TARGET).axf > $(BIN_DIR)/$(TARGET).asm
 
 # Manipulate Image
@@ -561,6 +576,14 @@ prerequirement:
 	mkdir -p $(BIN_DIR)
 	mkdir -p $(BOOT_BIN_DIR)
 	mkdir -p $(INFO_DIR)
+
+$(SRC_OO): %_$(TARGET).oo : %.cpp | prerequirement
+	$(CC) $(CPPFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) -c $< -MM -MT $@ -MF $(OBJ_DIR)/$(notdir $(patsubst %.oo,%.d,$@))
+	cp $@ $(OBJ_DIR)/$(notdir $@)
+	mv $(notdir $*.ii) $(INFO_DIR)
+#	mv $(notdir $*.s) $(INFO_DIR)
+	chmod 777 $(OBJ_DIR)/$(notdir $@)
 
 $(SRC_O): %_$(TARGET).o : %.c | prerequirement
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
@@ -628,6 +651,12 @@ debug:
 	$(AMEBAZ2_GCCTOOLDIR)/debug.sh $(BIN_DIR)/$(TARGET).axf
 	$(GDB) -x $(AMEBAZ2_GCCTOOLDIR)/rtl_gdb_debug.txt
 
+.PHONY: dump
+dump:
+	chmod +rx $(AMEBAZ2_GCCTOOLDIR)/dump.sh
+	$(AMEBAZ2_GCCTOOLDIR)/dump.sh $(BIN_DIR)/flash_is_dump.bin $(DUMP_START_ADDRESS) $(DUMP_END_ADDRESS)
+	$(GDB) -x $(AMEBAZ2_GCCTOOLDIR)/rtl_gdb_dump_jlink.txt
+
 .PHONY: setup
 setup:
 	@echo "----------------"
@@ -644,8 +673,8 @@ endif
 .PHONY: clean
 clean:
 	rm -rf $(TARGET)
-	rm -f $(SRC_O) $(SRAM_O) $(ERAM_O)
-	rm -f $(patsubst %.o,%.d,$(SRC_O)) $(patsubst %.o,%.d,$(SRAM_O)) $(patsubst %.o,%.d,$(ERAM_O))
-	rm -f $(patsubst %.o,%.su,$(SRC_O)) $(patsubst %.o,%.su,$(SRAM_O)) $(patsubst %.o,%.su,$(ERAM_O))
+	rm -f $(SRC_O) $(SRAM_O) $(ERAM_O) $(SRC_OO)
+	rm -f $(patsubst %.o,%.d,$(SRC_O)) $(patsubst %.o,%.d,$(SRAM_O)) $(patsubst %.o,%.d,$(ERAM_O)) $(patsubst %.oo,%.d,$(SRC_OO))
+	rm -f $(patsubst %.o,%.su,$(SRC_O)) $(patsubst %.o,%.su,$(SRAM_O)) $(patsubst %.o,%.su,$(ERAM_O)) $(patsubst %.oo,%.su,$(SRC_OO))
 	rm -f *.i
 	rm -f *.s
