@@ -108,6 +108,35 @@ int __wrap_puts(const char *str)
 	return __wrap_printf("%s\n", str);
 }
 
+int __wrap_putc(char character, void* file)
+{
+	/* must handle file argument */
+	stdio_printf_stubs.stdio_port_putc(character);
+	return 0;
+}
+
+int __wrap_putchar(char character)
+{
+	stdio_printf_stubs.stdio_port_putc(character);
+	return 0;
+}
+
+#if defined(__ICCARM__)
+int __write (int fd, char *buf, int count) {
+#else
+int _write (int fd, char *buf, int count) {
+#endif
+	int written = 0;
+
+	for (; count != 0; --count) {
+		if (__wrap_putchar((uint8_t)*buf++)) {
+			return -1;
+		}
+		++written;
+	}
+	return written;
+}
+
 int __wrap_vprintf(const char *fmt, va_list args)
 {
         int count;
