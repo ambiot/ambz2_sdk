@@ -19,6 +19,13 @@
 #include "wlan_fast_connect/example_wlan_fast_connect.h"
 #endif
 
+#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
+#if LWIP_IPV6
+#include "lwip/dhcp6.h"
+#include "lwip/prot/dhcp6.h"
+#endif
+#endif
+
 /*Static IP ADDRESS*/
 #ifndef IP_ADDR0
 #define IP_ADDR0   192
@@ -93,6 +100,11 @@
 
 /* Private define ------------------------------------------------------------*/
 #define MAX_DHCP_TRIES 5
+#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
+#if LWIP_IPV6
+#define MAX_DHCP6_TRIES 5
+#endif
+#endif
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -216,9 +228,17 @@ extern write_reconnect_ptr p_write_reconnect_ptr;
 
 extern struct wlan_fast_reconnect wifi_data_to_flash;
 extern uint32_t offer_ip;
+extern uint32_t server_ip;
 extern u8 is_the_same_ap;
 
-#endif 
+#endif
+
+#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
+#if LWIP_IPV6 && (LWIP_IPV6_DHCP6_STATEFUL||LWIP_IPV6_DHCP6_STATELESS)
+extern err_t dhcp6_enable(struct netif *netif);
+#endif
+#endif
+
 /**
   * @brief  LwIP_DHCP_Process_Handle
   * @param  None
@@ -280,14 +300,17 @@ uint8_t LwIP_DHCP(uint8_t idx, uint8_t dhcp_state)
 
 #if defined(CONFIG_FAST_DHCP) && CONFIG_FAST_DHCP
 				if(is_the_same_ap){
-					if( (offer_ip != 0) && (dhcp == NULL) ){
-						dhcp = (struct dhcp *)mem_malloc(sizeof(struct dhcp));
-						if (dhcp == NULL) {
-						  printf("dhcp_start(): could not allocate dhcp\n");
-						  return -1;
+					if( (offer_ip != 0 && offer_ip != 0xFFFFFFFF) || (dhcp != NULL) ){
+						if(dhcp == NULL){
+							dhcp = (struct dhcp *)mem_malloc(sizeof(struct dhcp));
+							if (dhcp == NULL) {
+							  printf("dhcp_start(): could not allocate dhcp\n");
+							  return -1;
+							}
 						}
 						memset(dhcp, 0, sizeof(struct dhcp));
 						dhcp->offered_ip_addr.addr = (u32_t)offer_ip;
+						dhcp->server_ip_addr.addr = (u32_t)server_ip;
 #if LWIP_VERSION_MAJOR >= 2
 						netif_set_client_data(pnetif, LWIP_NETIF_CLIENT_DATA_INDEX_DHCP, dhcp);
 #else
@@ -371,11 +394,7 @@ uint8_t LwIP_DHCP(uint8_t idx, uint8_t dhcp_state)
 #else
 				dhcp = pnetif->dhcp;
 #endif
-				wifi_data_to_flash.offer_ip = (uint32_t)dhcp->offered_ip_addr.addr;
-
-				if(p_write_reconnect_ptr){
-					p_write_reconnect_ptr((u8 *)&wifi_data_to_flash, sizeof(struct wlan_fast_reconnect));
-				}
+				restore_wifi_info_to_flash((uint32_t)dhcp->offered_ip_addr.addr, (uint32_t)dhcp->server_ip_addr.addr);
 #endif
 
 #if CONFIG_WLAN
@@ -413,11 +432,7 @@ uint8_t LwIP_DHCP(uint8_t idx, uint8_t dhcp_state)
 					printf("\n\rStatic IP address : %d.%d.%d.%d", iptab[3], iptab[2], iptab[1], iptab[0]);
 
 #if defined(CONFIG_FAST_DHCP) && CONFIG_FAST_DHCP
-				wifi_data_to_flash.offer_ip = 0;
-
-				if(p_write_reconnect_ptr){
-					p_write_reconnect_ptr((u8 *)&wifi_data_to_flash, sizeof(struct wlan_fast_reconnect));
-				}
+					restore_wifi_info_to_flash((uint32_t)dhcp->offered_ip_addr.addr, (uint32_t)dhcp->server_ip_addr.addr);
 #endif
 
 #if CONFIG_WLAN
@@ -478,6 +493,16 @@ void LwIP_ReleaseIP(uint8_t idx)
 	
 	netif_set_addr(pnetif, &ipaddr , &netmask, &gw);
 #endif
+
+#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
+#if LWIP_IPV6
+	IP6_ADDR(ip_2_ip6(&ipaddr), 0,0,0,0);
+	for (int idx = 1; idx < LWIP_IPV6_NUM_ADDRESSES; idx++) {
+		netif_ip6_addr_set_state(pnetif, idx, IP6_ADDR_INVALID);
+		netif_ip6_addr_set(pnetif, idx, ip_2_ip6(&ipaddr));
+	}
+#endif
+#endif
 }
 
 uint8_t* LwIP_GetMAC(struct netif *pnetif)
@@ -490,11 +515,138 @@ uint8_t* LwIP_GetIP(struct netif *pnetif)
 	return (uint8_t *) &(pnetif->ip_addr);
 }
 
-#if LWIP_VERSION_MAJOR >= 2
+#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
 #if LWIP_IPV6
-uint8_t* LwIP_GetIPv6(struct netif *pnetif)
+uint8_t LwIP_DHCP6(uint8_t idx, uint8_t dhcp6_state)
+{
+	struct ip_addr ipaddr;
+	uint8_t *ipv6_global;
+	uint32_t ip6tab[8];
+	uint8_t DHCP6_state;
+	struct netif *pnetif = NULL;
+	struct dhcp6 *dhcp6 = NULL;
+	err_t err;
+
+	DHCP6_state = dhcp6_state;
+
+#if !CONFIG_ETHERNET
+	if(idx > 1)
+	idx = 1;
+#endif
+
+	pnetif = &xnetif[idx];
+	if(DHCP6_state == 0){
+		for (int free_idx = 1; free_idx < LWIP_IPV6_NUM_ADDRESSES; free_idx++) {
+			ip_addr_set_zero(&pnetif->ip6_addr[free_idx]);
+			netif_ip6_addr_set_state(pnetif, free_idx, IP6_ADDR_INVALID);
+		}
+	}
+
+	dhcp6 = ((struct dhcp6*)netif_get_client_data(pnetif, LWIP_NETIF_CLIENT_DATA_INDEX_DHCP6));
+	if(!netif_is_up(pnetif)) // netif should be set up before doing dhcp request (in lwip v2.0.0)
+	{
+		netif_set_up(pnetif);
+	}
+
+	for (;;)
+	{
+		//printf("\n\r ========DHCP6_state:%d============\n\r",DHCP6_state);
+		switch (DHCP6_state)
+		{
+
+			case DHCP6_START:
+			{
+#if CONFIG_WLAN
+				wifi_unreg_event_handler(WIFI_EVENT_BEACON_AFTER_DHCP, wifi_rx_beacon_hdl);
+#endif
+				err = dhcp6_enable(pnetif);
+				if (err != ERR_OK)
+					printf("error in dhcp6_enable\r\n");
+
+				dhcp6 = ((struct dhcp6*)netif_get_client_data(pnetif, LWIP_NETIF_CLIENT_DATA_INDEX_DHCP6));
+
+				ipv6_global = 0;
+				DHCP6_state = DHCP6_WAIT_ADDRESS;
+			}
+			break;
+			case DHCP6_WAIT_ADDRESS:
+			{
+				if(dhcp6->state == DHCP6_STATE_OFF)
+				{
+					printf("\n\rLwIP_DHCP6: dhcp6 stop.");
+					return DHCP6_STOP;
+				}
+
+				/* Read the new IPv6 address */
+				ipv6_global = LwIP_GetIPv6_global(pnetif);
+
+				if(*ipv6_global!=0){
+
+					DHCP6_state = DHCP6_ADDRESS_ASSIGNED;
+
+#if CONFIG_WLAN
+					wifi_reg_event_handler(WIFI_EVENT_BEACON_AFTER_DHCP, wifi_rx_beacon_hdl, NULL);
+#endif
+
+					printf("\n\rInterface %d IPv6 address : %02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x",
+					idx, ipv6_global[0], ipv6_global[1],  ipv6_global[2],  ipv6_global[3],  ipv6_global[4],  ipv6_global[5],
+					ipv6_global[6], ipv6_global[7], ipv6_global[8], ipv6_global[9], ipv6_global[10], ipv6_global[11],
+					ipv6_global[12], ipv6_global[13], ipv6_global[14], ipv6_global[15]);
+
+					/*Todo: error_flag for DHCPv6*/
+
+					return DHCP6_ADDRESS_ASSIGNED;
+				}
+
+				else
+				{
+					/* DHCP timeout */
+					if (dhcp6->tries > MAX_DHCP6_TRIES || pnetif->rs_timeout)
+					{
+						DHCP6_state = DHCP6_TIMEOUT;
+						/* Stop DHCP */
+						dhcp6_stop(pnetif);
+
+						/*Todo: error_flag for DHCPv6*/
+
+#if CONFIG_ETHERNET
+						if(idx == NET_IF_NUM -1) // This is the ethernet interface, set it up for static ip address
+							netif_set_up(pnetif);
+#endif
+						return DHCP6_TIMEOUT;
+					}
+				}
+			}
+			break;
+			case DHCP6_RELEASE_IP:
+#if CONFIG_WLAN
+				wifi_unreg_event_handler(WIFI_EVENT_BEACON_AFTER_DHCP, wifi_rx_beacon_hdl);
+#endif
+				printf("\n\rLwIP_DHCP6: Release ipv6");
+				dhcp6_release(pnetif);
+				return DHCP6_RELEASE_IP;
+			case DHCP6_STOP:
+#if CONFIG_WLAN
+				wifi_unreg_event_handler(WIFI_EVENT_BEACON_AFTER_DHCP, wifi_rx_beacon_hdl);
+#endif
+				printf("\n\rLwIP_DHCP6: dhcp6 stop.");
+				dhcp6_stop(pnetif);
+				return DHCP6_STOP;
+			default:
+			break;
+		}
+		vTaskDelay(30);
+	}
+}
+
+uint8_t* LwIP_GetIPv6_linklocal(struct netif *pnetif)
 {
 	return (uint8_t *) netif_ip6_addr(pnetif, 0)->addr;
+}
+
+uint8_t* LwIP_GetIPv6_global(struct netif *pnetif)
+{
+	return (uint8_t *) netif_ip6_addr(pnetif, 1)->addr;
 }
 #endif
 #endif

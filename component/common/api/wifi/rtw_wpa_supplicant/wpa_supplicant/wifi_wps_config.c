@@ -12,6 +12,9 @@
 #include "wps/wps_defs.h"
 #include <platform/platform_stdlib.h>
 
+#if defined(CONFIG_PLATFORM_8710C)
+#include "platform_opts_bt.h"
+#endif
 
 // The maximum number of WPS credentials. The value should be in range of 1~10.
 int wps_max_cred_count = 10;

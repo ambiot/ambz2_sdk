@@ -27,6 +27,7 @@ write_reconnect_ptr p_write_reconnect_ptr;
 
 #if defined(CONFIG_FAST_DHCP) && CONFIG_FAST_DHCP
 uint32_t offer_ip = 0;
+uint32_t server_ip = 0;
 #endif
 #define WIFI_RETRYCOUNT 5
 /*
@@ -92,6 +93,11 @@ int wlan_init_done_callback(void)
 #if CONFIG_LWIP_LAYER
 	netif_set_up(&xnetif[0]);
 #endif
+#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
+#if LWIP_IPV6
+	netif_create_ip6_linklocal_address(&xnetif[0], 1);
+#endif
+#endif
 
 #if CONFIG_AUTO_RECONNECT
 	//setup reconnection flag
@@ -123,7 +129,7 @@ int wlan_init_done_callback(void)
 		memcpy(psk_passphrase, data->psk_passphrase, sizeof(data->psk_passphrase));
 		memcpy(wpa_global_PSK, data->wpa_global_PSK, sizeof(data->wpa_global_PSK));
 		channel = data->channel;
-		sprintf(key_id,"%d",(char) (channel>>28));
+		snprintf(key_id, sizeof(key_id), "%d",(char) (channel>>28));
 		channel &= 0xff;
 		security_type = data->security_type;
 		pscan_config = PSCAN_ENABLE | PSCAN_FAST_SURVEY;
@@ -150,6 +156,7 @@ WIFI_RETRY_LOOP:
 			case RTW_SECURITY_WPA2_AES_PSK:
 #ifdef CONFIG_SAE_SUPPORT
 			case RTW_SECURITY_WPA3_AES_PSK:
+			case RTW_SECURITY_WPA2_WPA3_MIXED:
 #endif
 				wifi.password = (unsigned char*) psk_passphrase;
 				wifi.password_len = strlen((char*)psk_passphrase);
@@ -160,6 +167,7 @@ WIFI_RETRY_LOOP:
 
 #if defined(CONFIG_FAST_DHCP) && CONFIG_FAST_DHCP
 		offer_ip = data->offer_ip;
+		server_ip = data->server_ip;
 #endif
 
 		ret = wifi_connect((char*)wifi.ssid.val, wifi.security_type, (char*)wifi.password, wifi.ssid.len,
@@ -173,6 +181,11 @@ WIFI_RETRY_LOOP:
 		}
 		if(ret == RTW_SUCCESS){
 			LwIP_DHCP(0, DHCP_START);
+#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
+#if LWIP_IPV6
+			LwIP_DHCP6(0, DHCP6_START);
+#endif
+#endif
 		}
 
 		free(data);

@@ -9,22 +9,24 @@
  *
  ******************************************************************************
  *
- * Copyright(c) 2007 - 2016 Realtek Corporation. All rights reserved.
+ * Copyright(c) 2007 - 2017 Realtek Corporation. All rights reserved.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
+ * SPDX-License-Identifier: Apache-2.0
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
+ * Licensed under the Apache License, Version 2.0 (the License); you may
+ * not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an AS IS BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  ******************************************************************************/
+ 
 #include "cmsis.h"
 
 #if CONFIG_SPI_EN
@@ -546,6 +548,14 @@ int32_t spi_slave_read_stream_dma(spi_t *obj, char *rx_buffer, uint32_t length)
     phal_ssi_adaptor_t phal_ssi_adaptor = &(obj->hal_ssi_adaptor);
     int32_t ret;
 
+    /* Checks PSRAM alignment */
+    if (is_dcache_enabled() && (((uint32_t)(rx_buffer)) >> 24) == 0x60) {
+        if((uint32_t)(rx_buffer) & 0x1F != 0x0) {
+            DBG_SSI_ERR("PSRAM Buffer must be 32B aligned\r\n");
+            return HAL_ERR_MEM;
+        }
+    }
+
     if (obj->state & SPI_STATE_RX_BUSY) {
         DBG_SSI_WARN("spi_slave_read_stream_dma: state(0x%x) is not ready\r\n", 
             obj->state);
@@ -574,6 +584,14 @@ int32_t spi_slave_write_stream_dma(spi_t *obj, char *tx_buffer, uint32_t length)
 {
     phal_ssi_adaptor_t phal_ssi_adaptor = &(obj->hal_ssi_adaptor);
     int32_t ret;
+
+    /* Checks PSRAM alignment */
+    if (is_dcache_enabled() && (((uint32_t)(tx_buffer)) >> 24) == 0x60) {
+        if((uint32_t)(tx_buffer) & 0x1F != 0x0) {
+            DBG_SSI_ERR("PSRAM Buffer must be 32B aligned\r\n");
+            return HAL_ERR_MEM;
+        }
+    }
 
     if (obj->state & SPI_STATE_TX_BUSY) {
         DBG_SSI_WARN("spi_slave_write_stream_dma: state(0x%x) is not ready\r\n", 
@@ -604,6 +622,13 @@ int32_t spi_master_read_stream_dma(spi_t *obj, char *rx_buffer, uint32_t length)
     phal_ssi_adaptor_t phal_ssi_adaptor = &(obj->hal_ssi_adaptor);
     int32_t ret;
 
+    /* Checks PSRAM alignment */
+    if (is_dcache_enabled() && (((uint32_t)(rx_buffer)) >> 24) == 0x60) {
+        if((uint32_t)(rx_buffer) & 0x1F != 0x0) {
+            DBG_SSI_ERR("PSRAM Buffer must be 32B aligned\r\n");
+            return HAL_ERR_MEM;
+        }
+    }
     if (obj->state & SPI_STATE_RX_BUSY) {
         DBG_SSI_WARN("spi_master_read_stream_dma: state(0x%x) is not ready\r\n", 
             obj->state);
@@ -647,6 +672,14 @@ int32_t spi_master_write_stream_dma(spi_t *obj, char *tx_buffer, uint32_t length
     phal_ssi_adaptor_t phal_ssi_adaptor = &(obj->hal_ssi_adaptor);
     int32_t ret;
 
+    /* Checks PSRAM alignment */
+    if (is_dcache_enabled() && (((uint32_t)(tx_buffer)) >> 24) == 0x60) {
+        if((uint32_t)(tx_buffer) & 0x1F != 0x0) {
+            DBG_SSI_ERR("PSRAM Buffer must be 32B aligned\r\n");
+            return HAL_ERR_MEM;
+        }
+    }
+
     if (obj->state & SPI_STATE_TX_BUSY) {
         DBG_SSI_WARN("spi_master_write_stream_dma: state(0x%x) is not ready\r\n", 
             obj->state);
@@ -675,6 +708,20 @@ int32_t spi_master_write_read_stream_dma(spi_t *obj, char *tx_buffer, char *rx_b
 {
     phal_ssi_adaptor_t phal_ssi_adaptor = &(obj->hal_ssi_adaptor);
     int32_t ret;
+
+    /* Checks PSRAM alignment */
+    if (is_dcache_enabled() && (((uint32_t)(tx_buffer)) >> 24) == 0x60) {
+	    if((uint32_t)(tx_buffer) & 0x1F != 0x0) {
+            DBG_SSI_ERR("PSRAM Buffer must be 32B aligned\r\n");
+            return HAL_ERR_MEM;
+        }
+    }
+    if (is_dcache_enabled() && (((uint32_t)(rx_buffer)) >> 24) == 0x60) {
+        if((uint32_t)(rx_buffer) & 0x1F != 0x0) {
+            DBG_SSI_ERR("PSRAM Buffer must be 32B aligned\r\n");
+            return HAL_ERR_MEM;
+        }
+    }
 
     if (obj->state & (SPI_STATE_RX_BUSY|SPI_STATE_TX_BUSY)) {
         DBG_SSI_WARN("spi_master_write_and_read_stream: state(0x%x) is not ready\r\n", 
@@ -717,6 +764,14 @@ int32_t spi_slave_read_stream_dma_timeout(spi_t *obj, char *rx_buffer, uint32_t 
     int ret,timeout = 0;
     u32 start_us;
     phal_ssi_adaptor_t phal_ssi_adaptor = &(obj->hal_ssi_adaptor);
+
+    /* Checks PSRAM alignment */
+    if (is_dcache_enabled() && (((uint32_t)(rx_buffer)) >> 24) == 0x60) {
+        if((uint32_t)(rx_buffer) & 0x1F != 0x0) {
+            DBG_SSI_ERR("PSRAM Buffer must be 32B aligned\r\n");
+            return HAL_ERR_MEM;
+        }
+    }
 
     if (obj->state & SPI_STATE_RX_BUSY) {
         DBG_SSI_WARN("spi_slave_read_stream_dma: state(0x%x) is not ready\r\n", 
@@ -768,6 +823,15 @@ int32_t spi_slave_read_stream_dma_terminate(spi_t *obj, char *rx_buffer, uint32_
     volatile u8 cs_stop;
 
     cs_stop = 0;
+
+    /* Checks PSRAM alignment */
+    if (is_dcache_enabled() && (((uint32_t)(rx_buffer)) >> 24) == 0x60) {
+        if((uint32_t)(rx_buffer) & 0x1F != 0x0) {
+            DBG_SSI_ERR("PSRAM Buffer must be 32B aligned\r\n");
+            return HAL_ERR_MEM;
+        }
+    }
+
     if (obj->state & SPI_STATE_RX_BUSY) {
         DBG_SSI_WARN("spi_slave_read_stream_dma: state(0x%x) is not ready\r\n", 
             obj->state);

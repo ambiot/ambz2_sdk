@@ -203,6 +203,29 @@ int i2c_repeatread(i2c_t *obj, int address, u8 *pWriteBuf, int Writelen, u8 *pRe
 ///@}
 #endif //CONFIG_PLATFORM_8711B
 
+#if (defined(CONFIG_PLATFORM_8710C) && (CONFIG_PLATFORM_8710C))
+///@name AmebaZ2 Only 
+///@{
+/**
+  * @brief  Configure I2C operation mode.
+  * @param  op_mode: I2C operation mode, I2CModePoll/I2CModeInterrupt.
+  * @retval operation mode is correct or not  
+  */
+int i2c_op_mode(uint8_t op_mode);
+
+/**
+  * @brief  I2C master send NULL data.
+  * @param  obj: i2c object define in application software.
+  * @param  data: the data to be sent.
+  * @param  length: the length of the data to be sent.
+  * @param  stop: specifies whether a STOP is issued after all the bytes are sent.
+  * @retval : none. 
+  */
+void i2c_mst_null_data(i2c_t *obj, const char *data, int length, int stop);
+
+///@}
+#endif //CONFIG_PLATFORM_8710C
+
 /*\@}*/
 
 #ifdef __cplusplus

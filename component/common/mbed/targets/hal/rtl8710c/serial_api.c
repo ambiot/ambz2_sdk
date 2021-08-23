@@ -320,6 +320,14 @@ int32_t serial_recv_stream_dma (serial_t *obj, char *prxbuf, uint32_t len)
         return ret;
     }
 
+    //Checks PSRAM misalignment
+    if (is_dcache_enabled() && (((uint32_t)(prxbuf)) >> 24) == 0x60) {
+        if(((uint32_t)(prxbuf) & 0x1F) != 0x0) {
+            DBG_UART_ERR("PSRAM Buffer must be 32B aligned\r\n");
+            return HAL_ERR_MEM;
+        }
+    }
+
     ret = hal_uart_dma_recv (&obj->uart_adp, (uint8_t *)prxbuf, len);
     return ret;
 }
@@ -330,6 +338,14 @@ int32_t serial_send_stream_dma (serial_t *obj, char *ptxbuf, uint32_t len)
     hal_status_t ret;
     uint32_t phy_addr;
     uint32_t is_enc;
+
+    //Checks PSRAM misalignment
+    if (is_dcache_enabled() && (((uint32_t)(ptxbuf)) >> 24) == 0x60) {
+        if(((uint32_t)(ptxbuf) & 0x1F) != 0x0) {
+            DBG_UART_ERR("PSRAM Buffer must be 32B aligned\r\n");
+            return HAL_ERR_MEM;
+        }
+    }
 
     if ((serial_dma_init[uart_idx] & SERIAL_TX_DMA_EN) == 0) {
         ret = hal_uart_tx_gdma_init(&obj->uart_adp, &obj->tx_gdma);
@@ -363,6 +379,14 @@ int32_t serial_recv_stream_dma_timeout (serial_t *obj, char *prxbuf, uint32_t le
     ret = _serial_recv_dma_enable(obj);
     if (ret != HAL_OK) {
         return -ret;
+    }
+
+    //Checks PSRAM misalignment
+    if (is_dcache_enabled() && (((uint32_t)(prxbuf)) >> 24) == 0x60) {
+        if(((uint32_t)(prxbuf) & 0x1F) != 0x0) {
+            DBG_UART_ERR("PSRAM Buffer must be 32B aligned\r\n");
+            return HAL_ERR_MEM;
+        }
     }
 
     ret = hal_uart_dma_recv (&obj->uart_adp, (uint8_t *)prxbuf, len);
@@ -493,4 +517,3 @@ void serial_rx_fifo_level(serial_t *obj, SerialFifoLevel FifoLv)
 }
 
 #endif
-
