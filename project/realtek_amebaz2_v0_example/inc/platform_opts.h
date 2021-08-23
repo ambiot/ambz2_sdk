@@ -56,7 +56,9 @@
 #define UART_SETTING_SECTOR		(0x200000 - 0x5000)
 #define DCT_BEGIN_ADDR			(0x200000 - 0x29000) /*!< DCT begin address of flash, ex: 0x200000 = 2M, the default size of DCT is 24K; ; if backup enabled, the size is 48k; if wear leveling enabled, the size is 144k*/
 #define FLASH_APP_BASE			(0x200000 - 0xA9000) /*!< FATFS begin address, default size used is 512KB (can be adjusted based on user requirement)*/
-
+#define BT_WHITELIST_BASE_1		(0x200000 - 0xA000)
+#define BT_WHITELIST_PAGE_SIZE		(0x1000)
+#define BT_WHITELIST_BASE_2		(BT_WHITELIST_BASE_1 + BT_WHITELIST_PAGE_SIZE)
 /**
  * For Wlan configurations
  */
@@ -139,6 +141,11 @@
 /* For LWIP configuration */
 #define CONFIG_LWIP_DHCP_COARSE_TIMER 60
 
+/*Enable CONFIG_LWIP_DHCP_FINE_TIMEOUT if lease time is less than or equal to CONFIG_LWIP_DHCP_COARSE_TIMER
+* replace dhcp_coarse_tmr with dhcp_fine_tmr to manage and check for lease timeout
+*/
+#define CONFIG_LWIP_DHCP_FINE_TIMEOUT 0
+
 /**
  * For Ethernet configurations
  */
@@ -154,11 +161,21 @@
 
 #endif
 
+/* For Azure Examples */
+#define CONFIG_USE_AZURE_EMBEDDED_C        1
+#if CONFIG_USE_AZURE_EMBEDDED_C
+/* For Azure embedded iot examples*/
+#define CONFIG_EXAMPLE_AZURE   0
+#if CONFIG_EXAMPLE_AZURE
+#undef WAIT_FOR_ACK
+#define WAIT_FOR_ACK
+#endif
+#else
 /* For Azure iot hub telemetry example*/
 #define CONFIG_EXAMPLE_AZURE_IOTHUB_TELEMETRY      0
-
 /* For Azure iot hub x509 example*/
 #define CONFIG_EXAMPLE_AZURE_IOTHUB_X509     0
+#endif
 
 /* for CoAP example*/
 #define CONFIG_EXAMPLE_COAP              0

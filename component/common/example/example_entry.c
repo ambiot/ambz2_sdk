@@ -6,7 +6,11 @@
  ******************************************************************************/
 #include <platform_opts.h>
 
+#if defined(CONFIG_PLATFORM_8710C)
+#include <platform_opts_bt.h>
+#endif
 #include "main.h"
+#include "FreeRTOSConfig.h"
 
 #if ATCMD_VER == ATVER_2
 #include "flash_api.h"
@@ -62,6 +66,10 @@
 #include <httpc/example_httpc.h>
 #endif
 
+#if defined(CONFIG_EXAMPLE_FFS) && CONFIG_EXAMPLE_FFS
+#include <amazon_ffs/example_ffs.h>
+#endif
+
 #if defined(CONFIG_EXAMPLE_HTTPD) && CONFIG_EXAMPLE_HTTPD
 #include <httpd/example_httpd.h>
 #endif
@@ -82,8 +90,12 @@
 #include <pppoe/example_pppoe.h>
 #endif
 
-#if defined(CONFIG_EXAMPLE_AZURE_IOT_HUB) && CONFIG_EXAMPLE_AZURE_IOT_HUB
-#include <azure_iot_hub/example_azure_iot_hub.h>
+#if defined(CONFIG_EXAMPLE_AZURE_IOTHUB_TELEMETRY) && CONFIG_EXAMPLE_AZURE_IOTHUB_TELEMETRY 
+#include <azure_iothub_telemetry/example_azure_iothub_telemetry.h>
+#endif
+
+#if defined(CONFIG_EXAMPLE_AZURE_IOTHUB_X509) && CONFIG_EXAMPLE_AZURE_IOTHUB_X509 
+#include <azure_iothub_x509/example_azure_iothub_x509.h>
 #endif
 
 #if defined(CONFIG_EXAMPLE_GOOGLE_NEST) && CONFIG_EXAMPLE_GOOGLE_NEST
@@ -164,6 +176,14 @@
 
 #if defined(CONFIG_EXAMPLE_COAP) && CONFIG_EXAMPLE_COAP
 #include <coap/example_coap.h>
+#endif
+
+#if defined(CONFIG_EXAMPLE_COAP_CLIENT) && CONFIG_EXAMPLE_COAP_CLIENT
+#include <coap_client/example_coap_client.h>
+#endif
+
+#if defined(CONFIG_EXAMPLE_COAP_SERVER) && CONFIG_EXAMPLE_COAP_SERVER
+#include <coap_server/example_coap_server.h>
 #endif
 
 #if defined(CONFIG_EXAMPLE_WEBSOCKET_CLIENT) && CONFIG_EXAMPLE_WEBSOCKET_CLIENT
@@ -310,9 +330,26 @@
 #include <secure_boot/example_secure_boot.h>
 #endif
 
+#if defined(CONFIG_EXAMPLE_SECURE_STORAGE) && CONFIG_EXAMPLE_SECURE_STORAGE
+#include <secure_storage/example_secure_storage.h>
+#endif
+
+#if defined(CONFIG_BT_MESH_PROVISIONER_RTK_DEMO) && CONFIG_BT_MESH_PROVISIONER_RTK_DEMO
+#include "example_bt_mesh_provisioner_rtk_demo.h"
+#endif
+
+#if defined(CONFIG_BT_MESH_DEVICE_RTK_DEMO) && CONFIG_BT_MESH_DEVICE_RTK_DEMO
+#include "example_bt_mesh_device_rtk_demo.h"
+#endif
+
 #if CONFIG_EXAMPLE_IPV6
 #include <ipv6/example_ipv6.h>
 #endif
+
+#if defined(CONFIG_EXAMPLE_AMAZON_FREERTOS) && (CONFIG_EXAMPLE_AMAZON_FREERTOS == 1)
+#include <amazon_freertos/example_amazon_freertos.h>
+#endif
+
 /*
 	Preprocessor of example
 */
@@ -362,6 +399,9 @@ void pre_example_entry(void)
 	app_ftl_init();
 #endif
 
+#if CONFIG_EXAMPLE_TICKLESS_WIFI_ROAMING
+    example_tickless_wifi_roaming_init();
+#endif
 }
 
 /*
@@ -410,6 +450,10 @@ void example_entry(void)
 
 #if defined(CONFIG_EXAMPLE_HTTPC) && CONFIG_EXAMPLE_HTTPC
 	example_httpc();
+#endif
+        
+#if defined(CONFIG_EXAMPLE_FFS) && CONFIG_EXAMPLE_FFS
+	example_amazon_ffs();
 #endif
 
 #if defined(CONFIG_EXAMPLE_HTTPD) && CONFIG_EXAMPLE_HTTPD
@@ -551,6 +595,14 @@ void example_entry(void)
     example_coap();
 #endif
 
+#if defined(CONFIG_EXAMPLE_COAP_CLIENT) && CONFIG_EXAMPLE_COAP_CLIENT
+    example_coap_client();
+#endif
+
+#if defined(CONFIG_EXAMPLE_COAP_SERVER) && CONFIG_EXAMPLE_COAP_SERVER
+    example_coap_server();
+#endif
+
 #if defined(CONFIG_EXAMPLE_WEBSOCKET_CLIENT) && CONFIG_EXAMPLE_WEBSOCKET_CLIENT
     example_wsclient();
 #endif
@@ -648,8 +700,12 @@ void example_entry(void)
     example_amazon_awsiot();
 #endif
 
-#if defined(CONFIG_EXAMPLE_AZURE_IOT_HUB) && CONFIG_EXAMPLE_AZURE_IOT_HUB
-    example_iot_hub();
+#if defined(CONFIG_EXAMPLE_AZURE_IOTHUB_TELEMETRY) && CONFIG_EXAMPLE_AZURE_IOTHUB_TELEMETRY 
+    example_azure_iothub_telemetry();
+#endif
+
+#if defined(CONFIG_EXAMPLE_AZURE_IOTHUB_X509) && CONFIG_EXAMPLE_AZURE_IOTHUB_X509 
+    example_azure_iothub_x509();
 #endif
     
 #if CONFIG_ALINK
@@ -670,6 +726,10 @@ example_hilink();
 
 #if defined(CONFIG_EXAMPLE_WIFI_ROAMING) && CONFIG_EXAMPLE_WIFI_ROAMING
 	example_wifi_roaming();
+#endif
+
+#if CONFIG_EXAMPLE_TICKLESS_WIFI_ROAMING
+	example_tickless_wifi_roaming();
 #endif
 
 #if defined(CONFIG_EXAMPLE_FLASH_MP3) && CONFIG_EXAMPLE_FLASH_MP3
@@ -727,6 +787,10 @@ example_hilink();
 	example_secure_boot();
 #endif
 
+#if defined(CONFIG_EXAMPLE_SECURE_STORAGE) && (CONFIG_EXAMPLE_SECURE_STORAGE == 1)
+	example_secure_storage();
+#endif
+
 #if defined(CONFIG_EXAMPLE_TRUST_ZONE) && (CONFIG_EXAMPLE_TRUST_ZONE == 1)
 	example_trust_zone();
 #endif
@@ -735,12 +799,25 @@ example_hilink();
 	example_ipv6();
 #endif
 
-#if (CONFIG_EXAMPLE_AMAZON_FREERTOS)
+#if defined(CONFIG_EXAMPLE_AMAZON_FREERTOS) && (CONFIG_EXAMPLE_AMAZON_FREERTOS == 1)
 	example_amazon_freertos();
+#endif
+
+#if ((defined CONFIG_BT_MESH_PROVISIONER_RTK_DEMO && CONFIG_BT_MESH_PROVISIONER_RTK_DEMO) || (defined CONFIG_BT_MESH_DEVICE_RTK_DEMO && CONFIG_BT_MESH_DEVICE_RTK_DEMO))
+    example_bt_mesh();
 #endif
 
 #if (CONFIG_EXAMPLE_AMAZON_AFQP_TESTS)
 	example_amazon_afqp_tests();
 #endif
 
+#if defined(CONFIG_RIC) && (CONFIG_RIC == 1)
+	extern void example_ric(void);
+	example_ric();
+#endif
+
+#if defined(CONFIG_LINKKIT_AWSS) && (CONFIG_LINKKIT_AWSS == 1)
+	extern void example_ali_awss();
+	example_ali_awss();
+#endif
 }

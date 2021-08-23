@@ -39,14 +39,14 @@
 #include "pinmap.h"
 #include <string.h>
 
-#define UART_NUM (3)
+#define UART_NUM (4)
 #define SERIAL_TX_IRQ_EN        0x01
 #define SERIAL_RX_IRQ_EN        0x02
 #define SERIAL_TX_DMA_EN        0x01
 #define SERIAL_RX_DMA_EN        0x02
 
 #ifdef CONFIG_GDMA_EN
-static uint8_t serial_dma_init[UART_NUM] = {0, 0, 0};
+static uint8_t serial_dma_init[UART_NUM] = {0, 0, 0, 0};
 #endif
 
 #ifdef CONFIG_MBED_ENABLED
@@ -320,6 +320,14 @@ int32_t serial_recv_stream_dma (serial_t *obj, char *prxbuf, uint32_t len)
         return ret;
     }
 
+    //Checks PSRAM misalignment
+    if (is_dcache_enabled() && (((uint32_t)(prxbuf)) >> 24) == 0x60) {
+        if(((uint32_t)(prxbuf) & 0x1F) != 0x0) {
+            DBG_UART_ERR("PSRAM Buffer must be 32B aligned\r\n");
+            return HAL_ERR_MEM;
+        }
+    }
+
     ret = hal_uart_dma_recv (&obj->uart_adp, (uint8_t *)prxbuf, len);
     return ret;
 }
@@ -331,6 +339,14 @@ int32_t serial_send_stream_dma (serial_t *obj, char *ptxbuf, uint32_t len)
     uint32_t phy_addr;
     uint32_t is_enc;
 
+    //Checks PSRAM misalignment
+    if (is_dcache_enabled() && (((uint32_t)(ptxbuf)) >> 24) == 0x60) {
+        if(((uint32_t)(ptxbuf) & 0x1F) != 0x0) {
+            DBG_UART_ERR("PSRAM Buffer must be 32B aligned\r\n");
+            return HAL_ERR_MEM;
+        }
+    }
+
     if ((serial_dma_init[uart_idx] & SERIAL_TX_DMA_EN) == 0) {
         ret = hal_uart_tx_gdma_init(&obj->uart_adp, &obj->tx_gdma);
         if (ret != HAL_OK) {
@@ -340,14 +356,17 @@ int32_t serial_send_stream_dma (serial_t *obj, char *ptxbuf, uint32_t len)
         }
     }
 
-    hal_xip_get_phy_addr ((uint32_t)ptxbuf, &phy_addr, &is_enc);
-    if (is_enc) {
-        DBG_UART_ERR("UART DMA Source cannot be encrypted Flash\r\n");
-        return HAL_ERR_MEM;
-    } else {
-        ret = hal_uart_dma_send (&obj->uart_adp, (uint8_t *)phy_addr, len);
-        return ret;
+    if ((((uint32_t)(ptxbuf)) >> 24) == 0x9B) {
+        hal_xip_get_phy_addr ((uint32_t)ptxbuf, &phy_addr, &is_enc);
+        if (is_enc) {
+            DBG_UART_ERR("UART DMA Source cannot be encrypted Flash\r\n");
+            return HAL_ERR_MEM;
+        } else {
+            ptxbuf = (uint8_t *)phy_addr;
+        }
     }
+    ret = hal_uart_dma_send (&obj->uart_adp, (uint8_t *)ptxbuf, len);
+    return ret;
 }
 
 int32_t serial_recv_stream_dma_timeout (serial_t *obj, char *prxbuf, uint32_t len, uint32_t timeout_ms, void *force_cs)
@@ -360,6 +379,14 @@ int32_t serial_recv_stream_dma_timeout (serial_t *obj, char *prxbuf, uint32_t le
     ret = _serial_recv_dma_enable(obj);
     if (ret != HAL_OK) {
         return -ret;
+    }
+
+    //Checks PSRAM misalignment
+    if (is_dcache_enabled() && (((uint32_t)(prxbuf)) >> 24) == 0x60) {
+        if(((uint32_t)(prxbuf) & 0x1F) != 0x0) {
+            DBG_UART_ERR("PSRAM Buffer must be 32B aligned\r\n");
+            return HAL_ERR_MEM;
+        }
     }
 
     ret = hal_uart_dma_recv (&obj->uart_adp, (uint8_t *)prxbuf, len);
@@ -490,4 +517,3 @@ void serial_rx_fifo_level(serial_t *obj, SerialFifoLevel FifoLv)
 }
 
 #endif
-

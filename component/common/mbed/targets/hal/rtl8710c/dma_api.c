@@ -9,20 +9,21 @@
  *
  ******************************************************************************
  *
- * Copyright(c) 2007 - 2016 Realtek Corporation. All rights reserved.
+ * Copyright(c) 2007 - 2017 Realtek Corporation. All rights reserved.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
- * published by the Free Software Foundation.
+ * SPDX-License-Identifier: Apache-2.0
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
+ * Licensed under the Apache License, Version 2.0 (the License); you may
+ * not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an AS IS BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  ******************************************************************************/
 
@@ -70,6 +71,19 @@ void dma_memcpy_deinit(gdma_t *dma_obj)
 void dma_memcpy(gdma_t *dma_obj, void *dst, void* src, uint32_t len)
 {
     phal_gdma_adaptor_t phal_gdma_adaptor = &(dma_obj->hal_gdma_adaptor);
+
+    /* Checks PSRAM alignment */
+    if (is_dcache_enabled() && (((uint32_t)(dst)) >> 24) == 0x60) {
+        if(((uint32_t)(dst) & 0x1F) != 0x0) {
+            DBG_GDMA_ERR("PSRAM Buffer must be 32B aligned\r\n");
+        }
+    }
+    if (is_dcache_enabled() && (((uint32_t)(src)) >> 24) == 0x60) {
+        if(((uint32_t)(src) & 0x1F) != 0x0) {
+            DBG_GDMA_ERR("PSRAM Buffer must be 32B aligned\r\n");
+        }
+    }
+
     hal_gdma_memcpy(phal_gdma_adaptor, dst, src, len);
 }
 

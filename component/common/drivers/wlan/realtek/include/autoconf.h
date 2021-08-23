@@ -139,19 +139,10 @@
 
 #define BAD_MIC_COUNTERMEASURE 1
 #define DEFRAGMENTATION 1
+#define RX_AGGREGATION 1
+#define RX_AMSDU 1
 
 #define WIFI_LOGO_CERTIFICATION 0
-#if WIFI_LOGO_CERTIFICATION
-    #define RX_AGGREGATION 1
-	#define RX_AMSDU 1
-#else
-	#ifdef CONFIG_HIGH_TP_TEST
-    		#define RX_AGGREGATION 1
-	#else
-		#define RX_AGGREGATION 1
-	#endif
-	#define RX_AMSDU 0
-#endif
 
 #if defined(CONFIG_PLATFORM_8711B)
 	#define CONFIG_FW_C2H_PKT
@@ -238,8 +229,10 @@
 #define CONFIG_PMKSA_CACHING
 
 /* For WPA3 */
+#ifndef PLATFORM_OHOS
 #define CONFIG_IEEE80211W
 #define CONFIG_SAE_SUPPORT
+#endif
 #ifdef CONFIG_SAE_SUPPORT
 #define CONFIG_SAE_DH_SUPPORT 1
 #define ALL_DH_GROUPS
@@ -248,8 +241,9 @@
 
 
 /* For promiscuous mode */
+#ifndef PLATFORM_OHOS
 #define CONFIG_PROMISC
-
+#endif
 #define PROMISC_DENY_PAIRWISE	0
 
 /* For Simple Link */
@@ -265,13 +259,20 @@
 #define CONFIG_MULTICAST
 #endif
 
+#define CONFIG_RX_PACKET_APPEND_FCS
+
 /* For STA+AP Concurrent MODE */
 #define CONFIG_CONCURRENT_MODE
 #ifdef CONFIG_CONCURRENT_MODE
-//#define CONFIG_MCC_MODE
-    #ifdef CONFIG_MCC_MODE
-      #define CONFIG_MCC_STA_AP_MODE
+  //#define CONFIG_MCC_MODE
+  #ifdef CONFIG_MCC_MODE
+    //#define CONFIG_MCC_STA_AP_MODE
+    #ifdef CONFIG_MCC_STA_AP_MODE
+      #ifndef CONFIG_RX_PACKET_APPEND_FCS
+        #define CONFIG_RX_PACKET_APPEND_FCS
+      #endif
     #endif
+  #endif
   #if defined(CONFIG_PLATFORM_8195A) || defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8710C)
     #define CONFIG_RUNTIME_PORT_SWITCH
   #endif
@@ -320,7 +321,9 @@
 /****************** End of EAP configurations *******************/
 
 /* For WPS and P2P */
+#ifndef PLATFORM_OHOS
 #define CONFIG_WPS
+#endif
 #if 0
 #define CONFIG_WPS_AP
 #define CONFIG_P2P_NEW
@@ -431,6 +434,8 @@ extern unsigned int g_ap_sta_num;
 		//#define CONFIG_SW_MAILBOX_EN
 		//#define NEW_BT_COEX
 		#define CONFIG_BT_COEXIST_SOC
+		#define CONFIG_BT_SCOREBOARD_ISR
+		//#define CONFIG_WIFI_SLOT_DYNAMIC_ADJUST
 	#endif
 #endif // #ifdef CONFIG_MP_INCLUDED
 
@@ -614,7 +619,9 @@ extern unsigned int g_ap_sta_num;
 		//#define CONFIG_EFUSE_SEPARATE
 		#define CONFIG_TRAFFIC_PROTECT	
 		#ifdef CONFIG_POWER_SAVING
+			#ifndef PLATFORM_OHOS
 			#define CONFIG_WOWLAN
+			#endif
 			//#define CONFIG_LPS_LCLK
 			#ifdef CONFIG_LPS_LCLK
 				//#define CONFIG_DETECT_CPWM_BY_POLLING

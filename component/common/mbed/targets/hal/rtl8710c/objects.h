@@ -84,6 +84,10 @@ struct pwmout_s {
 #ifdef CONFIG_I2C_EN
 struct i2c_s {
     hal_i2c_adapter_t i2c_adp;
+#ifdef CONFIG_GDMA_EN
+    hal_gdma_adaptor_t tx_gdma;
+    hal_gdma_adaptor_t rx_gdma;
+#endif
 };
 #endif
 

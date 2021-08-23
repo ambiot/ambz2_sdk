@@ -401,13 +401,63 @@
                     <state>$PROJ_DIR$\..\..\..\component\common\drivers\wlan\realtek\src\osdep</state>
                     <state>$PROJ_DIR$\..\..\..\component\common\mbed\targets\hal\rtl8710c</state>
                     <state>$PROJ_DIR$\..\..\..\component\common\test</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\app</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\bluetooth\gap</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\bluetooth\profile</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\bluetooth\profile\client</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\bluetooth\profile\server</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\os</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\platform</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\stack</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\lib</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src\data_uart</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src\hci</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src\os</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src\vendor_cmd</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_config</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\ble_central</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\ble_peripheral</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\ble_scatternet</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\src\mcu\module\data_uart_cmd</state>
                     <state>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\platform</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\common\inc</state>
                     <state>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\driver</state>
                     <state>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\os</state>
                     <state>$PROJ_DIR$\..\..\..\component\common\drivers\wlan\realtek\src\core\option</state>
                     <state>$PROJ_DIR$\..\..\..\component\common\api\wifi\rtw_wpa_supplicant\src\crypto</state>
                     <state>$PROJ_DIR$\..\..\..\component\common\file_system\fatfs</state>
                     <state>$PROJ_DIR$\..\..\..\component\common\file_system\fatfs\r0.10c\include</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\network\libcoap\include</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_mesh\lib\cmd</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_mesh\lib\common</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_mesh\lib\gap</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_mesh\lib\inc</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_mesh\lib\inc\amebaz2</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_mesh\lib\model</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_mesh\lib\model\realtek</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_mesh\lib\platform</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_mesh\lib\profile</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_mesh\provisioner</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_mesh\device</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_mesh_device_rtk_demo</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_mesh_provisioner_rtk_demo</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_mesh_provisioner_rtk_demo\inc</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_mesh\api</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_mesh\api\device</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_mesh\api\provisioner</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\media\rtp_codec</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_airsync_config</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\application\airsync\1.0.4</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_mesh_multiple_profile\device_multiple_profile</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_mesh_multiple_profile\provisioner_multiple_profile</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_mesh_test</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_fuzz_test</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_ota_central_client</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_harmony_adapter</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_datatrans</state>
                 </option>
                 <option>
                     <name>CCStdIncCheck</name>
@@ -902,8 +952,6 @@
                     <state>--redirect atoul=__wrap_atoul</state>
                     <state>--redirect atoull=__wrap_atoull</state>
                     <state>--redirect atof=__wrap_atof</state>
-                    <!-- <state>--redirect __localtime64=__wrap_localtime</state> -->
-                    <!-- <state>--redirect __mktime64=__wrap_mktime</state> -->
                     <state>--skip_dynamic_initialization</state>
                     <state>--redirect aesccmp_construct_mic_iv=aesccmp_construct_mic_iv_ram</state>
                     <state>--redirect aesccmp_construct_mic_header1=aesccmp_construct_mic_header1_ram</state>
@@ -1338,7 +1386,23 @@
                         <state>$PROJ_DIR$\..\..\..\component\common\drivers\wlan\realtek\src\osdep</state>
                         <state>$PROJ_DIR$\..\..\..\component\common\mbed\targets\hal\rtl8710c</state>
                         <state>$PROJ_DIR$\..\..\..\component\common\test</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\app</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\bluetooth\gap</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\bluetooth\profile</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\bluetooth\profile\server</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\os</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\platform</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\stack</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\lib</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src\data_uart</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src\hci</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src\os</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\src\mcu\module\data_uart_cmd</state>
                         <state>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\platform</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\common\inc</state>
                         <state>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\driver</state>
                         <state>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\os</state>
                     </option>
@@ -1666,7 +1730,23 @@
                         <state>$PROJ_DIR$\..\..\..\component\common\drivers\wlan\realtek\src\osdep</state>
                         <state>$PROJ_DIR$\..\..\..\component\common\mbed\targets\hal\rtl8710c</state>
                         <state>$PROJ_DIR$\..\..\..\component\common\test</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\app</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\bluetooth\gap</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\bluetooth\profile</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\bluetooth\profile\server</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\os</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\platform</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\inc\stack</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\lib</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src\data_uart</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src\hci</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src\os</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\src\mcu\module\data_uart_cmd</state>
                         <state>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\platform</state>
+                        <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\common\inc</state>
                         <state>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\driver</state>
                         <state>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\os</state>
                         <state>$PROJ_DIR$\..\..\..\component\common\file_system\fatfs</state>
@@ -1785,6 +1865,186 @@
         </configuration>
     </group>
     <group>
+        <name>bluetooth</name>
+        <group>
+            <name>board</name>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src\hci\bt_fwconfig.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src\hci\bt_mp_patch.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src\hci\bt_normal_patch.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\common\src\cycle_queue.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src\data_uart\data_uart.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src\hci\hci_board.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src\hci\hci_uart.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\common\os\freertos\osif_freertos.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src\platform_utils.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src\rtk_coex.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src\trace_uart.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\src\vendor_cmd\vendor_cmd.c</name>
+            </file>
+        </group>
+        <group>
+            <name>common</name>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\src\ble\profile\client\ancs_client.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\src\ble\profile\server\bas.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\src\ble\profile\client\bas_client.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\common\src\bt_uart_bridge.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\src\ble\profile\server\dis.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\file_system\ftl\ftl.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\src\ble\profile\client\gaps_client.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\common\src\hci_adapter.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\common\src\hci_process.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\src\ble\profile\server\hids.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\src\ble\profile\server\hids_kb.c</name>
+                <excluded>
+                    <configuration>Debug</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\src\ble\profile\server\hids_rmc.c</name>
+                <excluded>
+                    <configuration>Debug</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\src\ble\profile\client\simple_ble_client.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\src\ble\profile\server\simple_ble_service.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\common\src\trace_task.c</name>
+            </file>
+        </group>
+        <group>
+            <name>example</name>
+            <group>
+                <name>ble_central</name>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\ble_central\ble_central_app_main.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\ble_central\ble_central_app_task.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\ble_central\ble_central_at_cmd.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\ble_central\ble_central_client_app.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\ble_central\ble_central_link_mgr.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\src\ble\profile\client\gcs_client.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\ble_central\user_cmd.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\src\mcu\module\data_uart_cmd\user_cmd_parse.c</name>
+                </file>
+            </group>
+            <group>
+                <name>ble_peripheral</name>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\ble_peripheral\app_task.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\ble_peripheral\ble_app_main.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\ble_peripheral\ble_peripheral_at_cmd.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\ble_peripheral\peripheral_app.c</name>
+                </file>
+            </group>
+            <group>
+                <name>ble_scatternet</name>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\ble_scatternet\ble_scatternet_app.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\ble_scatternet\ble_scatternet_app_main.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\ble_scatternet\ble_scatternet_app_task.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\ble_scatternet\ble_scatternet_link_mgr.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\ble_scatternet\ble_scatternet_user_cmd.c</name>
+                </file>
+            </group>
+            <group>
+                <name>bt_config</name>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_config\bt_config_app_main.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_config\bt_config_app_task.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_config\bt_config_peripheral_app.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_config\bt_config_service.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_config\bt_config_wifi.c</name>
+                </file>
+            </group>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\bt_example_entry.c</name>
+            </file>
+        </group>
+    </group>
+    <group>
         <name>cmsis</name>
         <file>
             <name>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\cmsis\rtl8710c\source\ram_s\app_start.c</name>
@@ -1801,6 +2061,9 @@
     </group>
     <group>
         <name>console</name>
+        <file>
+            <name>$PROJ_DIR$\..\..\..\component\common\api\at_cmd\atcmd_bt.c</name>
+        </file>
         <file>
             <name>$PROJ_DIR$\..\..\..\component\common\api\at_cmd\atcmd_isp.c</name>
             <excluded>
@@ -1849,6 +2112,9 @@
     </group>
     <group>
         <name>lib</name>
+        <file>
+            <name>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\board\amebaz2\lib\btgap.a</name>
+        </file>
         <file>
             <name>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\fwlib\lib\lib\hal_pmc.a</name>
         </file>
@@ -2383,6 +2649,45 @@
                 <name>$PROJ_DIR$\..\..\..\component\os\freertos\freertos_v10.0.1\Source\timers.c</name>
             </file>
         </group>
+        <group>
+            <name>freertos_amazon</name>
+            <excluded>
+                <configuration>Debug</configuration>
+            </excluded>
+            <group>
+                <name>portable</name>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\application\amazon\v202007\vendors\realtek\sdk\component\os\freertos\freertos_v10.0.1\Source\portable\MemMang\heap_5.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\application\amazon\v202007\vendors\realtek\sdk\component\os\freertos\freertos_v10.0.1\Source\portable\IAR\ARM_RTL8710C\port.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\common\application\amazon\v202007\vendors\realtek\sdk\component\os\freertos\freertos_v10.0.1\Source\portable\IAR\ARM_RTL8710C\portasm.s</name>
+                </file>
+            </group>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\application\amazon\v202007\vendors\realtek\sdk\component\os\freertos\freertos_v10.0.1\Source\croutine.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\application\amazon\v202007\vendors\realtek\sdk\component\os\freertos\freertos_v10.0.1\Source\event_groups.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\application\amazon\v202007\vendors\realtek\sdk\component\os\freertos\freertos_v10.0.1\Source\list.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\application\amazon\v202007\vendors\realtek\sdk\component\os\freertos\freertos_v10.0.1\Source\queue.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\application\amazon\v202007\vendors\realtek\sdk\component\os\freertos\freertos_v10.0.1\Source\stream_buffer.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\application\amazon\v202007\vendors\realtek\sdk\component\os\freertos\freertos_v10.0.1\Source\tasks.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\application\amazon\v202007\vendors\realtek\sdk\component\os\freertos\freertos_v10.0.1\Source\timers_10.3.0.c</name>
+            </file>
+        </group>
         <file>
             <name>$PROJ_DIR$\..\..\..\component\os\freertos\cmsis_os.c</name>
         </file>
@@ -2506,13 +2811,7 @@
         <group>
             <name>wlan</name>
             <file>
-                <name>$PROJ_DIR$\..\..\..\component\common\drivers\wlan\realtek\src\core\option\rtw_opt_power_by_rate.c</name>
-                <excluded>
-                    <configuration>Debug</configuration>
-                </excluded>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\..\..\component\common\drivers\wlan\realtek\src\core\option\rtw_opt_power_limit.c</name>
+                <name>$PROJ_DIR$\..\..\..\component\common\drivers\wlan\realtek\src\core\option\rtw_opt_rf_para_rtl8710c.c</name>
                 <excluded>
                     <configuration>Debug</configuration>
                 </excluded>
@@ -2542,6 +2841,12 @@
                 </excluded>
             </file>
             <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\example\amazon_freertos\example_amazon_freertos.c</name>
+                <excluded>
+                    <configuration>Debug</configuration>
+                </excluded>
+            </file>
+            <file>
                 <name>$PROJ_DIR$\..\..\..\component\common\example\bcast\example_bcast.c</name>
             </file>
             <file>
@@ -2549,6 +2854,18 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\..\..\..\component\common\example\coap\example_coap.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\example\coap_client\example_coap_client.c</name>
+                <excluded>
+                    <configuration>Debug</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\example\coap_server\example_coap_server.c</name>
+                <excluded>
+                    <configuration>Debug</configuration>
+                </excluded>
             </file>
             <file>
                 <name>$PROJ_DIR$\..\..\..\component\common\example\dct\example_dct.c</name>
@@ -2618,6 +2935,9 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\..\..\..\component\common\example\tcp_keepalive\example_tcp_keepalive.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\common\example\tickless_wifi_roaming\example_tickless_wifi_roaming.c</name>
             </file>
             <file>
                 <name>$PROJ_DIR$\..\..\..\component\common\example\uart_atcmd\example_uart_atcmd.c</name>

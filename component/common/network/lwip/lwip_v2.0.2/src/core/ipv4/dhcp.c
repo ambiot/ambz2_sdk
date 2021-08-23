@@ -429,7 +429,11 @@ dhcp_coarse_tmr(void)
   while (netif != NULL) {
     /* only act on DHCP configured interfaces */
     struct dhcp *dhcp = netif_dhcp_data(netif);
-    if ((dhcp != NULL) && (dhcp->state != DHCP_STATE_OFF)) {
+    if ((dhcp != NULL) && (dhcp->state != DHCP_STATE_OFF)
+#if CONFIG_LWIP_DHCP_FINE_TIMEOUT
+          && ((dhcp->offered_t2_rebind + DHCP_COARSE_TIMER_SECS / 2) / DHCP_COARSE_TIMER_SECS > 1)
+#endif
+    ) {
       /* compare lease time to expire timeout */
       if (dhcp->t0_timeout && (++dhcp->lease_used == dhcp->t0_timeout)) {
         LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE, ("dhcp_coarse_tmr(): t0 timeout\n"));
@@ -484,7 +488,34 @@ dhcp_fine_tmr(void)
         /* this client's request timeout triggered */
         dhcp_timeout(netif);
       }
+
+#if CONFIG_LWIP_DHCP_FINE_TIMEOUT
+      if((dhcp->state != DHCP_STATE_OFF) && 
+        ((dhcp->offered_t2_rebind + DHCP_COARSE_TIMER_SECS / 2) / DHCP_COARSE_TIMER_SECS <= 1)){
+        if (dhcp->t0_timeout && (++dhcp->lease_used == dhcp->t0_timeout)) {
+        LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE, ("dhcp_fine_tmr(): t0 timeout\n"));
+        /* this clients' lease time has expired */
+//ipv6
+#if LWIP_IPV4 && !LWIP_IPV6
+        igmp_report_groups_leave(netif);    //Realtek add: not remove group to make able to report group when dhcp bind
+#endif
+        dhcp_release(netif);
+        dhcp_discover(netif);
+        /* timer is active (non zero), and triggers (zeroes) now? */
+        } else if (dhcp->t2_rebind_time && (dhcp->t2_rebind_time-- == 1)) {
+          LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE, ("dhcp_fine_tmr(): t2 timeout\n"));
+          /* this clients' rebind timeout triggered */
+          dhcp_t2_timeout(netif);
+        /* timer is active (non zero), and triggers (zeroes) now */
+        } else if (dhcp->t1_renew_time && (dhcp->t1_renew_time-- == 1)) {
+          LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE, ("dhcp_fine_tmr(): t1 timeout\n"));
+          /* this clients' renewal timeout triggered */
+          dhcp_t1_timeout(netif);
+        }
+      }
+#endif
     }
+
     /* proceed to next network interface */
     netif = netif->next;
   }
@@ -531,6 +562,23 @@ dhcp_timeout(struct netif *netif)
       dhcp_bind(netif);
     }
 #endif /* DHCP_DOES_ARP_CHECK */
+  }
+  /* did not get response to renew request? */
+  else if (dhcp->state == DHCP_STATE_RENEWING) {
+    LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE, ("dhcp_timeout(): RENEWING, DHCP request timed out\n"));
+    /* just retry renewal */
+    /* note that the rebind timer will eventually time-out if renew does not work */
+    dhcp_renew(netif);
+  /* did not get response to rebind request? */
+  } else if (dhcp->state == DHCP_STATE_REBINDING) {
+    LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE, ("dhcp_timeout(): REBINDING, DHCP request timed out\n"));
+    if (dhcp->tries <= 8) {
+      dhcp_rebind(netif);
+    } else {
+      LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE, ("dhcp_timeout(): RELEASING, DISCOVERING\n"));
+      dhcp_release(netif);
+      dhcp_discover(netif);
+    }
   } else if (dhcp->state == DHCP_STATE_REBOOTING) {
     if (dhcp->tries < REBOOT_TRIES) {
       dhcp_reboot(netif);
@@ -566,10 +614,20 @@ dhcp_t1_timeout(struct netif *netif)
 //Realtek add end
     dhcp_renew(netif);
     /* Calculate next timeout */
-    if (((dhcp->t2_timeout - dhcp->lease_used) / 2) >= ((60 + DHCP_COARSE_TIMER_SECS / 2) / DHCP_COARSE_TIMER_SECS))
-    {
-       dhcp->t1_renew_time = ((dhcp->t2_timeout - dhcp->lease_used) / 2);
+#if CONFIG_LWIP_DHCP_FINE_TIMEOUT
+    if((dhcp->offered_t2_rebind + DHCP_COARSE_TIMER_SECS / 2) / DHCP_COARSE_TIMER_SECS <= 1){
+      if (((dhcp->t2_timeout - dhcp->lease_used) / 2) >= ((500 + DHCP_FINE_TIMER_MSECS / 2) / DHCP_FINE_TIMER_MSECS)) {
+        dhcp->t1_renew_time = (u16_t)((dhcp->t2_timeout - dhcp->lease_used) / 2);
+      }
     }
+    else{
+#endif
+      if (((dhcp->t2_timeout - dhcp->lease_used) / 2) >= ((60 + DHCP_COARSE_TIMER_SECS / 2) / DHCP_COARSE_TIMER_SECS)) {
+        dhcp->t1_renew_time = (u16_t)((dhcp->t2_timeout - dhcp->lease_used) / 2);
+     }
+#if CONFIG_LWIP_DHCP_FINE_TIMEOUT
+    }
+#endif
   }
 }
 
@@ -593,10 +651,20 @@ dhcp_t2_timeout(struct netif *netif)
        DHCP_STATE_REBINDING, not DHCP_STATE_BOUND */
     dhcp_rebind(netif);
     /* Calculate next timeout */
-    if (((dhcp->t0_timeout - dhcp->lease_used) / 2) >= ((60 + DHCP_COARSE_TIMER_SECS / 2) / DHCP_COARSE_TIMER_SECS))
-    {
-       dhcp->t2_rebind_time = ((dhcp->t0_timeout - dhcp->lease_used) / 2);
+#if CONFIG_LWIP_DHCP_FINE_TIMEOUT
+    if((dhcp->offered_t2_rebind + DHCP_COARSE_TIMER_SECS / 2) / DHCP_COARSE_TIMER_SECS <= 1){
+      if (((dhcp->t0_timeout - dhcp->lease_used) / 2) >= ((500 + DHCP_FINE_TIMER_MSECS / 2) / DHCP_FINE_TIMER_MSECS)) {
+        dhcp->t2_rebind_time = (u16_t)((dhcp->t0_timeout - dhcp->lease_used) / 2);
+      }
     }
+    else{
+#endif
+      if (((dhcp->t0_timeout - dhcp->lease_used) / 2) >= ((60 + DHCP_COARSE_TIMER_SECS / 2) / DHCP_COARSE_TIMER_SECS)) {
+        dhcp->t2_rebind_time = (u16_t)((dhcp->t0_timeout - dhcp->lease_used) / 2);
+      }
+#if CONFIG_LWIP_DHCP_FINE_TIMEOUT
+    }
+#endif
   }
 }
 
@@ -1098,7 +1166,12 @@ dhcp_bind(struct netif *netif)
   if (dhcp->offered_t0_lease != 0xffffffffUL) {
      /* set renewal period timer */
      LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE, ("dhcp_bind(): t0 renewal timer %"U32_F" secs\n", dhcp->offered_t0_lease));
-     timeout = (dhcp->offered_t0_lease + DHCP_COARSE_TIMER_SECS / 2) / DHCP_COARSE_TIMER_SECS;
+#if CONFIG_LWIP_DHCP_FINE_TIMEOUT
+     if((dhcp->offered_t2_rebind + DHCP_COARSE_TIMER_SECS / 2) / DHCP_COARSE_TIMER_SECS <= 1)
+       timeout = ((dhcp->offered_t0_lease * 1000) + DHCP_FINE_TIMER_MSECS / 2) / DHCP_FINE_TIMER_MSECS;
+     else
+#endif
+       timeout = (dhcp->offered_t0_lease + DHCP_COARSE_TIMER_SECS / 2) / DHCP_COARSE_TIMER_SECS;
      if (timeout > 0xffff) {
        timeout = 0xffff;
      }
@@ -1113,7 +1186,12 @@ dhcp_bind(struct netif *netif)
   if (dhcp->offered_t1_renew != 0xffffffffUL) {
     /* set renewal period timer */
     LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE, ("dhcp_bind(): t1 renewal timer %"U32_F" secs\n", dhcp->offered_t1_renew));
-    timeout = (dhcp->offered_t1_renew + DHCP_COARSE_TIMER_SECS / 2) / DHCP_COARSE_TIMER_SECS;
+#if CONFIG_LWIP_DHCP_FINE_TIMEOUT
+    if((dhcp->offered_t2_rebind + DHCP_COARSE_TIMER_SECS / 2) / DHCP_COARSE_TIMER_SECS <= 1)
+      timeout = ((dhcp->offered_t1_renew * 1000) + DHCP_FINE_TIMER_MSECS / 2) / DHCP_FINE_TIMER_MSECS;
+    else
+#endif
+      timeout = (dhcp->offered_t1_renew + DHCP_COARSE_TIMER_SECS / 2) / DHCP_COARSE_TIMER_SECS;
     if (timeout > 0xffff) {
       timeout = 0xffff;
     }
@@ -1127,7 +1205,12 @@ dhcp_bind(struct netif *netif)
   /* set renewal period timer */
   if (dhcp->offered_t2_rebind != 0xffffffffUL) {
     LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE, ("dhcp_bind(): t2 rebind timer %"U32_F" secs\n", dhcp->offered_t2_rebind));
-    timeout = (dhcp->offered_t2_rebind + DHCP_COARSE_TIMER_SECS / 2) / DHCP_COARSE_TIMER_SECS;
+#if CONFIG_LWIP_DHCP_FINE_TIMEOUT
+    if((dhcp->offered_t2_rebind + DHCP_COARSE_TIMER_SECS / 2) / DHCP_COARSE_TIMER_SECS <= 1)
+      timeout = ((dhcp->offered_t2_rebind * 1000) + DHCP_FINE_TIMER_MSECS / 2) / DHCP_FINE_TIMER_MSECS;
+    else
+#endif
+      timeout = (dhcp->offered_t2_rebind + DHCP_COARSE_TIMER_SECS / 2) / DHCP_COARSE_TIMER_SECS;
     if (timeout > 0xffff) {
       timeout = 0xffff;
     }
@@ -1143,6 +1226,13 @@ dhcp_bind(struct netif *netif)
   if ((dhcp->t1_timeout >= dhcp->t2_timeout) && (dhcp->t2_timeout > 0)) {
     dhcp->t1_timeout = 0;
   }
+
+#if !CONFIG_LWIP_DHCP_FINE_TIMEOUT
+  if((dhcp->offered_t2_rebind + DHCP_COARSE_TIMER_SECS / 2) / DHCP_COARSE_TIMER_SECS <= 1){
+    printf("\n\rDHCP warning: lease renewal time(%d) <= DHCP_COARSE_TIMER_SECS(%d)", dhcp->offered_t1_renew, DHCP_COARSE_TIMER_SECS);
+    printf("\n\rturn on CONFIG_LWIP_DHCP_FINE_TIMEOUT to support short lease time\n");
+  }
+#endif
 
   if (dhcp->subnet_mask_given) {
     /* copy offered network mask */
