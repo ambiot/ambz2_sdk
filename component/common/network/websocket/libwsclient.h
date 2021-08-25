@@ -63,6 +63,7 @@ struct rsv_bits_field{
 typedef struct send_buf_t{
 	uint8_t *txbuf;
 	int tx_len;
+	int send_offset;
 }send_buf;
 
 struct _wsclient_context;
@@ -75,18 +76,27 @@ struct ws_fun_ops{
 };
 
 typedef struct _wsclient_context{
-	char host[128];
-	char path[128];
-	char origin[200];
+	char *host;
+	char *path;
+	char *origin;
 	int port;
+	char *protocol;
+	int protocol_len;
+	char *version;
+	int version_len;
+	char *custom_token;
+	int custom_token_len;
 	uint8_t use_ssl;
 	int sockfd;
 	readyStateValues readyState;
 	int tx_len;
 	int rx_len;
 	void *tls;
-	int maxQueueSize;
-	int queueItemNum;
+	int max_queue_size;
+	int wsclient_reallength;
+	int stable_buf_num;
+	int ready_send_buf_num;
+	int recycle_send_buf_num;
 	_xqueue ready_send_buf; //tx message ready to send
 	_xqueue recycle_send_buf; //usable buf to load tx message
 	uint8_t *txbuf;
@@ -95,6 +105,7 @@ typedef struct _wsclient_context{
 	struct rsv_bits_field rxRsvBits;
 	uint8_t *receivedData;
 	struct ws_fun_ops fun_ops;
+	_mutex queue_mutex;
 }wsclient_context;
 /*******************************************************************/
 

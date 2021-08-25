@@ -91,10 +91,12 @@ T_GAP_CAUSE le_adv_set_power_save_enable(uint8_t enable)
     {
 		if (enable)
 		{
+			extern void rltk_coex_ps_enter(void);
 			rltk_coex_ps_enter();
 		}
 		else
 		{
+			extern void rltk_coex_ps_leave(void);
 			rltk_coex_ps_leave();
 			rtlk_bt_set_rf_power(1);
 		}

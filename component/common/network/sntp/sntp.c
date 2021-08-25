@@ -263,6 +263,14 @@ int sntp_set_timeserver( unsigned int ntp_server_addr )
 
 	return 0;
 }
+
+/**
+ * SNTP Change time server name, must be called before @ref sntp_init
+ */
+void sntp_set_timeservername(char *ntp_server_name)
+{
+	sntp_server_addresses[0] = ntp_server_name;
+}
 /* End of Realtek added */
 
 /** SNTP macro to change system time and/or the update the RTC clock */
@@ -729,4 +737,26 @@ sntp_stop(void)
     sntp_pcb = NULL;
   }
 }
+
+int atcmd_sntp(char* hostname){
+  
+	ip_addr_t sntp_server_address;
+	err_t err;
+  
+	if (sntp_pcb == NULL) {
+		sntp_pcb = udp_new();
+		LWIP_ASSERT("Failed to allocate udp pcb for sntp client", sntp_pcb != NULL);
+		if (sntp_pcb != NULL) {
+			udp_recv(sntp_pcb, (udp_recv_fn)sntp_recv, NULL);
+			err = dns_gethostbyname(hostname, &sntp_server_address,(dns_found_callback)sntp_dns_found, NULL);
+			if (err == ERR_OK) {
+				sntp_send_request(&sntp_server_address);
+			} 
+		}
+	}
+	return err;
+}
+
+
+
 #endif /* LWIP_UDP */

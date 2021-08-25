@@ -64,6 +64,7 @@ extern bool bt_trace_uninit(void);
  * NOTE: This function shall be called before @ref bte_init is invoked.
  * @return void
  */
+#ifndef PLATFORM_OHOS
 extern void gap_config_hci_task_secure_context(uint32_t size);
 void ble_central_bt_stack_config_init(void)
 {
@@ -71,6 +72,16 @@ void ble_central_bt_stack_config_init(void)
     gap_config_max_le_paired_device(BLE_CENTRAL_APP_MAX_LINKS);
     gap_config_hci_task_secure_context (280);
 }
+#else
+extern void gap_config_deinit_flow(uint8_t deinit_flow);
+void ble_central_bt_stack_config_init(void)
+{
+    gap_config_max_le_link_num(BLE_CENTRAL_APP_MAX_LINKS);
+    gap_config_max_le_paired_device(BLE_CENTRAL_APP_MAX_LINKS);
+    //gap_config_hci_task_secure_context (280);
+    gap_config_deinit_flow(1);
+}
+#endif
 
 /**
   * @brief  Initialize central and gap bond manager related parameters
@@ -217,10 +228,12 @@ int ble_central_app_init(void)
 	//(void) bt_stack_already_on;
 	T_GAP_DEV_STATE new_state;
 
+#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && (CONFIG_BT_ONLY_WITHOUT_WLAN == 0)
 	/*Wait WIFI init complete*/
 	while(!(wifi_is_up(RTW_STA_INTERFACE) || wifi_is_up(RTW_AP_INTERFACE))) {
 		os_delay(1000);
 	}
+#endif
 
 	//judge BLE central is already on
 	le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state);
@@ -231,8 +244,10 @@ int ble_central_app_init(void)
 	}
 	else
 		ble_central_app_main();
-	
+
+#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && (CONFIG_BT_ONLY_WITHOUT_WLAN == 0)
 	bt_coex_init();
+#endif
 
 	/*Wait BT init complete*/
 	do {
@@ -240,8 +255,10 @@ int ble_central_app_init(void)
 		le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state);
 	}while(new_state.gap_init_state != GAP_INIT_STATE_STACK_READY);
 
+#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && (CONFIG_BT_ONLY_WITHOUT_WLAN == 0)
 	/*Start BT WIFI coexistence*/
 	wifi_btcoex_set_bt_on();
+#endif
 	return 0;
 
 }

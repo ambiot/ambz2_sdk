@@ -2,6 +2,14 @@
 /*
  * Release Note
  */
+	v1.0.1.158
+	2021/07/23
+	1. Fix a bug for bte_deinit.
+	
+	v1.0.1.157
+	2021/07/22
+	1. Fix a bug for le_get_conn_info.
+	
 	v1.0.1.153
 	2021/06/10
 	1. Fix an secure bug CVE-2020-26558.

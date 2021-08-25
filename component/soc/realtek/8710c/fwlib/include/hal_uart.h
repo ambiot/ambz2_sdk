@@ -730,7 +730,7 @@ void hal_uart_en_ctrl (uint8_t uart_idx, BOOL en)
     hal_uart_stubs.hal_uart_en_ctrl (uart_idx, en);
 }
 
-/** 
+/**
  *  @brief Query the UART index by a given pin name and its pin function.
  *
  *  @param[in]  pin_name  The pin name be used to query the corresponding UART index.
@@ -754,6 +754,9 @@ hal_status_t hal_uart_tx_gdma_init(phal_uart_adapter_t puart_adapter, phal_gdma_
 hal_status_t hal_uart_tx_gdma_deinit(phal_uart_adapter_t puart_adapter);
 hal_status_t hal_uart_dma_recv (phal_uart_adapter_t puart_adapter, uint8_t *prx_buf, uint32_t len);
 hal_status_t hal_uart_dma_send (phal_uart_adapter_t puart_adapter, uint8_t *ptx_buf, uint32_t len);
+void hal_uart_deinit_ram (phal_uart_adapter_t puart_adapter);
+void hal_uart_unreg_irq_ram (phal_uart_adapter_t puart_adapter);
+void hal_uart_exit_critical_ram ();
 
 /** @} */ /* End of group hs_hal_uart */
 

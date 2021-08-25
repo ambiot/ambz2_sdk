@@ -1,6 +1,23 @@
 cd /D %1
-:: Generate build_info.h
+
 echo off
+
+::; Need to restore the .out file as our postbuild action will rename .out to .dbg.out then generate a different .out for flashing.
+if exist %1\Debug\Exe\%2.out (
+del %1\Debug\Exe\%2.out
+if exist %1\Debug\Exe\%2.dbg.out (
+rename %1\Debug\Exe\%2.dbg.out %2.out
+)
+)
+
+::;*****************************************************************************#
+::;                     Generate Git revision tracking                          #
+::;*****************************************************************************#
+if exist %1\..\..\..\component\soc\realtek\8710c\misc\iar_utility\prebuild_version.bat (
+call %1\..\..\..\component\soc\realtek\8710c\misc\iar_utility\prebuild_version.bat %2
+)
+
+:: Generate build_info.h
 ::echo %date:~0,10%-%time:~0,8%
 ::echo %USERNAME%
 for /f "usebackq" %%i in (`hostname`) do set hostname=%%i

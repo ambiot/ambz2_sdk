@@ -48,9 +48,6 @@ void sys_interrupt_disable(void);
 
 static volatile uint32_t primask;
 
-#if !defined(CONFIG_BUILD_SECURE)
-// Building for Non-Secure and Ignore Secure
-
 /* implement system level IRQ control functions here */
 const hal_irq_api_t sys_irq_api = {
     .irq_enable = sys_irq_enable, 
@@ -205,6 +202,20 @@ void sys_interrupt_disable(void)
     __disable_irq();
 }
 
+#if defined(CONFIG_BUILD_SECURE)
+//below nsc functions don't require secure stack to run
+SECTION_NS_ENTRY_FUNC uint32_t NS_ENTRY __get_PRIMASK_nsc(void)
+{
+    return __get_PRIMASK();
+}
+SECTION_NS_ENTRY_FUNC uint32_t NS_ENTRY __get_BASEPRI_nsc(void)
+{
+    return __get_BASEPRI();
+}
+SECTION_NS_ENTRY_FUNC uint32_t NS_ENTRY __get_AIRCR_PRIS_nsc(void)
+{
+    return SCB->AIRCR & SCB_AIRCR_PRIS_Msk;
+}
 #endif
 
 /** @} */ /* End of group hs_hal_irq */

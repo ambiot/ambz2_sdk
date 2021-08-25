@@ -17,6 +17,7 @@
 #define HCI_UART_TX_DMA    0
 
 static serial_t hci_serial_obj;
+extern uint8_t flag_for_hci_trx;
 
 #if defined(HCI_UART_TX_DMA) && HCI_UART_TX_DMA
 void *uart_send_done_task = NULL;
@@ -189,9 +190,11 @@ static void hciuart_irq(uint32_t id, SerialIrq event)
         }
         while (serial_readable(sobj) && max_count-- > 0);
 
-        if (hci_uart_obj->rx_ind)
-        {
-            hci_uart_obj->rx_ind();
+        if (flag_for_hci_trx == 0) {
+            if (hci_uart_obj->rx_ind)
+            {
+                hci_uart_obj->rx_ind();
+            }
         }
     }
 }

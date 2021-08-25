@@ -1,8 +1,6 @@
 #include <platform_stdlib.h>
-#include "FreeRTOS.h"
-#include "task.h"
 #include "serial_api.h"
-#include "semphr.h"
+#include "osdep_service.h"
 #include "log_service.h"
 #include <stdbool.h>
 #include "hci_uart.h"
@@ -12,7 +10,7 @@
 #define KEY_ENTER		0xd // '\r'
 
 extern char log_buf[LOG_SERVICE_BUFLEN];
-extern xSemaphoreHandle log_rx_interrupt_sema;
+extern _sema log_rx_interrupt_sema;
 
 #ifdef CONFIG_PLATFORM_8710C
 extern hal_uart_adapter_t log_uart;

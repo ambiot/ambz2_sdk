@@ -256,6 +256,23 @@ int wext_get_enc_ext(const char *ifname, __u16 *alg, __u8 *key_idx, __u8 *passph
 	return ret;
 }
 
+int wext_get_auth_type(const char *ifname, __u32 *auth_type)
+{
+	struct iwreq iwr;
+	int ret = 0;
+
+	memset(&iwr, 0, sizeof(iwr));
+
+	if (iw_ioctl(ifname, SIOCGIWAUTH, &iwr) < 0) {
+		RTW_API_INFO("\n\rioctl[SIOCGIWAUTH] error");
+		ret = -1;
+	}else{
+		*auth_type = (__u32) iwr.u.param.value;
+	}
+
+	return ret;
+}
+
 int wext_set_passphrase(const char *ifname, const __u8 *passphrase, __u16 passphrase_len)
 {
 	struct iwreq iwr;
