@@ -2598,9 +2598,9 @@ void fATSG(void *arg)
 #else
 	pin = (port << 4 | num);
 #endif
-	
+
 	AT_DBG_MSG(AT_FLAG_GPIO, AT_DBG_ALWAYS, "PORT: %s[%d]", argv[2], pin);
-	
+
 	if(gpio_set(pin) == 0xff)
 	{
 		AT_DBG_MSG(AT_FLAG_GPIO, AT_DBG_ERROR, "[ATSG]: Invalid Pin Name [%d]", pin);
