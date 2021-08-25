@@ -14,7 +14,9 @@
 #include "wifi_conf.h"
 #include "wifi_util.h"
 
-#if  defined(CONFIG_PLATFORM_8721D)
+#if defined(CONFIG_PLATFORM_8710C)
+#include "platform_opts_bt.h"
+#elif  defined(CONFIG_PLATFORM_8721D)
 #include "platform_autoconf.h"
 #endif
 

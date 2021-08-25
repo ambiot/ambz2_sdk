@@ -379,7 +379,32 @@ Certain platform allows computing and verifying the IP, UDP, TCP and ICMP checks
 #undef  MEMP_NUM_SYS_TIMEOUT
 #define MEMP_NUM_SYS_TIMEOUT            13
 #endif
-     
+
+/*CONFIG_LIBCOAP_ON is defined to 1 in the lib_coap project options preprocessor defined symbol
+CONFIG_EXAMPLE_COAP_SERVER and CONFIG_EXAMPLE_COAP_CLIENT is defined in platform_opts.h*/
+#if CONFIG_EXAMPLE_COAP_SERVER || CONFIG_EXAMPLE_COAP_CLIENT || (defined(CONFIG_LIBCOAP_ON) && (CONFIG_LIBCOAP_ON))   
+#if defined LWIP_TIMEVAL_PRIVATE
+#undef LWIP_TIMEVAL_PRIVATE
+#define LWIP_TIMEVAL_PRIVATE            1
+#endif
+#undef SO_REUSE
+#define SO_REUSE                        1
+#undef MEMP_NUM_NETCONN
+#define MEMP_NUM_NETCONN                20   
+#define MEMP_USE_CUSTOM_POOLS           1
+#undef LWIP_IPV6
+#define LWIP_IPV6                       1
+#define ERRNO                           1
+
+#if defined(LWIP_IPV6) && (LWIP_IPV6==1)
+#undef MEMP_NUM_SYS_TIMEOUT
+#define MEMP_NUM_SYS_TIMEOUT            20
+#ifndef xchar
+#define xchar(i)                ((i) < 10 ? '0' + (i) : 'A' + (i) - 10)               
+#endif
+#endif
+#endif 
+      
 #if defined(ENABLE_AMAZON_COMMON) 
 #define LWIP_COMPAT_MUTEX_ALLOWED  
 #define ERRNO   1

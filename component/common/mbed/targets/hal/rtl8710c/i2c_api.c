@@ -38,13 +38,24 @@
 #include "pinmap.h"
 #include <string.h>
 
+/// i2c timeout check disabled
+#define I2C_TIMEOUT_DISABLE  0x00
+
+#define I2C_TX_DMA_EN        0x01
+#define I2C_RX_DMA_EN        0x02
+
+//DMA i2c0
+#ifdef CONFIG_GDMA_EN
+static uint8_t i2c_dma_init = 0;
+#endif
+
 static const PinMap PinMap_I2C_SDA[] = {
     {PA_3,  RTL_PIN_PERI(PID_I2C0, 0, PinSel0), RTL_PIN_FUNC(PID_I2C0, PinSel0)},
     {PA_12,  RTL_PIN_PERI(PID_I2C0, 0, PinSel1), RTL_PIN_FUNC(PID_I2C0, PinSel1)},
     {PA_16,  RTL_PIN_PERI(PID_I2C0, 0, PinSel2), RTL_PIN_FUNC(PID_I2C0, PinSel2)},
     {PA_20,  RTL_PIN_PERI(PID_I2C0, 0, PinSel3), RTL_PIN_FUNC(PID_I2C0, PinSel3)},
     {PA_22,  RTL_PIN_PERI(PID_I2C0, 0, PinSel4), RTL_PIN_FUNC(PID_I2C0, PinSel4)},
-    
+
     {NC,    NC,     0}
 };
 
@@ -55,10 +66,21 @@ static const PinMap PinMap_I2C_SCL[] = {
     {PA_19,  RTL_PIN_PERI(PID_I2C0, 0, PinSel3), RTL_PIN_FUNC(PID_I2C0, PinSel3)},
     {PA_21,  RTL_PIN_PERI(PID_I2C0, 0, PinSel4), RTL_PIN_FUNC(PID_I2C0, PinSel4)},
 
-    
+
     {NC,    NC,     0}
 };
 
+static uint8_t g_op_mode = I2CModePoll;
+
+int i2c_op_mode(uint8_t op_mode)
+{
+    if(op_mode > I2CModeDMA)
+        return HAL_ERR_PARA;
+    else
+        g_op_mode = op_mode;
+
+    return HAL_OK;
+}
 void i2c_init(i2c_t *obj, PinName sda, PinName scl)
 {
     uint32_t i2c_sel = 0;
@@ -76,7 +98,7 @@ void i2c_init(i2c_t *obj, PinName sda, PinName scl)
     }
 
     hal_i2c_load_default(&obj->i2c_adp, i2c_idx);
-    
+    obj->i2c_adp.op_mode = g_op_mode;
     //obj->i2c_adp.mst_spe_func |= I2CAddressRetry;
     hal_i2c_init(&obj->i2c_adp, (uint8_t)scl, (uint8_t)sda);
 }
@@ -100,14 +122,40 @@ int i2c_stop(i2c_t *obj)
 
 void i2c_reset(i2c_t *obj)
 {
+#ifdef CONFIG_GDMA_EN
+    if ((i2c_dma_init & I2C_TX_DMA_EN) != 0) {
+        hal_i2c_send_dma_deinit(&obj->i2c_adp);
+        i2c_dma_init &= ~I2C_TX_DMA_EN;
+    }
+    if ((i2c_dma_init & I2C_RX_DMA_EN) != 0) {
+        hal_i2c_recv_dma_deinit(&obj->i2c_adp);
+        i2c_dma_init &= ~I2C_RX_DMA_EN;
+    }
+#endif
+
     hal_i2c_deinit(&obj->i2c_adp);
+}
+
+void i2c_mst_null_data(i2c_t *obj, const char *data, int length, int stop)
+{
+    int i;
+    hal_i2c_adapter_t *phal_i2c_adapter = (hal_i2c_adapter_t *)(&obj->i2c_adp);
+
+    dbg_printf("mst send null data\n\r");
+
+    for (i = 0; i < length - 1; i++) {
+        phal_i2c_adapter->init_dat.reg_base->dat_cmd = BIT_CTRL_NULL_DATA(1) | data[i];
+    }
+
+    phal_i2c_adapter->init_dat.reg_base->dat_cmd = BIT_CTRL_NULL_DATA(1) | data[i] | BIT_CTRL_STOP(stop);
+
 }
 
 int i2c_byte_read(i2c_t *obj, int last)
 {
     hal_i2c_adapter_t *phal_i2c_adapter = (hal_i2c_adapter_t *)(&obj->i2c_adp);
     int i2c_rx_dat_tmp;
-    
+
     phal_i2c_adapter->rx_dat.len = 1;
     phal_i2c_adapter->rx_dat.buf = (uint8_t *)&i2c_rx_dat_tmp;
     phal_i2c_adapter->rx_dat.addr = phal_i2c_adapter->init_dat.ack_addr0;
@@ -144,7 +192,17 @@ int i2c_read(i2c_t *obj, int address, char *data, int length, int stop)
 {
     hal_i2c_adapter_t *phal_i2c_adapter = (hal_i2c_adapter_t *)(&obj->i2c_adp);
     uint32_t i2c_time_start;
-    
+    uint32_t i2c_timeout_bak;
+    hal_status_t ret;
+
+    /* Checks PSRAM DMA alignment */
+    if ((phal_i2c_adapter->op_mode == I2CModeDMA) && is_dcache_enabled() && (((uint32_t)(data)) >> 24) == 0x60) {
+        if(((uint32_t)(data) & 0x1F) != 0x0) {
+            DBG_I2C_ERR("PSRAM Buffer must be 32B aligned\r\n");
+            return 0;
+        }
+    }
+
     if (phal_i2c_adapter->rx_dat.addr != address) {
         phal_i2c_adapter->rx_dat.addr = address;
     }
@@ -153,18 +211,35 @@ int i2c_read(i2c_t *obj, int address, char *data, int length, int stop)
     phal_i2c_adapter->rx_dat.len = length;
     phal_i2c_adapter->rx_dat.mst_stop = stop;
 
-    
+#ifdef CONFIG_GDMA_EN
+    if (phal_i2c_adapter->op_mode == I2CModeDMA && (i2c_dma_init & I2C_RX_DMA_EN) == 0) {
+        ret = hal_i2c_recv_dma_init(&obj->i2c_adp, &obj->rx_gdma);
+        if (ret != HAL_OK) {
+            DBG_I2C_ERR("i2c_init: RX GDMA init err(0x%x)\n", ret);
+            return 0;
+        } else {
+            i2c_dma_init |= I2C_RX_DMA_EN;
+        }
+    }
+#endif
+
     if (hal_i2c_receive(phal_i2c_adapter) != HAL_OK) {
         return (int)(length - phal_i2c_adapter->rx_dat.len);
     } else {
         i2c_time_start = hal_read_cur_time();
+        i2c_timeout_bak = phal_i2c_adapter->pltf_dat.tr_time_out;
+        if (phal_i2c_adapter->op_mode == I2CModeInterrupt)
+            phal_i2c_adapter->pltf_dat.tr_time_out = I2C_TIMEOUT_DISABLE;
         while ((phal_i2c_adapter->status == I2CStatusRxReady) || (phal_i2c_adapter->status == I2CStatusRxing)) {
             if (hal_i2c_timeout_chk(phal_i2c_adapter, i2c_time_start)) {
-                phal_i2c_adapter->status = I2CStatusTimeOut;
+                if (phal_i2c_adapter->pltf_dat.tr_time_out != I2C_TIMEOUT_DISABLE) {
+                    phal_i2c_adapter->status = I2CStatusTimeOut;
+                }
                 break;
             }
         }
-
+        
+        phal_i2c_adapter->pltf_dat.tr_time_out = i2c_timeout_bak;
         return (int)(length - phal_i2c_adapter->rx_dat.len);
     }
 }
@@ -173,6 +248,16 @@ int i2c_write(i2c_t *obj, int address, const char *data, int length, int stop)
 {
     hal_i2c_adapter_t *phal_i2c_adapter = (hal_i2c_adapter_t *)(&obj->i2c_adp);
     uint32_t i2c_time_start;
+    uint32_t i2c_timeout_bak;
+    hal_status_t ret;
+
+    /* Checks PSRAM DMA alignment */
+    if ((phal_i2c_adapter->op_mode == I2CModeDMA) && is_dcache_enabled() && (((uint32_t)(data)) >> 24) == 0x60) {
+        if(((uint32_t)(data) & 0x1F) != 0x0) {
+            DBG_I2C_ERR("PSRAM Buffer must be 32B aligned\r\n");
+            return 0;
+        }
+    }
 
     if (phal_i2c_adapter->tx_dat.addr != address) {
         phal_i2c_adapter->tx_dat.addr = address;
@@ -182,17 +267,35 @@ int i2c_write(i2c_t *obj, int address, const char *data, int length, int stop)
     phal_i2c_adapter->tx_dat.len = length;
     phal_i2c_adapter->tx_dat.mst_stop = stop;
 
+#ifdef CONFIG_GDMA_EN
+    if (phal_i2c_adapter->op_mode == I2CModeDMA && (i2c_dma_init & I2C_TX_DMA_EN) == 0) {
+        ret = hal_i2c_send_dma_init(&obj->i2c_adp, &obj->tx_gdma);
+        if (ret != HAL_OK) {
+            DBG_I2C_ERR("i2c_init: TX GDMA init err(0x%x)\n", ret);
+            return 0;
+        } else {
+            i2c_dma_init |= I2C_TX_DMA_EN;
+        }
+    }
+#endif
+
     if (hal_i2c_send(phal_i2c_adapter) != HAL_OK) {
         return (int)(length - phal_i2c_adapter->tx_dat.len);
     } else {
         i2c_time_start = hal_read_cur_time();
+        i2c_timeout_bak = phal_i2c_adapter->pltf_dat.tr_time_out;
+        if (phal_i2c_adapter->op_mode == I2CModeInterrupt)
+            phal_i2c_adapter->pltf_dat.tr_time_out = I2C_TIMEOUT_DISABLE;
         while ((phal_i2c_adapter->status == I2CStatusTxReady) || (phal_i2c_adapter->status == I2CStatusTxing)) {
             if (hal_i2c_timeout_chk(phal_i2c_adapter, i2c_time_start)) {
-                phal_i2c_adapter->status = I2CStatusTimeOut;
+                if (phal_i2c_adapter->pltf_dat.tr_time_out != I2C_TIMEOUT_DISABLE) {
+                    phal_i2c_adapter->status = I2CStatusTimeOut;
+                }
                 break;
             }
         }
 
+        phal_i2c_adapter->pltf_dat.tr_time_out = i2c_timeout_bak;
         return (int)(length - phal_i2c_adapter->tx_dat.len);
     }
 }
@@ -248,21 +351,49 @@ int i2c_slave_read(i2c_t *obj, char *data, int length)
 {
     hal_i2c_adapter_t *phal_i2c_adapter = (hal_i2c_adapter_t *)(&obj->i2c_adp);
     uint32_t i2c_time_start;
-    
+    uint32_t i2c_timeout_bak;
+    hal_status_t ret;
+
+    /* Checks PSRAM DMA alignment */
+    if ((phal_i2c_adapter->op_mode == I2CModeDMA)  && is_dcache_enabled() && (((uint32_t)(data)) >> 24) == 0x60) {
+        if(((uint32_t)(data) & 0x1F) != 0x0) {
+            DBG_I2C_ERR("PSRAM Buffer must be 32B aligned\r\n");
+            return 0;
+        }
+    }
+
     phal_i2c_adapter->rx_dat.buf = (uint8_t *)data;
     phal_i2c_adapter->rx_dat.len = length;
-    
+
+#ifdef CONFIG_GDMA_EN
+    if (phal_i2c_adapter->op_mode == I2CModeDMA && (i2c_dma_init & I2C_RX_DMA_EN) == 0) {
+        ret = hal_i2c_recv_dma_init(&obj->i2c_adp, &obj->rx_gdma);
+        if (ret != HAL_OK) {
+            DBG_I2C_ERR("i2c_init: RX GDMA slave init err(0x%x)\n", ret);
+            return 0;
+        } else {
+            i2c_dma_init |= I2C_RX_DMA_EN;
+        }
+    }
+#endif
+
     if (hal_i2c_slv_recv(phal_i2c_adapter) != HAL_OK) {
         return (int)(length - phal_i2c_adapter->rx_dat.len);
     } else {
         i2c_time_start = hal_read_cur_time();
+        i2c_timeout_bak = phal_i2c_adapter->pltf_dat.tr_time_out;
+        if (phal_i2c_adapter->op_mode == I2CModeInterrupt)
+            phal_i2c_adapter->pltf_dat.tr_time_out = I2C_TIMEOUT_DISABLE;
         while ((phal_i2c_adapter->status == I2CStatusRxReady) || (phal_i2c_adapter->status == I2CStatusRxing)) {
             if (hal_i2c_timeout_chk(phal_i2c_adapter, i2c_time_start)) {
-                phal_i2c_adapter->status = I2CStatusTimeOut;
+                if (phal_i2c_adapter->pltf_dat.tr_time_out != I2C_TIMEOUT_DISABLE) {
+                    phal_i2c_adapter->status = I2CStatusTimeOut;
+                }                
                 break;
             }
         }
 
+        phal_i2c_adapter->pltf_dat.tr_time_out = i2c_timeout_bak;
         return (int)(length - phal_i2c_adapter->rx_dat.len);
     }
 }
@@ -270,9 +401,30 @@ int i2c_slave_read(i2c_t *obj, char *data, int length)
 int i2c_slave_write(i2c_t *obj, const char *data, int length)
 {
     hal_i2c_adapter_t *phal_i2c_adapter = (hal_i2c_adapter_t *)(&obj->i2c_adp);
+    hal_status_t ret;
 
     phal_i2c_adapter->tx_dat.buf = (uint8_t *)data;
     phal_i2c_adapter->tx_dat.len = length;
+
+    /* Checks PSRAM DMA alignment */
+    if ((phal_i2c_adapter->op_mode == I2CModeDMA)  && is_dcache_enabled() && (((uint32_t)(data)) >> 24) == 0x60) {
+        if(((uint32_t)(data) & 0x1F) != 0x0) {
+            DBG_I2C_ERR("PSRAM Buffer must be 32B aligned\r\n");
+            return 0;
+        }
+    }
+
+#ifdef CONFIG_GDMA_EN
+    if (phal_i2c_adapter->op_mode == I2CModeDMA && (i2c_dma_init & I2C_TX_DMA_EN) == 0) {
+        ret = hal_i2c_send_dma_init(&obj->i2c_adp, &obj->tx_gdma);
+        if (ret != HAL_OK) {
+            DBG_I2C_ERR("i2c_init: TX GDMA slave init err(0x%x)\n", ret);
+            return 0;
+        } else {
+            i2c_dma_init |= I2C_TX_DMA_EN;
+        }
+    }
+#endif
 
     if (hal_i2c_slv_send(phal_i2c_adapter) != HAL_OK) {
         return (int)(length - phal_i2c_adapter->tx_dat.len);

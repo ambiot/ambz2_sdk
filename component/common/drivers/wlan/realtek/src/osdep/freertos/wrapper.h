@@ -28,6 +28,9 @@
 #include <skbuff.h>
 #include "osdep_service.h"
 
+#ifdef PLATFORM_OHOS
+#include <dlist.h>
+#endif
 #ifndef __LIST_H__
 #warning "DLIST_NOT_DEFINE!!!!!!"
 //----- ------------------------------------------------------------------
@@ -398,6 +401,21 @@ struct net_device_stats {
 	unsigned long   rx_bytes;               /* total bytes received         */
 	unsigned long   tx_bytes;               /* total bytes transmitted      */
 	unsigned long   rx_overflow;            /* rx fifo overflow count       */
+};
+
+struct net_rx_stats {
+	unsigned long   false_alarm_time;      /* false alarm time, unit:us           */
+	unsigned long   cnt_cck_fail;          /* flase alarm: cck         fail count */
+	unsigned long   cnt_ofdm_fail;         /* flase alarm: ofdm + ht   fail count */
+	unsigned long   cnt_crc32_error_all;   /* false alarm: all  crc32 error count */
+	unsigned long   cnt_cck_crc32_error;   /* false alarm: cck  crc32 error count */
+	unsigned long   cnt_ofdm_crc32_error;  /* false alarm: ofdm crc32 error count */
+	unsigned long   cnt_ht_crc32_error;    /* false alarm: ht   crc32 error count */
+	unsigned long   cnt_crc32_ok_all;      /* false alarm: all  crc32    ok count */
+	unsigned long   cnt_cck_crc32_ok;      /* false alarm: cck  crc32    ok count */
+	unsigned long   cnt_ofdm_crc32_ok;     /* false alarm: ofdm crc32    ok count */
+	unsigned long   cnt_ht_crc32_ok;       /* false alarm: ht   crc32    ok count */
+	unsigned long   nhm_noise_pwr;         /* nhm noise power, unit:dB            */
 };
 
 struct net_device {

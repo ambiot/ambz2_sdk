@@ -8,6 +8,9 @@ AMEBAZ2_BSPDIR = ../../../component/soc/realtek/8710c/misc/bsp
 AMEBAZ2_BOOTLOADERDIR = $(AMEBAZ2_BSPDIR)/image
 AMEBAZ2_ROMSYMDIR = $(AMEBAZ2_BSPDIR)/ROM
 
+DUMP_START_ADDRESS = 0x98000000
+DUMP_END_ADDRESS = 0x98200000
+
 OS := $(shell uname)
 
 CROSS_COMPILE = $(ARM_GCC_TOOLCHAIN)/arm-none-eabi-
@@ -75,6 +78,7 @@ INCLUDES += -I../../../component/common/mbed/hal_ext
 INCLUDES += -I../../../component/common/mbed/targets/hal/rtl8710c
 INCLUDES += -I../../../component/common/network
 INCLUDES += -I../../../component/common/network/coap/include
+INCLUDES += -I../../../component/common/network/libcoap/include
 INCLUDES += -I../../../component/common/network/http2/nghttp2-1.31.0/includes
 INCLUDES += -I../../../component/common/network/lwip/lwip_v2.0.2/src/include
 INCLUDES += -I../../../component/common/network/lwip/lwip_v2.0.2/src/include/lwip
@@ -86,6 +90,57 @@ INCLUDES += -I../../../component/common/drivers/wlan/realtek/include
 INCLUDES += -I../../../component/common/drivers/wlan/realtek/src/osdep
 INCLUDES += -I../../../component/common/drivers/wlan/realtek/src/core/option
 INCLUDES += -I../../../component/common/test
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/inc
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/inc/app
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/inc/bluetooth/gap
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/inc/bluetooth/profile
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/inc/bluetooth/profile/client
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/inc/bluetooth/profile/server
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/inc/os
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/inc/platform
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/inc/stack
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/board/amebaz2/lib
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/board/amebaz2/src
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/board/amebaz2/src/data_uart
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/board/amebaz2/src/hci
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/board/amebaz2/src/os
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/board/amebaz2/src/vendor_cmd
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_config
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/ble_central
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/ble_peripheral
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_fuzz_test
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_ota_central_client
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_datatrans
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/cmd
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/common
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/gap
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/inc
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/inc/amebaz2
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/realtek
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/platform
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/profile
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/utility
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/provisioner
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/device
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/api/common
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/api/provisioner
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/api/device
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/api
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_provisioner_rtk_demo
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_provisioner_rtk_demo/inc
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_device_rtk_demo
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/device_multiple_profile
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/provisioner_multiple_profile
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_test
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/src/mcu/module/data_uart_cmd
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/board/common/inc
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_airsync_config
+INCLUDES += -I../../../component/common/media/rtp_codec
+INCLUDES += -I../../../component/common/media/mmfv2
+INCLUDES += -I../../../component/common/application/airsync/1.0.4
 
 INCLUDES += -I../../../component/soc/realtek/8710c/cmsis/rtl8710c/include
 INCLUDES += -I../../../component/soc/realtek/8710c/cmsis/rtl8710c/lib/include
@@ -106,12 +161,78 @@ INCLUDES += -I../../../component/os/freertos/freertos_v10.0.1/Source/include
 INCLUDES += -I../../../component/os/freertos/freertos_v10.0.1/Source/portable/GCC/ARM_RTL8710C
 INCLUDES += -I../../../component/os/os_dep/include
 
+INCLUDES += -I../../../component/common/application/amazon/amazon-ffs/libffs/include
+INCLUDES += -I../../../component/common/application/amazon/amazon-ffs/ffs_linux/libffs/include
+
 # Source file list
 # -------------------------------------------------------------------
 
 SRC_C =
 SRAM_C =
 ERAM_C =
+#bluetooth - board
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/board/amebaz2/src/hci/bt_fwconfig.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/board/amebaz2/src/hci/bt_mp_patch.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/board/amebaz2/src/hci/bt_normal_patch.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/board/common/src/cycle_queue.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/board/amebaz2/src/data_uart/data_uart.c
+SRC_C += ../../../component/common/file_system/ftl/ftl.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/board/amebaz2/src/hci/hci_board.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/board/amebaz2/src/hci/hci_uart.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/board/common/os/freertos/osif_freertos.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/board/amebaz2/src/platform_utils.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/board/amebaz2/src/rtk_coex.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/board/amebaz2/src/trace_uart.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/board/amebaz2/src/vendor_cmd/vendor_cmd.c
+
+#bluetooth - common
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/src/ble/profile/client/ancs_client.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/src/ble/profile/server/bas.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/src/ble/profile/client/bas_client.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/board/common/src/bt_uart_bridge.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/src/ble/profile/server/dis.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/src/ble/profile/client/gaps_client.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/board/common/src/hci_adapter.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/board/common/src/hci_process.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/src/ble/profile/server/hids.c
+#SRC_C += ../../../component/common/bluetooth/realtek/sdk/src/ble/profile/server/hids_kb.c
+#SRC_C += ../../../component/common/bluetooth/realtek/sdk/src/ble/profile/server/hids_rmc.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/src/ble/profile/client/simple_ble_client.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/src/ble/profile/server/simple_ble_service.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/board/common/src/trace_task.c
+
+#bluetooth - example - ble_central
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_central/ble_central_app_main.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_central/ble_central_app_task.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_central/ble_central_at_cmd.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_central/ble_central_client_app.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_central/ble_central_link_mgr.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_central/user_cmd.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/src/ble/profile/client/gcs_client.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/src/mcu/module/data_uart_cmd/user_cmd_parse.c
+
+#bluetooth - example - ble_peripheral
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_peripheral/app_task.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_peripheral/ble_app_main.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_peripheral/ble_peripheral_at_cmd.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_peripheral/peripheral_app.c
+
+#bluetooth - example - ble_scatternet
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet/ble_scatternet_app.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet/ble_scatternet_app_main.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet/ble_scatternet_app_task.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet/ble_scatternet_link_mgr.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet/ble_scatternet_user_cmd.c
+
+#bluetooth - example - bt_config
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_config/bt_config_app_main.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_config/bt_config_app_task.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_config/bt_config_peripheral_app.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_config/bt_config_service.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_config/bt_config_wifi.c
+
+#bluetooth - example
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/bt_example_entry.c
 
 #cmsis
 SRC_C += ../../../component/soc/realtek/8710c/cmsis/rtl8710c/source/ram_s/app_start.c
@@ -122,6 +243,7 @@ SRC_C += ../../../component/soc/realtek/8710c/cmsis/rtl8710c/source/ram/sys_irq.
 SRC_C += ../../../component/soc/realtek/8710c/misc/utilities/source/ram/libc_wrap.c
 
 #console
+SRC_C += ../../../component/common/api/at_cmd/atcmd_bt.c
 SRC_C += ../../../component/common/api/at_cmd/atcmd_lwip.c
 SRC_C += ../../../component/common/api/at_cmd/atcmd_mp.c
 SRC_C += ../../../component/common/api/at_cmd/atcmd_mp_ext2.c
@@ -408,6 +530,7 @@ SRC_C += ../../../component/common/example/wlan_scenario/example_wlan_scenario.c
 SRC_C += ../../../component/common/example/websocket_client/example_wsclient.c
 SRC_C += ../../../component/common/example/xml/example_xml.c
 SRC_C += ../../../component/common/example/fatfs/example_fatfs.c
+SRC_C += ../../../component/common/example/tickless_wifi_roaming/example_tickless_wifi_roaming.c
 
 #user
 SRC_C += ../src/main.c
@@ -500,6 +623,9 @@ endif
 LIBFLAGS =
 LIBFLAGS += -L$(AMEBAZ2_ROMSYMDIR)
 LIBFLAGS += -Wl,--start-group ../../../component/soc/realtek/8710c/fwlib/lib/lib/hal_pmc.a -Wl,--end-group
+LIBFLAGS += -Wl,--start-group ../../../component/common/bluetooth/realtek/sdk/board/amebaz2/lib/btgap.a -Wl,--end-group
+#LIBFLAGS += -Wl,--start-group ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/lib/amebaz2/btmesh_prov.a -Wl,--end-group
+#LIBFLAGS += -Wl,--start-group ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/lib/amebaz2/btmesh_dev.a -Wl,--end-group
 all: LIBFLAGS += -Wl,--start-group -L../../../component/soc/realtek/8710c/misc/bsp/lib/common/GCC -l_soc_is -l_wlan -Wl,--end-group
 mp: LIBFLAGS += -Wl,--start-group -L../../../component/soc/realtek/8710c/misc/bsp/lib/common/GCC -l_soc_is -l_wlan_mp -Wl,--end-group
 LIBFLAGS += -L../../../component/soc/realtek/8710c/misc/bsp/lib/common/GCC -l_http -l_dct -l_eap -l_p2p -l_websocket -l_wps
@@ -516,7 +642,9 @@ include toolchain.mk
 
 .PHONY: application_is
 application_is: prerequirement $(SRC_O) $(SRAM_O) $(ERAM_O) $(SRC_OO)
-	$(LD) $(LFLAGS) -o $(BIN_DIR)/$(TARGET).axf $(OBJ_CPP_LIST) -lstdc++ $(OBJ_LIST) $(ROMIMG) $(LIBFLAGS) -T$(LDSCRIPT) 
+	$(LD) $(LFLAGS) -o $(BIN_DIR)/$(TARGET).axf $(OBJ_CPP_LIST) -lstdc++ $(OBJ_LIST) $(ROMIMG) $(LIBFLAGS) -T$(LDSCRIPT)  
+	$(OBJCOPY) -j .bluetooth_trace.text -Obinary $(BIN_DIR)/$(TARGET).axf $(BIN_DIR)/APP.trace
+	$(OBJCOPY) -R .bluetooth_trace.text $(BIN_DIR)/$(TARGET).axf 
 	$(OBJDUMP) -d $(BIN_DIR)/$(TARGET).axf > $(BIN_DIR)/$(TARGET).asm
 
 # Manipulate Image
@@ -631,7 +759,7 @@ flash:
 #endif
 	@if [ ! -e $(AMEBAZ2_GCCTOOLDIR)/rtl_gdb_flashloader.txt ]; then \
 		echo ===========================================================; \
-		echo gdb script not found, \"make setup GDB_SERVER=[jlink or pyocd]\" first!; \
+		echo gdb script not found, \"make setup GDB_SERVER=[jlink, pyocd or openocd]\" first!; \
 		echo ===========================================================; \
 		exit -1; \
 	fi
@@ -643,7 +771,7 @@ flash:
 debug:
 	@if [ ! -e $(AMEBAZ2_GCCTOOLDIR)/rtl_gdb_debug.txt ]; then \
 		echo ===========================================================; \
-		echo gdb script not found, \"make setup GDB_SERVER=[jlink or pyocd]\" first!; \
+		echo gdb script not found, \"make setup GDB_SERVER=[jlink, pyocd or openocd]\" first!; \
 		echo ===========================================================; \
 		exit -1; \
 	fi
@@ -665,6 +793,9 @@ setup:
 ifeq ($(GDB_SERVER), pyocd)
 	cp -p $(AMEBAZ2_GCCTOOLDIR)/rtl_gdb_debug_pyocd.txt $(AMEBAZ2_GCCTOOLDIR)/rtl_gdb_debug.txt
 	cp -p $(AMEBAZ2_GCCTOOLDIR)/rtl_gdb_flashloader_pyocd.txt $(AMEBAZ2_GCCTOOLDIR)/rtl_gdb_flashloader.txt
+else ifeq ($(GDB_SERVER), openocd)
+	cp -p $(AMEBAZ2_GCCTOOLDIR)/rtl_gdb_debug_openocd.txt $(AMEBAZ2_GCCTOOLDIR)/rtl_gdb_debug.txt
+	cp -p $(AMEBAZ2_GCCTOOLDIR)/rtl_gdb_flashloader_openocd.txt $(AMEBAZ2_GCCTOOLDIR)/rtl_gdb_flashloader.txt
 else
 	cp -p $(AMEBAZ2_GCCTOOLDIR)/rtl_gdb_debug_jlink.txt $(AMEBAZ2_GCCTOOLDIR)/rtl_gdb_debug.txt
 	cp -p $(AMEBAZ2_GCCTOOLDIR)/rtl_gdb_flashloader_jlink.txt $(AMEBAZ2_GCCTOOLDIR)/rtl_gdb_flashloader.txt

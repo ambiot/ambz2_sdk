@@ -69,7 +69,7 @@ void fATXX(void *arg)
 	flash_erase_sector(&flash_Ptable, 0x00000000);
 	sys_reset();
 #else
-//	sys_uart_download_mode();
+	sys_uart_download_mode();
 #endif
 }
 #endif
@@ -2151,6 +2151,42 @@ void fATSJ(void *arg)
 #endif
 }
 
+
+#if WIFI_LOGO_CERTIFICATION_CONFIG
+
+#define FLASH_ADDR_SW_VERSION 	FAST_RECONNECT_DATA+0x900
+#define SW_VERSION_LENGTH 	32
+
+
+void fATSV(void *arg)
+{
+	unsigned char sw_version[SW_VERSION_LENGTH+1];
+	flash_t flash;
+
+	if(!arg){
+		printf("[ATSV]Usage: ATSV=[SW_VERSION]\n\r");
+		return;
+    }
+
+	if(strlen((char*)arg) > SW_VERSION_LENGTH){
+		printf("[ATSV] ERROR : SW_VERSION length can't exceed %d\n\r",SW_VERSION_LENGTH);
+		return;
+	}
+
+	memset(sw_version,0,SW_VERSION_LENGTH+1);
+	strncpy(sw_version, (char*)arg, strlen((char*)arg));
+
+	device_mutex_lock(RT_DEV_LOCK_FLASH);
+	flash_erase_sector(&flash, FAST_RECONNECT_DATA);
+	flash_stream_write(&flash, FLASH_ADDR_SW_VERSION, strlen((char*)arg), (uint8_t *) sw_version);
+	device_mutex_unlock(RT_DEV_LOCK_FLASH);
+
+	printf("[ATSV] Write SW_VERSION to flash : %s\n\r",sw_version);
+
+}
+#endif
+
+
 void fATSx(void *arg)
 {
 	/* To avoid gcc warnings */
@@ -2172,7 +2208,25 @@ void fATSx(void *arg)
 #else
 	strcat(buf, ".4.0." RTL_FW_COMPILE_DATE);
 #endif
+
+#if WIFI_LOGO_CERTIFICATION_CONFIG
+	flash_t		flash;
+	unsigned char sw_version[SW_VERSION_LENGTH+1];
+
+	memset(sw_version,0,SW_VERSION_LENGTH+1);
+
+	device_mutex_lock(RT_DEV_LOCK_FLASH);
+	flash_stream_read(&flash, FLASH_ADDR_SW_VERSION, SW_VERSION_LENGTH, (uint8_t *)sw_version);
+	device_mutex_unlock(RT_DEV_LOCK_FLASH);
+
+	if(sw_version[0] != 0xff)
+		AT_PRINTK("[ATS?]: SW VERSION: %s", sw_version);
+	else
+		AT_PRINTK("[ATS?]: SW VERSION: %s", buf);
+
+#else
 	AT_PRINTK("[ATS?]: SW VERSION: %s", buf);
+#endif
 }
 #elif ATCMD_VER == ATVER_2
 
@@ -2497,9 +2551,21 @@ void fATSU(void *arg){
 #endif //#if (defined(CONFIG_EXAMPLE_UART_ATCMD) && CONFIG_EXAMPLE_UART_ATCMD)
 #endif //#if CONFIG_WLAN
 
+#if defined(CONFIG_PLATFORM_8710C)
+struct gpio_str
+{
+	gpio_t gpio[24];
+	u32 pinmux_manager;
+};
+#endif
+
 void fATSG(void *arg)
 {
+#if defined(CONFIG_PLATFORM_8710C)
+	static struct gpio_str *gpio_ctrl = NULL;
+#else
 	gpio_t gpio_ctrl;
+#endif
 	int argc = 0, val, error_no = 0;
 	char *argv[MAX_ARGC] = {0}, port, num;
 	PinName pin = NC;
@@ -2532,9 +2598,9 @@ void fATSG(void *arg)
 #else
 	pin = (port << 4 | num);
 #endif
-	
+
 	AT_DBG_MSG(AT_FLAG_GPIO, AT_DBG_ALWAYS, "PORT: %s[%d]", argv[2], pin);
-	
+
 	if(gpio_set(pin) == 0xff)
 	{
 		AT_DBG_MSG(AT_FLAG_GPIO, AT_DBG_ERROR, "[ATSG]: Invalid Pin Name [%d]", pin);
@@ -2543,16 +2609,45 @@ void fATSG(void *arg)
 	}
 
 #if defined(CONFIG_PLATFORM_8710C)
-	static u32 pinmux_manager=0;
+
+	if(gpio_ctrl == NULL){
+		gpio_ctrl = malloc(sizeof(struct gpio_str));
+		if(gpio_ctrl == NULL){
+			AT_DBG_MSG(AT_FLAG_GPIO, AT_DBG_ERROR, "[ATSG]: Gpio malloc fail");
+			error_no = 4;
+			goto exit;
+		}
+		memset(gpio_ctrl,0,sizeof(struct gpio_str));
+	}
+
 	if((0 == port) && (num <= PIN_A23)){	// If Port A, and pin num is in range
-		if (!(pinmux_manager & (1<<num))){
-			gpio_init(&gpio_ctrl, pin);
-			pinmux_manager |= (1<<num);
+		if (!(gpio_ctrl->pinmux_manager & (1<<num))){
+			gpio_init(&gpio_ctrl->gpio[num], pin);
+			gpio_ctrl->pinmux_manager |= (1<<num);
 		}
 	}
+
+	if(argv[4]){
+		int dir = atoi(argv[4]);
+		AT_DBG_MSG(AT_FLAG_GPIO, AT_DBG_ALWAYS, "DIR: %s", argv[4]);
+		gpio_dir(&gpio_ctrl->gpio[num], dir);
+	}
+	if(argv[5]){
+		int pull = atoi(argv[5]);
+		AT_DBG_MSG(AT_FLAG_GPIO, AT_DBG_ALWAYS, "PULL: %s", argv[5]);
+		gpio_mode(&gpio_ctrl->gpio[num], pull);
+	}
+	if(argv[1][0] == 'R'){
+		val = gpio_read(&gpio_ctrl->gpio[num]);
+	}
+	else if(argv[1][0] == 'W'){
+		val = atoi(argv[3]);
+		gpio_dir(&gpio_ctrl->gpio[num], PIN_OUTPUT);
+		gpio_write(&gpio_ctrl->gpio[num], val);
+	}
+
 #else
 	gpio_init(&gpio_ctrl, pin);
-#endif
 
 	if(argv[4]){
 		int dir = atoi(argv[4]);
@@ -2572,7 +2667,8 @@ void fATSG(void *arg)
 		gpio_dir(&gpio_ctrl, PIN_OUTPUT);
 		gpio_write(&gpio_ctrl, val);
 	}
-	
+#endif
+
 exit:
 	if(error_no){
 		at_printf("\r\n[ATSG] ERROR:%d", error_no);
@@ -2743,6 +2839,9 @@ log_item_t at_sys_items[] = {
 	{"ATS!", fATSc,{NULL,NULL}},	// Debug config setting
 	{"ATS#", fATSt,{NULL,NULL}},	// test command
 	{"ATS?", fATSx,{NULL,NULL}},	// Help
+#if WIFI_LOGO_CERTIFICATION_CONFIG
+	{"ATSV", fATSV},				// Write SW version for wifi logo test
+#endif
 #elif ATCMD_VER == ATVER_2 //#if ATCMD_VER == ATVER_1
 	{"AT", 	 fATS0,},	// test AT command ready
 	{"ATS?", fATSh,},	// list all AT command

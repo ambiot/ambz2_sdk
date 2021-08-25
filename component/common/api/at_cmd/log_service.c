@@ -14,6 +14,9 @@
 #if (defined(CONFIG_EXAMPLE_UART_ATCMD) && CONFIG_EXAMPLE_UART_ATCMD) || (defined(CONFIG_EXAMPLE_SPI_ATCMD) && CONFIG_EXAMPLE_SPI_ATCMD) 
 #include "atcmd_lwip.h"
 #endif
+#if defined(CONFIG_PLATFORM_8710C)
+#include <platform_opts_bt.h>
+#endif
 #include "osdep_service.h"
 
 #if SUPPORT_LOG_SERVICE
@@ -457,7 +460,7 @@ void log_service(void *param)
 #else
 		_AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ALWAYS, "\n\r[MEM] After do cmd, available heap %d\n\r", xPortGetFreeHeapSize());
 #endif
-		_AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ALWAYS, "\r\n\n# "); //"# " is needed for mp tool
+		_AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ALWAYS, "\r\n\n#\r\n"); //"#" is needed for mp tool
 #if (defined(CONFIG_EXAMPLE_UART_ATCMD) && CONFIG_EXAMPLE_UART_ATCMD)
 		if(atcmd_lwip_is_tt_mode())
 			at_printf(STR_END_OF_ATDATA_RET);

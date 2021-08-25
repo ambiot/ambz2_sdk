@@ -21,6 +21,9 @@ define symbol __ICFEDIT_region_DTCM_RAM_end__           = 0x1003F9FF;
 define symbol __ICFEDIT_region_PSRAM_RAM_start__        = 0x60000000;
 define symbol __ICFEDIT_region_PSRAM_RAM_end__          = 0x603F0000;    // 4MB  
 
+define symbol __ICFEDIT_region_BT_TRACE_start__         = 0x00800000;
+define symbol __ICFEDIT_region_BT_TRACE_end__           = 0x00C00000;    
+
 /* Flash memory for XIP */
 /* XIP image must start with 64K(0x10000) aligned address */
 /* XIP image section must start with 64K aligned address, reserve 0x140 for image header */
@@ -49,6 +52,7 @@ define region DTCM_RAM_region				= mem:[from __ICFEDIT_region_DTCM_RAM_start__  
 define region ERAM_region   	            = mem:[from __ICFEDIT_region_PSRAM_RAM_start__   	to __ICFEDIT_region_PSRAM_RAM_end__];
 define region XIP_FLASH_C_region   	        = mem:[from __ICFEDIT_region_XIP_FLASH_C_start__   	to __ICFEDIT_region_XIP_FLASH_C_end__];
 define region XIP_FLASH_P_region   	        = mem:[from __ICFEDIT_region_XIP_FLASH_P_start__   	to __ICFEDIT_region_XIP_FLASH_P_end__];
+define region BT_TRACE_region               = mem:[from __ICFEDIT_region_BT_TRACE_start__       to __ICFEDIT_region_BT_TRACE_end__];
 
 define exported symbol SramEnd = end(DTCM_RAM_region);
 define exported symbol EramStart = start(ERAM_region);
@@ -93,6 +97,10 @@ place at start of FUNTAB_region
 {
     block RAM_FUNTAB
 };
+
+keep { section .BTTRACE };
+"BTTRACE":
+place at start of BT_TRACE_region { section .BTTRACE };
 
 keep { section .start.ram.sign* };
 define block RAM_SIGN

@@ -80,7 +80,7 @@ static gtimer_t my_Gtimer;
 
 static void Gtimer_timeout_handler (uint32_t id)
 {
-    dbg_printf("Gtimer wake up   \r\n");
+    dbg_printf("You will never see this message   \r\n");
 }
 #endif
 
@@ -94,7 +94,7 @@ extern void pwmout_period_int(pwmout_t *obj, pwm_period_callback_t callback, u8 
 
 static void PWM_period_handler (uint32_t id)
 {
-    dbg_printf("PWM wake up   \r\n");
+    dbg_printf("You will never see this message   \r\n");
 }
 #endif
 
@@ -156,8 +156,8 @@ int main (void)
 
 #elif (WAKEUP_SOURCE == 4)
     dbg_printf("Enter Standby, wake up by PWM \r\n");
-    pwmout_period_int(&my_PWM, 0, 0);
     pwmout_init(&my_PWM, WAKEUP_PWM_PIN);
+    pwmout_period_int(&my_PWM, 0, 0);
     pwmout_period(&my_PWM, PWM_SLEEP_DURATION);
     for (int i = 5; i > 0; i--) {
         dbg_printf("Enter Standby by %d seconds \r\n", i);

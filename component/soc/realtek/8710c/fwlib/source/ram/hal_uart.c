@@ -104,7 +104,7 @@ hal_status_t hal_uart_init (phal_uart_adapter_t puart_adapter, uint8_t tx_pin, u
 {
     hal_status_t ret;
     uint8_t uart_idx;
-    
+
     uart_idx = hal_uart_check_uart_id(tx_pin,rx_pin);
 
     if ((uart_idx <= Uart2) && (rx_pin != PIN_NC)) {
@@ -127,7 +127,7 @@ hal_status_t hal_uart_init (phal_uart_adapter_t puart_adapter, uint8_t tx_pin, u
             }
 
             if (rx_pin != PIN_NC) {
-                ret |= hal_pinmux_register (rx_pin, (PID_UART0+uart_idx)); 
+                ret |= hal_pinmux_register (rx_pin, (PID_UART0+uart_idx));
             }
         }
     } else {
@@ -152,21 +152,22 @@ void hal_uart_deinit (phal_uart_adapter_t puart_adapter)
 {
     uint32_t uart_idx = puart_adapter->uart_idx;
 
-    hal_uart_stubs.hal_uart_deinit(puart_adapter);
+    //hal_uart_stubs.hal_uart_deinit(puart_adapter);
+    hal_uart_deinit_ram(puart_adapter);
     if (uart_idx <= Uart2) {
         if (puart_adapter->tx_pin != PIN_NC) {
             hal_pinmux_unregister (puart_adapter->tx_pin, (PID_UART0+uart_idx));
         }
-        
+
         if (puart_adapter->rx_pin != PIN_NC) {
             hal_pinmux_unregister (puart_adapter->rx_pin, (PID_UART0+uart_idx));
             hal_gpio_pull_ctrl (puart_adapter->rx_pin, Pin_PullNone);
         }
-        
+
         if (puart_adapter->rts_pin != PIN_NC) {
             hal_pinmux_unregister (puart_adapter->rts_pin, (PID_UART0+uart_idx));
         }
-        
+
         if (puart_adapter->cts_pin != PIN_NC) {
             hal_pinmux_unregister (puart_adapter->cts_pin, (PID_UART0+uart_idx));
         }
@@ -199,18 +200,18 @@ hal_status_t hal_uart_set_flow_control (phal_uart_adapter_t puart_adapter, uint3
                     ret |= hal_pinmux_unregister (puart_adapter->rts_pin, (PID_UART0+uart_idx));
                     puart_adapter->rts_pin = PIN_NC;
                 }
-                
+
                 if (puart_adapter->cts_pin != PIN_NC) {
                     ret |= hal_pinmux_unregister (puart_adapter->cts_pin, (PID_UART0+uart_idx));
                     puart_adapter->cts_pin = PIN_NC;
                 }
                 break;
-                
+
             case UartFlowCtlRTSCTS:
                 ret |= hal_pinmux_register (puart_adapter->rts_pin, (PID_UART0+uart_idx));
                 ret |= hal_pinmux_register (puart_adapter->cts_pin, (PID_UART0+uart_idx));
                 break;
-                
+
             case UartFlowCtlRTS:
                 ret |= hal_pinmux_register (puart_adapter->rts_pin, (PID_UART0+uart_idx));
                 if (puart_adapter->cts_pin != PIN_NC) {
@@ -218,7 +219,7 @@ hal_status_t hal_uart_set_flow_control (phal_uart_adapter_t puart_adapter, uint3
                     puart_adapter->cts_pin = PIN_NC;
                 }
                 break;
-                
+
             case UartFlowCtlCTS:
                 ret |= hal_pinmux_register (puart_adapter->cts_pin, (PID_UART0+uart_idx));
                 if (puart_adapter->rts_pin != PIN_NC) {
@@ -226,12 +227,12 @@ hal_status_t hal_uart_set_flow_control (phal_uart_adapter_t puart_adapter, uint3
                     puart_adapter->rts_pin = PIN_NC;
                 }
                 break;
-                
+
             default:
                 break;
         }
     }
-    
+
     return ret;
 }
 
@@ -451,7 +452,7 @@ hal_status_t hal_uart_dma_send (phal_uart_adapter_t puart_adapter, uint8_t *ptx_
                 }
                 hal_gdma_irq_reg (pgdma_chnl, (irq_handler_t)hal_uart_stubs.uart_tx_dma_irq_handler, puart_adapter);
             }
-        }else 
+        }else
         #endif
         {
             DBG_UART_ERR("hal_uart_dma_send: Err: TX length too big(%lu)\r\n", len);
@@ -460,6 +461,118 @@ hal_status_t hal_uart_dma_send (phal_uart_adapter_t puart_adapter, uint8_t *ptx_
     }
 
     return hal_uart_stubs.hal_uart_dma_send (puart_adapter, ptx_buf, len);
+}
+
+
+/** 
+ *  @brief Disable the given UART port. It will do:
+ *           - disable UART hardware function.
+ *           - disable UART GDMA channel.
+ *           - disable UART pins.
+ *
+ *  @param[in]  puart_adapter  The UART adapter.
+ *
+ *  @returns void
+ */
+void hal_uart_deinit_ram (phal_uart_adapter_t puart_adapter)
+{
+    uint32_t i;
+
+    if ((puart_adapter->is_inited == 0) ||
+        (puart_adapter->uart_idx >= MaxUartNum)) {
+        return;
+    }
+    
+    // Wait all TX data transfered
+    for (i=0; i<100; i++) {
+        if (puart_adapter->base_addr->lsr_b.txfifo_empty) {
+            break;
+        } else {
+            hal_delay_us (100);
+        }
+    }
+
+    // Disable Interrupt
+    hal_uart_enter_critical();
+    puart_adapter->base_addr->ier = 0x00;
+    puart_adapter->base_addr->vier = 0x00;
+    puart_adapter->base_addr->visr = 0xFF;  // clear all pending status
+    hal_uart_unreg_irq_ram (puart_adapter);
+    hal_uart_exit_critical_ram();
+
+    if (puart_adapter->ptx_gdma != NULL) {
+        hal_uart_tx_gdma_deinit (puart_adapter);
+    }
+
+    if (puart_adapter->prx_gdma != NULL) {
+        hal_uart_rx_gdma_deinit (puart_adapter);
+    }
+
+    hal_uart_en_ctrl (puart_adapter->uart_idx, OFF);
+    puart_adapter->is_inited = 0;
+}
+
+/** 
+ *  @brief To un-register the interrupt handler of the given UART port.
+ *
+ *  @param[in]  puart_adapter  The UART adapter. 
+ *
+ *  @returns    void
+ */  
+void hal_uart_unreg_irq_ram (phal_uart_adapter_t puart_adapter)
+{
+    uint8_t i;
+
+    (*hal_uart_stubs.ppuart_gadapter)->irq_fun[puart_adapter->uart_idx] = (irq_handler_t)NULL;
+    for (i = 0; i < MaxUartNum; i++) {
+        if ((*hal_uart_stubs.ppuart_gadapter)->irq_fun[i] != NULL) {
+            break;
+        }
+    }
+
+    if (i == MaxUartNum) {
+        // No any UART port has IRQ handler, so disable the common interrupt
+        hal_irq_disable (UART_IRQn);
+        __ISB();
+    }
+}
+
+/** 
+ *  @brief To exit a critical code section, it will re-enable the UART interrupt
+ *         only when the exiting critical section is the top level.
+ *
+ *  @returns void
+ */   
+void hal_uart_exit_critical_ram ()
+{
+    uint8_t i;
+    
+    if (__get_IPSR () == (UART_IRQn + 16)) {
+        // In an ISR
+        return;
+    }
+
+    if ((*hal_uart_stubs.ppuart_gadapter)->critical_lv > 0) {
+        (*hal_uart_stubs.ppuart_gadapter)->critical_lv--;
+        __DSB();
+        if ((*hal_uart_stubs.ppuart_gadapter)->critical_lv == 0) {
+            
+            for (i = 0; i < MaxUartNum; i++) {
+                if ((*hal_uart_stubs.ppuart_gadapter)->irq_fun[i] != NULL) {
+                    break;
+                }
+            }
+            
+            if (i == MaxUartNum) {
+                // No any UART port has IRQ handler
+                __ISB();
+                return;
+            }
+
+            hal_irq_enable(UART_IRQn);
+            __ISB();
+        }
+    }
 }
 
 /** @} */ /* End of group hs_hal_uart */
