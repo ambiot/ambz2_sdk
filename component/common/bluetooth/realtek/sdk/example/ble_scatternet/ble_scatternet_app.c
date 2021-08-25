@@ -232,7 +232,7 @@ void ble_scatternet_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE 
                                  disc_cause);
             }
 
-            data_uart_print("Disconnect conn_id %d\r\n", conn_id);
+            data_uart_print("Disconnect conn_id %d, cause 0x%x\r\n", conn_id, disc_cause);
 ///judge the type of disconnect is central or peripheral,if peripheral,start ADV	
 			if (ble_scatternet_app_link_table[conn_id].role == 2){
 				data_uart_print("As peripheral,recieve disconncect,please start ADV\r\n");
@@ -1245,7 +1245,7 @@ T_APP_RESULT ble_scatternet_gcs_client_callback(T_CLIENT_ID client_id, uint8_t c
                 APP_PRINT_INFO1("INDICATION VALUE: %b",
                                 TRACE_BINARY(p_gcs_cb_data->cb_content.notif_ind.value_size,
                                              p_gcs_cb_data->cb_content.notif_ind.p_value));
-            data_uart_print("INDICATION: handle 0x%x, value_size %d\r\n",
+                data_uart_print("INDICATION: handle 0x%x, value_size %d\r\n",
                                 p_gcs_cb_data->cb_content.notif_ind.handle,
                                 p_gcs_cb_data->cb_content.notif_ind.value_size);
                 data_uart_print("INDICATION VALUE: ");

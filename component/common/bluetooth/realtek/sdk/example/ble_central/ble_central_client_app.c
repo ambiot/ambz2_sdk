@@ -191,7 +191,7 @@ void ble_central_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE new
                                  disc_cause);
             }
 
-            data_uart_print("Disconnect conn_id %d\r\n", conn_id);
+            data_uart_print("Disconnect conn_id %d, cause 0x%x\r\n", conn_id, disc_cause);
             memset(&ble_central_app_link_table[conn_id], 0, sizeof(T_APP_LINK));
         }
         break;
@@ -1118,8 +1118,8 @@ T_APP_RESULT ble_central_gcs_client_callback(T_CLIENT_ID client_id, uint8_t conn
                                 p_gcs_cb_data->cb_content.notif_ind.handle,
                                 p_gcs_cb_data->cb_content.notif_ind.value_size);
                 APP_PRINT_INFO1("INDICATION VALUE: %b",
-                                TRACE_BINARY(p_gcs_cb_data->cb_content.read_result.value_size,
-                                             p_gcs_cb_data->cb_content.read_result.p_value));
+                                TRACE_BINARY(p_gcs_cb_data->cb_content.notif_ind.value_size,
+                                             p_gcs_cb_data->cb_content.notif_ind.p_value));
                 data_uart_print("INDICATION: handle 0x%x, value_size %d\r\n",
                                 p_gcs_cb_data->cb_content.notif_ind.handle,
                                 p_gcs_cb_data->cb_content.notif_ind.value_size);

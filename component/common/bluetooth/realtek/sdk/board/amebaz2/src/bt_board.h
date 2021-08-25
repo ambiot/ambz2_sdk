@@ -25,7 +25,7 @@ BT_TRACE_LOG: PA3    (baudrate 921600,couldn't use 1500000)
 
 //trace
 #define platform_debug printf
-#define TRACE_TASK_PRIO 10
+#define TRACE_TASK_PRIO 3
 
 //#define TRACE_SWITCH_CLOSE
 #if 1

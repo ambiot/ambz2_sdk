@@ -25,6 +25,7 @@
 #include "bt_intf.h"
 #include "wifi_conf.h" //for wifi_disable_powersave and wifi_resume_powersave
 #include "device_lock.h"
+#include <platform_opts_bt.h>
 
 #define BOARD_LOGIC_EFUSE_OFFSET 0x190
 #define BT_LOGIC_EFUSE_OFFSET    0x194
@@ -55,6 +56,12 @@ extern uint32_t bt_dck_write(uint8_t q_dck, uint8_t i_dck);
 extern uint32_t bt_lok_write(uint16_t idac, uint16_t qdac, uint16_t idac2, uint16_t qdac2);
 extern uint32_t bt_iqk_8710c(BT_Cali_TypeDef *cal_data, BOOLEAN store);
 extern uint32_t bt_flatk_8710c(uint16_t txgain_flatk);
+
+#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && CONFIG_BT_ONLY_WITHOUT_WLAN
+extern hal_status_t hal_wlan_pwr_off(void);
+extern void bt_lok_write_bt_only(uint16_t idac, uint16_t qdac, uint16_t idac2, uint16_t qdac2);
+extern void bt_flatk_8710c_bt_only(uint16_t txgain_flatk);
+#endif
 
 static uint32_t cal_bit_shift(uint32_t Mask)
 {
@@ -220,8 +227,11 @@ bool hci_rtk_parse_config(uint8_t *config_buf, uint16_t config_len, uint8_t *efu
                 {
                     //0
                     tx_flatk=hci_tp_phy_efuse[0xa] | hci_tp_phy_efuse[0xb]<<8;
-
+#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && CONFIG_BT_ONLY_WITHOUT_WLAN
+                    bt_flatk_8710c_bt_only(tx_flatk);
+#else
                     bt_flatk_8710c(tx_flatk);
+#endif
                     hci_board_debug("\r\n WRITE  physical FLATK=tx_flatk=%x \r\n", tx_flatk);
                 }
 
@@ -242,7 +252,11 @@ bool hci_rtk_parse_config(uint8_t *config_buf, uint16_t config_len, uint8_t *efu
                     p[3]= efuse_buf[LEFUSE(0x199)];
                     
                     tx_flatk=efuse_buf[LEFUSE(0x198)] | efuse_buf[LEFUSE(0x199)]<<8;
+#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && CONFIG_BT_ONLY_WITHOUT_WLAN
+                    bt_flatk_8710c_bt_only(tx_flatk);
+#else
                     bt_flatk_8710c(tx_flatk);
+#endif
                     hci_board_debug("\r\n WRITE logic FLATK=tx_flatk=%x \r\n", tx_flatk);
 
                 }
@@ -252,8 +266,11 @@ bool hci_rtk_parse_config(uint8_t *config_buf, uint16_t config_len, uint8_t *efu
                     {
                         //0
                         tx_flatk=hci_tp_phy_efuse[0xa] | hci_tp_phy_efuse[0xb]<<8;
-
+#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && CONFIG_BT_ONLY_WITHOUT_WLAN
+                        bt_flatk_8710c_bt_only(tx_flatk);
+#else
                         bt_flatk_8710c(tx_flatk);
+#endif
                         hci_board_debug("\r\n WRITE  physical FLATK=tx_flatk=%x \r\n", tx_flatk);
                     }
 
@@ -394,7 +411,11 @@ bool hci_rtk_find_patch(uint8_t bt_hci_chip_id)
     if (CHECK_SW(EFUSE_SW_USE_FLASH_PATCH))
     {
         //use the default sdk patch
+#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && CONFIG_BT_ONLY_WITHOUT_WLAN
+        p_merge_addr = (uint8_t *)rltk_bt_get_patch_code_bt_only();
+#else
         p_merge_addr = (uint8_t *)rltk_bt_get_patch_code();
+#endif
         //hci_board_debug("use default patch = %x\r\n", p_merge_addr);
     }
     else
@@ -455,7 +476,11 @@ bool hci_rtk_find_patch(uint8_t bt_hci_chip_id)
     {
         hci_board_debug("single patch\r\n");
 
+#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && CONFIG_BT_ONLY_WITHOUT_WLAN
+        fw_len = rltk_bt_get_patch_code_len_bt_only();
+#else
         fw_len = rltk_bt_get_patch_code_len();
+#endif
         fw_buf = os_mem_zalloc(RAM_TYPE_DATA_ON, fw_len);
         if(fw_buf == NULL)
         {
@@ -464,7 +489,11 @@ bool hci_rtk_find_patch(uint8_t bt_hci_chip_id)
         }
         else
         {
-            memcpy(fw_buf, rltk_bt_get_patch_code(), fw_len);
+#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && CONFIG_BT_ONLY_WITHOUT_WLAN
+            memcpy(fw_buf,(unsigned char*)rltk_bt_get_patch_code_bt_only(), fw_len);
+#else
+            memcpy(fw_buf,rltk_bt_get_patch_code(), fw_len);
+#endif
         }
     }
     else if(!memcmp(p_merge_addr, rtb_patch_smagic, sizeof(rtb_patch_smagic)))
@@ -604,14 +633,17 @@ bool hci_read_efuse(void)
      
      return true;
 }
-
+extern void wlan_init_btonly(void);
 bool hci_board_init(void)
 {
+#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && CONFIG_BT_ONLY_WITHOUT_WLAN
+  rltk_wlan_init_btonly();
+#else
   if(!(wifi_is_up(RTW_STA_INTERFACE) || wifi_is_up(RTW_AP_INTERFACE))) {
         hci_board_debug("\nWIFI is off !Please restart BT after WIFI on!\n");
         return false;
    }
-
+#endif
   HCI_PRINT_INFO1("hci_tp_open, this cut is AmebaZ2 %X CUT",HCI_CHIP_VER);
 
   if (rltk_wlan_is_mp()) 
@@ -644,28 +676,38 @@ void bt_power_on(void)
 void bt_power_off(void)
 {
 	set_reg_value(0x40000214, BIT24 |BIT25, 0);
+#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && CONFIG_BT_ONLY_WITHOUT_WLAN
+	hal_wlan_pwr_off();
+#else
 	rltk_coex_bt_enable(0);
 	if (!rltk_wlan_is_mp() ) {
 		wifi_resume_powersave();
 	}
+#endif
 }
 
 void hci_normal_start(void)
 {
+#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && CONFIG_BT_ONLY_WITHOUT_WLAN
+	rltk_coex_bt_enable_bt_only();
+#else
 	if (rltk_wlan_is_mp() ) {
 		rtlk_bt_set_gnt_bt(PTA_BT);
 	}
 	else {
 		rltk_coex_bt_enable(1);
 	}
+#endif
 }
 
 void bt_reset(void)
 {
+#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && CONFIG_BT_ONLY_WITHOUT_WLAN
+#else
 	if (!rltk_wlan_is_mp() ) {
 		wifi_disable_powersave();
 	}
-
+#endif
 	hci_board_debug("BT RESET LOG...\n");
 	set_reg_value(0x40000244, BIT9|BIT8, 3);
 	os_delay(5);
@@ -828,7 +870,11 @@ bool bt_check_iqk(void)
 		if (bt_iqk_logic_efuse_valid(&bt_iqk_data))
 		{
 			bt_dump_iqk(&bt_iqk_data);
-			bt_lok_write(bt_iqk_data.IDAC , bt_iqk_data.QDAC, bt_iqk_data.IDAC2  , bt_iqk_data.QDAC2);
+#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && CONFIG_BT_ONLY_WITHOUT_WLAN
+            bt_lok_write_bt_only(bt_iqk_data.IDAC , bt_iqk_data.QDAC, bt_iqk_data.IDAC2  , bt_iqk_data.QDAC2);
+#else
+            bt_lok_write(bt_iqk_data.IDAC , bt_iqk_data.QDAC, bt_iqk_data.IDAC2  , bt_iqk_data.QDAC2);
+#endif
             hci_tp_phy_efuse[0] = 0;
             hci_tp_phy_efuse[1] =hci_tp_phy_efuse[1] & (~BIT0);
             //hci_tp_phy_efuse[1] = 0xfe;
@@ -847,20 +893,32 @@ bool bt_check_iqk(void)
     {
         if(hci_tp_phy_efuse[0]!=0)
         {
+#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && CONFIG_BT_ONLY_WITHOUT_WLAN
+            bt_dck_write_btonly(hci_tp_phy_efuse[0x0e], hci_tp_phy_efuse[0x0f]);
+#else
             bt_dck_write(hci_tp_phy_efuse[0x0e], hci_tp_phy_efuse[0x0f]);
+#endif
         }
         else
         {
             hci_board_debug("\r\nhci_tp_phy_efuse[0]=0,\r\n");
         }
         bt_dump_iqk(&bt_iqk_data);
-        bt_lok_write(bt_iqk_data.IDAC, bt_iqk_data.QDAC, bt_iqk_data.IDAC2, bt_iqk_data.QDAC2);
+#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && CONFIG_BT_ONLY_WITHOUT_WLAN
+	    bt_lok_write_bt_only(bt_iqk_data.IDAC , bt_iqk_data.QDAC, bt_iqk_data.IDAC2  , bt_iqk_data.QDAC2);
+#else
+            bt_lok_write(bt_iqk_data.IDAC , bt_iqk_data.QDAC, bt_iqk_data.IDAC2  , bt_iqk_data.QDAC2);
+#endif
         return true;
     }
 	else if (bt_iqk_logic_efuse_valid(&bt_iqk_data))
 	{
 		bt_dump_iqk(&bt_iqk_data);
-		bt_lok_write(bt_iqk_data.IDAC , bt_iqk_data.QDAC, bt_iqk_data.IDAC2  , bt_iqk_data.QDAC2);
+#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && CONFIG_BT_ONLY_WITHOUT_WLAN
+	    bt_lok_write_bt_only(bt_iqk_data.IDAC , bt_iqk_data.QDAC, bt_iqk_data.IDAC2  , bt_iqk_data.QDAC2);
+#else
+            bt_lok_write(bt_iqk_data.IDAC , bt_iqk_data.QDAC, bt_iqk_data.IDAC2  , bt_iqk_data.QDAC2);
+#endif
 		hci_tp_phy_efuse[0] = 0;
 		hci_tp_phy_efuse[1] =hci_tp_phy_efuse[1] & (~BIT0);
 		//hci_tp_phy_efuse[1] = 0xfe;
@@ -871,7 +929,11 @@ bool bt_check_iqk(void)
 		hci_tp_phy_efuse[6] = (bt_iqk_data.IQK_yy >> 8) & 0xff;
 		hci_tp_phy_efuse[0x0e] = hci_tp_lgc_efuse[0x1E];
 		hci_tp_phy_efuse[0x0f] = hci_tp_lgc_efuse[0x1f];
-		bt_dck_write(hci_tp_phy_efuse[0x0e], hci_tp_phy_efuse[0x0f]);
+#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && CONFIG_BT_ONLY_WITHOUT_WLAN
+            bt_dck_write_btonly(hci_tp_phy_efuse[0x0e], hci_tp_phy_efuse[0x0f]);
+#else
+            bt_dck_write(hci_tp_phy_efuse[0x0e], hci_tp_phy_efuse[0x0f]);
+#endif
 		return true;
 	}
 	else
@@ -884,8 +946,11 @@ bool bt_check_iqk(void)
 bool hci_start_iqk(void)
 {
 	uint32_t ret = 0;
-	
+#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && CONFIG_BT_ONLY_WITHOUT_WLAN
+	bt_iqk_8710c_btonly(&g_iqk_data);
+#else
 	ret = bt_iqk_8710c(&g_iqk_data, 0);
+#endif
 	if(_FAIL == ret)
 	{
 		hci_board_debug("\r\n%s:  Warning: IQK Fail, please connect driver !!!!!!!!!\r\n", __FUNCTION__);
@@ -893,7 +958,11 @@ bool hci_start_iqk(void)
 	}
 	
 	bt_dump_iqk(&g_iqk_data);
-	bt_lok_write(g_iqk_data.IDAC, g_iqk_data.QDAC, g_iqk_data.IDAC2, g_iqk_data.QDAC2);
+#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && CONFIG_BT_ONLY_WITHOUT_WLAN
+            bt_lok_write_bt_only(g_iqk_data.IDAC, g_iqk_data.QDAC, g_iqk_data.IDAC2, g_iqk_data.QDAC2);
+#else
+            bt_lok_write(g_iqk_data.IDAC, g_iqk_data.QDAC, g_iqk_data.IDAC2, g_iqk_data.QDAC2);
+#endif
 	
 	hci_tp_phy_efuse[0] = 0;
     hci_tp_phy_efuse[1] =hci_tp_phy_efuse[1] & (~BIT0);
