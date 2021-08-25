@@ -2599,17 +2599,14 @@ void fATSG(void *arg)
 	pin = (port << 4 | num);
 #endif
 	
-
 	AT_DBG_MSG(AT_FLAG_GPIO, AT_DBG_ALWAYS, "PORT: %s[%d]", argv[2], pin);
 	
-
 	if(gpio_set(pin) == 0xff)
 	{
 		AT_DBG_MSG(AT_FLAG_GPIO, AT_DBG_ERROR, "[ATSG]: Invalid Pin Name [%d]", pin);
 		error_no = 3;
 		goto exit;
 	}
-
 
 #if defined(CONFIG_PLATFORM_8710C)
 
@@ -2652,7 +2649,6 @@ void fATSG(void *arg)
 #else
 	gpio_init(&gpio_ctrl, pin);
 
-
 	if(argv[4]){
 		int dir = atoi(argv[4]);
 		AT_DBG_MSG(AT_FLAG_GPIO, AT_DBG_ALWAYS, "DIR: %s", argv[4]);
@@ -2664,7 +2660,6 @@ void fATSG(void *arg)
 		gpio_mode(&gpio_ctrl, pull);
 	}
 	if(argv[1][0] == 'R'){
-		gpio_dir(&gpio_ctrl, PIN_INPUT);
 		val = gpio_read(&gpio_ctrl);
 	}
 	else if(argv[1][0] == 'W'){
@@ -2672,7 +2667,6 @@ void fATSG(void *arg)
 		gpio_dir(&gpio_ctrl, PIN_OUTPUT);
 		gpio_write(&gpio_ctrl, val);
 	}
-	
 #endif
 
 exit:
