@@ -10,6 +10,13 @@
 #include "os_msg.h"
 #include "app_msg.h"
 
+#if defined(CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT) && CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT
+#include "bt_ota_central_client_app_flags.h"
+#include "bt_ota_central_client_at_cmd.h"
+extern void *bt_ota_central_client_evt_queue_handle;
+extern void *bt_ota_central_client_io_queue_handle;
+#endif
+
 #if defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL
 #include "app_flags.h"
 #include "ble_peripheral_at_cmd.h"
@@ -176,7 +183,8 @@ uint8_t bt_command_type(uint16_t command_type)
 	return 1;
 }
 
-#if ((defined(CONFIG_BT_CENTRAL) && CONFIG_BT_CENTRAL) || \
+#if ((defined(CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT) && CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT) || \
+	(defined(CONFIG_BT_CENTRAL) && CONFIG_BT_CENTRAL) || \
 	(defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL) || \
 	(defined(CONFIG_BT_SCATTERNET) && CONFIG_BT_SCATTERNET) || \
 	(defined(CONFIG_BT_FUZZ_TEST) && CONFIG_BT_FUZZ_TEST) || \
@@ -193,6 +201,16 @@ void bt_at_cmd_send_msg(uint16_t subtype, void *arg)
 	io_msg.type = IO_MSG_TYPE_AT_CMD;
 	io_msg.subtype = subtype;
 	io_msg.u.buf = arg;
+
+#if defined(CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT) && CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT
+	if (bt_ota_central_client_evt_queue_handle != NULL && bt_ota_central_client_io_queue_handle != NULL) {
+		if (os_msg_send(bt_ota_central_client_io_queue_handle, &io_msg, 0) == false) {
+			AT_PRINTK("bt at cmd send msg fail: subtype 0x%x", io_msg.subtype);
+		} else if (os_msg_send(bt_ota_central_client_evt_queue_handle, &event, 0) == false) {
+			AT_PRINTK("bt at cmd send event fail: subtype 0x%x", io_msg.subtype);
+		}
+	}
+#endif
 
 #if defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL
 	if (evt_queue_handle != NULL && io_queue_handle != NULL) {
@@ -1338,6 +1356,95 @@ extern void bt_ota_central_client_app_deinit(void);
 extern unsigned char rtl8762c_image[];
 extern unsigned char rtl8762c_aes256_key[];
 
+#if defined(CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT) && CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT
+void fATBs(void *arg)
+{
+	int argc = 0;
+	char *argv[MAX_ARGC] = {0};
+
+	memset(bt_at_cmd_buf, 0, 256);
+
+	if (arg) {
+		strncpy(bt_at_cmd_buf, arg, sizeof(bt_at_cmd_buf));
+		argc = parse_param(bt_at_cmd_buf, argv);
+	} else {
+		goto exit;
+	}
+
+	if ((argc != 2) && (argc != 3) && (argc != 4)) {
+		AT_PRINTK("[AT_PRINTK] ERROR: input parameter error!\n\r");
+		goto exit;
+	}
+
+	bt_at_cmd_send_msg(BT_ATCMD_SCAN, bt_at_cmd_buf);
+	return;
+
+exit:
+	AT_PRINTK("[ATBs] Scan:ATBs=scan_enable,filter_policy,filter_duplicate");
+	AT_PRINTK("[ATBs] [scan_enable]:0-(start scan),1(stop scan)");
+	AT_PRINTK("[ATBs] [filter_policy]: 0-(any), 1-(whitelist), 2-(any RPA), 3-(whitelist RPA)");
+	AT_PRINTK("[ATBs] [filter_duplicate]: 0-(disable), 1-(enable)");
+	AT_PRINTK("[ATBs] eg:ATBs=1");
+	AT_PRINTK("[ATBs] eg:ATBs=1,0");
+	AT_PRINTK("[ATBs] eg:ATBs=1,0,1");
+	AT_PRINTK("[ATBs] eg:ATBs=0");
+}
+
+void fATBl(void *arg)
+{
+	int argc = 0;
+	char *argv[MAX_ARGC] = {0};
+
+	memset(bt_at_cmd_buf, 0, 256);
+
+	if (arg) {
+		strncpy(bt_at_cmd_buf, arg, sizeof(bt_at_cmd_buf));
+		argc = parse_param(bt_at_cmd_buf, argv);
+	} else {
+		goto exit;
+	}
+
+	if (argc != 3) {
+		AT_PRINTK("[AT_PRINTK] ERROR: input parameter error!\n\r");
+		return;
+	}
+
+	bt_at_cmd_send_msg(BT_ATCMD_CONNECT, bt_at_cmd_buf);
+	return;
+
+exit:
+	AT_PRINTK("[ATBl] Connect to remote device: ATBl=P/R,BLE_BD_ADDR");
+	AT_PRINTK("[ATBl] P=public, R=random");
+	AT_PRINTK("[ATBl] eg:ATBC=P,001122334455");
+}
+
+void fATBq(void *arg)
+{
+	int argc = 0;
+	char *argv[MAX_ARGC] = {0};
+
+	memset(bt_at_cmd_buf, 0, 256);
+
+	if (arg) {
+		strncpy(bt_at_cmd_buf, arg, sizeof(bt_at_cmd_buf));
+		argc = parse_param(bt_at_cmd_buf, argv);
+	} else {
+		goto exit;
+	}
+
+	if (argc != 2) {
+		AT_PRINTK("[AT_PRINTK] ERROR: input parameter error!\n\r");
+		return;
+	}
+
+	bt_at_cmd_send_msg(BT_ATCMD_OTA_START, bt_at_cmd_buf);
+	return;
+
+exit:
+	AT_PRINTK("[ATBq] Start OTA: ATBt=conn_id");
+}
+#endif
+
 void fATBo(void *arg)
 {
 	int argc = 0;
@@ -1771,6 +1878,11 @@ log_item_t at_bt_items[ ] = {
 #endif
 #if defined(CONFIG_BT_OTA_CENTRAL_CLIENT) && CONFIG_BT_OTA_CENTRAL_CLIENT
 	{"ATBo", fATBo, {NULL, NULL}}, //Start/Stop BT OTA Central Client
+#if defined(CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT) && CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT
+	{"ATBs", fATBs, {NULL, NULL}}, //Scan start/stop BT OTA Central Client
+	{"ATBl", fATBl, {NULL, NULL}}, //Connection start/stop BT OTA Central Client
+	{"ATBq", fATBq, {NULL, NULL}}, //OTA start/stop BT OTA Central Client
+#endif
 #endif
 #if defined(CONFIG_BT_DATATRANS) && CONFIG_BT_DATATRANS
 	{"ATBT", fATBT, {NULL, NULL}}, //Start/stop BT datatrans

@@ -190,12 +190,11 @@ void app_gap_vendor_callback(uint8_t cb_type, void *p_cb_data)
                 break;
         }
         break;
-    case GAP_MSG_VENDOR_EVT_INFO:
+     case GAP_MSG_VENDOR_EVT_INFO:
         {
-		//format: subcode + status + payload(for wifi)
-            uint16_t subcode;
+            uint8_t subcode;
             uint8_t *p = cb_data.p_gap_vendor_evt_info->param;
-            LE_STREAM_TO_UINT16(subcode, p);
+            LE_STREAM_TO_UINT8(subcode, p);
             APP_PRINT_INFO1("GAP_MSG_VENDOR_EVT_INFO: param_len %d",
                             cb_data.p_gap_vendor_evt_info->param_len);
             //Debug vendor command event
@@ -203,18 +202,23 @@ void app_gap_vendor_callback(uint8_t cb_type, void *p_cb_data)
             //                cb_data.p_gap_vendor_evt_info->param_len, subcode, cb_data.p_gap_vendor_evt_info->param[0]);
             switch(subcode)
             {
-                case HCI_VENDOR_PRE_ADV_EARLY_EVENT: // Adv early event
-                    break;
-                case HCI_VENDOR_PRE_ADV_END_EVENT: // Adv end event
-                    break;
                 case HCI_VENDOR_PTA_AUTO_REPORT_EVENT:
-                    bt_coex_handle_specific_evt(p,cb_data.p_gap_vendor_evt_info->param_len - 2);
+                    bt_coex_handle_specific_evt(p + 1, cb_data.p_gap_vendor_evt_info->param_len - 2);
+                    break;
+                case HCI_VENDOR_LOWERSTACK_EXCEPTION_EVENT:
+                    {
+                        uint8_t reason;
+                        LE_STREAM_TO_UINT8(reason, p);
+                        if (reason == 0)
+                            printf("Exception: Connection interval == 0!\r\n");
+                        else
+                            printf("Other lower stack exception!\r\n");
+                    }
                     break;
                 default:
                     break;
             }
         }
-		
         break;
     default:
         break;
