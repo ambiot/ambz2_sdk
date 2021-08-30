@@ -435,7 +435,6 @@ extern unsigned int g_ap_sta_num;
 		//#define NEW_BT_COEX
 		#define CONFIG_BT_COEXIST_SOC
 		#define CONFIG_BT_SCOREBOARD_ISR
-		//#define CONFIG_WIFI_SLOT_DYNAMIC_ADJUST
 	#endif
 #endif // #ifdef CONFIG_MP_INCLUDED
 

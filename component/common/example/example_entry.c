@@ -772,10 +772,6 @@ example_hilink();
         example_duer();
 #endif
 
-#if defined(CONFIG_BT) && CONFIG_BT
-	bt_example_init();
-#endif
-
 #if defined(CONFIG_EXAMPLE_COMPETITIVE_HEADPHONES) && CONFIG_EXAMPLE_COMPETITIVE_HEADPHONES
 //	example_competitive_headphones();
 #endif

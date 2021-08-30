@@ -1275,6 +1275,10 @@ int wifi_set_country(rtw_country_code_t country_code)
 
 	ret = wext_set_country(WLAN0_NAME, country_code);
 
+	if((ret == 0) && (wifi_mode == RTW_MODE_STA_AP)){
+		ret = wext_set_country(WLAN1_NAME, country_code);
+	}
+
 	return ret;
 }
 

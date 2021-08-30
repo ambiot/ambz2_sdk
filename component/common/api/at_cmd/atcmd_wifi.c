@@ -1,8 +1,4 @@
-#ifndef PLATFORM_OHOS
-#include "FreeRTOS.h"
-#include "task.h"
-#include "semphr.h"
-#endif
+#include "osdep_service.h"
 #include "log_service.h"
 #include "atcmd_wifi.h"
 #include <lwip_netconf.h>
