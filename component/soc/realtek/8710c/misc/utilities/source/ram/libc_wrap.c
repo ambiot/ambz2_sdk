@@ -31,13 +31,14 @@
 #endif
 #include "basic_types.h"
 #include "ctype.h"
+#include "diag.h"
 
 /* for GNU C++ */
 #if defined(__GNUC__)
 void* __dso_handle = 0;
 #endif
 
-#if defined(CONFIG_CMSIS_FREERTOS_EN) && (CONFIG_CMSIS_FREERTOS_EN != 0)
+#if !defined(PLATFORM_OHOS) && defined(CONFIG_CMSIS_FREERTOS_EN) && (CONFIG_CMSIS_FREERTOS_EN != 0)
 /**************************************************
  * FreeRTOS memory management functions's wrapper to replace 
  * malloc/free/realloc of GCC Lib.
@@ -64,6 +65,11 @@ void* __wrap_realloc( void *p, size_t size )
     return (void*)pvPortReAlloc(p, size);
 }
 
+void* __wrap__realloc_r( void *reent, void *p, size_t size )
+{
+    return (void*)pvPortReAlloc(p, size);
+}
+
 void* __wrap_calloc( size_t cnt, size_t size )
 {
     return (void*)pvPortCalloc(cnt, size);
@@ -78,12 +84,85 @@ void __wrap_free( void *p )
 {
     vPortFree(p);
 }
+
+void __wrap__free_r( void *reent, void *p )
+{
+    vPortFree(p);
+}
 #endif  //  #if defined(CONFIG_CMSIS_FREERTOS_EN) && (CONFIG_CMSIS_FREERTOS_EN != 0)
 
 /**************************************************
  * string and memory api wrap for compiler
  *
  **************************************************/
+int check_format(const char * fmt,...){
+  
+    const char* fmt1;
+    fmt1 = fmt;
+
+    for(; *fmt1 != '\0'; ++fmt1) {
+        if(*fmt1 == '"') {
+            do {
+                fmt1 ++;
+            } while(*fmt1 != '"');
+            fmt1 ++;
+        }
+        
+        if(*fmt1 != '%')
+            continue;
+        else
+            fmt1 ++;
+        
+        while(isdigit(*fmt1)){
+            fmt1 ++;
+        }
+        
+        switch (*fmt1) {
+                  case '0':      
+                  case '1':
+                  case '2':
+                  case '3':
+                  case '4':
+                  case '5':
+                  case '6':
+                  case '7':
+                  case '8':
+                  case '9':
+                  case '.':
+                  case '%':
+                  case 'c':                
+                  case 's':
+                  case '-':
+                  case '+':
+                  case ' ':  
+                  case '#':
+                  case 'l':
+                  case 'h':
+                  case 'z':  
+                  case 'j':
+                  case 't':
+                  case 'i':
+                  case 'd':
+                  case 'u':
+                  case 'P':
+                  case 'p':
+                  case 'X':
+                  case 'x':
+                  case 'n':
+                  case 'F':
+                  case 'f':
+                  case 'A':
+                  case 'a': 
+                      continue;
+                  default:
+                      goto exit;
+                
+        }
+    }
+        return 1;
+exit:
+        return 0;
+}
 
 #if defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8195BLP) || defined(CONFIG_PLATFORM_8710C)
 #include "stdio_port.h"
@@ -91,16 +170,24 @@ void __wrap_free( void *p )
 
 int __wrap_printf(const char * fmt,...)
 {
-	int count;
-    va_list list;
-    va_start(list, fmt);	
-#if defined(CONFIG_BUILD_SECURE)	
-	count = stdio_printf_stubs.printf_corel(stdio_printf_stubs.stdio_port_sputc, (void*)NULL, fmt, list);
+    int count = 0;
+    const char* fmt1;
+
+    fmt1 = fmt;
+    if(check_format(fmt1)){
+        va_list list;
+        va_start(list, fmt);
+#if defined(CONFIG_BUILD_SECURE)
+        count = stdio_printf_stubs.printf_corel(stdio_printf_stubs.stdio_port_sputc, (void*)NULL, fmt, list);
 #else
-	count = stdio_printf_stubs.printf_core(stdio_printf_stubs.stdio_port_sputc, (void*)NULL, fmt, list);
+        count = stdio_printf_stubs.printf_core(stdio_printf_stubs.stdio_port_sputc, (void*)NULL, fmt, list);
 #endif
-	va_end(list);
-	return count;
+        va_end(list);
+    } else {
+        dbg_printf("\n%s",fmt1);
+        dbg_printf("format not support!\n");
+    }
+    return count;
 }
 
 int __wrap_puts(const char *str)
@@ -139,79 +226,158 @@ int _write (int fd, char *buf, int count) {
 
 int __wrap_vprintf(const char *fmt, va_list args)
 {
-        int count;
-#if defined(CONFIG_BUILD_SECURE)     
+    int count = 0;
+    const char* fmt1;
+
+    fmt1 = fmt;
+
+    if(check_format(fmt1)){
+#if defined(CONFIG_BUILD_SECURE)
         count = stdio_printf_stubs.printf_corel(stdio_printf_stubs.stdio_port_sputc, (void*)NULL, fmt, args);
 #else
         count = stdio_printf_stubs.printf_core(stdio_printf_stubs.stdio_port_sputc, (void*)NULL, fmt, args);
 #endif
-        return count;
+    } else {
+        dbg_printf("\n%s",fmt1);
+        dbg_printf("format not support!\n");
+    }
+    return count;
 }
 
 int __wrap_sprintf(char *buf, const char * fmt,...)
 {
-    int count;
-    va_list list;
-    stdio_buf_t pnt_buf;
+    int count = 0;
+    const char* fmt1;
 
-    pnt_buf.pbuf = buf;
-    pnt_buf.pbuf_lim = 0;
+    fmt1 = fmt;
+    if(check_format(fmt1)){
+        va_list list;
+        stdio_buf_t pnt_buf;
 
-    va_start(list, fmt);
-#if defined(CONFIG_BUILD_SECURE)		
-    count = stdio_printf_stubs.printf_corel(stdio_printf_stubs.stdio_port_bufputc, (void *)&pnt_buf, fmt, list);
+        pnt_buf.pbuf = buf;
+        pnt_buf.pbuf_lim = 0;
+
+        va_start(list, fmt);
+#if defined(CONFIG_BUILD_SECURE)
+        count = stdio_printf_stubs.printf_corel(stdio_printf_stubs.stdio_port_bufputc, (void *)&pnt_buf, fmt, list);
 #else
-	count = stdio_printf_stubs.printf_core(stdio_printf_stubs.stdio_port_bufputc, (void *)&pnt_buf, fmt, list);
+        count = stdio_printf_stubs.printf_core(stdio_printf_stubs.stdio_port_bufputc, (void *)&pnt_buf, fmt, list);
 #endif
-    *(pnt_buf.pbuf) = 0;
-    va_end(list);
-	(void)list;
+        *(pnt_buf.pbuf) = 0;
+        va_end(list);
+        (void)list;
+    } else {
+        dbg_printf("\n%s",fmt1);
+        dbg_printf("format not support!\n");
+    }
+    return count;
 
-    return count;	
 }
 
 int __wrap_snprintf(char *buf, size_t size, const char *fmt,...)
 {
-    int count;
-    va_list list;
-    stdio_buf_t pnt_buf;
+    int count=0;
+    const char* fmt1;
 
-    pnt_buf.pbuf = buf;
-    pnt_buf.pbuf_lim = buf + size - 1;  // reserve 1 byte for 'end of string'
+    fmt1 = fmt;
 
-    va_start(list,fmt);
+    if (check_format(fmt1)) {
+        va_list list;
+        stdio_buf_t pnt_buf;
+
+        pnt_buf.pbuf = buf;
+        pnt_buf.pbuf_lim = buf + size - 1;  // reserve 1 byte for 'end of string'
+
+        va_start(list,fmt);
 #if defined(CONFIG_BUILD_SECURE)
-    count = stdio_printf_stubs.printf_corel(stdio_printf_stubs.stdio_port_bufputc,(void *)&pnt_buf, fmt, list);
+        count = stdio_printf_stubs.printf_corel(stdio_printf_stubs.stdio_port_bufputc,(void *)&pnt_buf, fmt, list);
 #else
-	count = stdio_printf_stubs.printf_core(stdio_printf_stubs.stdio_port_bufputc,(void *)&pnt_buf, fmt, list);
+        count = stdio_printf_stubs.printf_core(stdio_printf_stubs.stdio_port_bufputc,(void *)&pnt_buf, fmt, list);
 #endif
-    *(pnt_buf.pbuf) = 0;
-    va_end(list);
-	(void)list;
+        *(pnt_buf.pbuf) = 0;
+        va_end(list);
+        (void)list;
+    } else {
+        dbg_printf("\n%s",fmt1);
+        dbg_printf("format not support!\n");
+    }
 
-    return count;	
+    return count;
 }
 
 int __wrap_vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 {
-    int count;
-    stdio_buf_t pnt_buf;
+    int count =0;
+    const char* fmt1;
 
-    pnt_buf.pbuf = buf;
-    pnt_buf.pbuf_lim = buf + size - 1;  // reserve 1 byte for 'end of string'
+    fmt1 = fmt;
+
+    if (check_format(fmt1)) {
+        stdio_buf_t pnt_buf;
+
+        pnt_buf.pbuf = buf;
+        pnt_buf.pbuf_lim = buf + size - 1;  // reserve 1 byte for 'end of string'
 #if defined(CONFIG_BUILD_SECURE)
-    count = stdio_printf_stubs.printf_corel(stdio_printf_stubs.stdio_port_bufputc,(void *)&pnt_buf, fmt, args);
+        count = stdio_printf_stubs.printf_corel(stdio_printf_stubs.stdio_port_bufputc,(void *)&pnt_buf, fmt, args);
 #else
-	count = stdio_printf_stubs.printf_core(stdio_printf_stubs.stdio_port_bufputc,(void *)&pnt_buf, fmt, args);
+        count = stdio_printf_stubs.printf_core(stdio_printf_stubs.stdio_port_bufputc,(void *)&pnt_buf, fmt, args);
 #endif
-    *(pnt_buf.pbuf) = 0;
+        *(pnt_buf.pbuf) = 0;
+    } else {
+        dbg_printf("\n%s",fmt1);
+        dbg_printf("format not support!\n");
+    }
 
-    return count;	
+    return count;
+
 }
 
 
 // define in AmebaPro utilites/include/memory.h
 #include "memory.h"
+
+#if defined(MEM_WR_CHECK)
+#if defined(__ICCARM__)
+#pragma section = "SRAM_OBJECT" 
+
+void const * robase = __section_begin("SRAM_OBJECT");
+void const * rolimit = __section_end("SRAM_OBJECT");
+#else
+#error "Implement GCC Support"
+#endif
+int check_address(uint32_t addr){
+	uint32_t valid_addr[2][2] = {{0x10000000, 0x1003FA00}, {0x60000000, 0x603F0000}};
+	uint32_t except_addr[1][2] = {{(uint32_t)robase, (uint32_t)rolimit}};
+	
+	int valid = 0;
+	for(int i=0;i<2;i++){
+		if((addr >= valid_addr[i][0])&&(addr < valid_addr[i][1])){
+			valid = 1;
+			break;
+		}
+	}
+	
+	if(valid==1){
+		for(int i=0;i<1;i++){
+			if((addr >= except_addr[i][0])&&(addr < except_addr[i][1])){
+				valid = 0;
+				break;
+			}
+		}		
+	}
+	return valid;
+}
+
+#define WR_CHECK(addr) 	do{\
+							if(check_address((uint32_t)addr)==0){\
+								__wrap_printf("memory write addr %x invalid\n\r", addr);\
+								while(1);\
+							}\
+						}while(0)
+#else
+#define WR_CHECK(addr)
+#endif
+
 int __wrap_memcmp(const void *av, const void *bv, size_t len)
 {
 	return rt_memcmp(av, bv, len);
@@ -219,16 +385,19 @@ int __wrap_memcmp(const void *av, const void *bv, size_t len)
 
 void *__wrap_memcpy( void *s1, const void *s2, size_t n )
 {
+	WR_CHECK(s1);
 	return rt_memcpy(s1, s2, n);
 }
 
 void *__wrap_memmove (void *destaddr, const void *sourceaddr, unsigned length)
 {
+	WR_CHECK(destaddr);
 	return rt_memmove (destaddr, sourceaddr, length);
 }
 
 void *__wrap_memset(void *dst0, int val, size_t length)
 {
+	WR_CHECK(dst0);
 	return rt_memset(dst0, val, length);
 }
 // define in AmebaPro utilites/include/strporc.h
@@ -425,25 +594,23 @@ unsigned long long __wrap_atoull(const char *num)
 double __wrap_atof(const char *str)
 {
 	return atof(str);
-}	
+}
 
 void __wrap_abort(void)
 {
 	__wrap_printf("\n\rabort execution\n\r");
 	while(1);
 }
-  
+
 #if defined(__GNUC__)
 #include <errno.h>
 
 static int gnu_errno;
 volatile int * __aeabi_errno_addr (void)
 {
-  return &gnu_errno;
+    return &gnu_errno;
 }
 #endif
-
-#endif // #if defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8195BLP) || defined(CONFIG_PLATFORM_8710C)
 
 /**************************************************
  * mktime/localtime wrap for gcc compiler
@@ -766,3 +933,52 @@ char * __wrap_ctime (long long *t)
   return asctime (__wrap_localtime (t));
 }
 
+#endif // #if defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8195BLP) || defined(CONFIG_PLATFORM_8710C)
+
+#ifdef PLATFORM_OHOS
+#include <los_memory.h>
+#include <stdlib.h>
+#include <string.h>
+
+void* __wrap_malloc( size_t size )
+{
+    return LOS_MemAlloc(m_aucSysMem0, size);
+}
+
+void *__wrap__malloc_r(void *reent, size_t size)
+{
+    return malloc(size);
+}
+
+void* __wrap_realloc( void *p, size_t size )
+{
+    return LOS_MemRealloc(m_aucSysMem0, p, size);
+}
+
+void* __wrap_calloc( size_t cnt, size_t size )
+{
+    size *= cnt;
+    void *ret = malloc(size);
+    if (ret)
+    {
+        memset(ret, 0, size);
+    }
+    return ret;
+}
+
+void* __wrap__calloc_r( void *reent, size_t cnt, size_t size )
+{
+    return calloc(cnt, size);
+}
+
+void __wrap_free( void *p )
+{
+    if (p)
+    {
+      if (LOS_MemFree(m_aucSysMem0, p) != LOS_OK)
+      {
+        printf("[BUG] free: LOS_MemFree fail\n");
+      }
+    }
+}
+#endif  

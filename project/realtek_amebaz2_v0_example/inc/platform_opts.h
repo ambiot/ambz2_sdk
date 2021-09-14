@@ -101,22 +101,15 @@
 #error "If CONFIG_ENABLE_P2P, need to define CONFIG_ENABLE_WPS_AP 1" 
 #endif
 
-/* For SSL/TLS */
-#define CONFIG_USE_POLARSSL     0 //polarssl is no longer suppported for AmebaZ2
-#define CONFIG_USE_MBEDTLS      1
-#if ((CONFIG_USE_POLARSSL == 0) && (CONFIG_USE_MBEDTLS == 0)) || ((CONFIG_USE_POLARSSL == 1) && (CONFIG_USE_MBEDTLS == 1))
-#undef CONFIG_USE_POLARSSL
-#define CONFIG_USE_POLARSSL 1
-#undef CONFIG_USE_MBEDTLS
-#define CONFIG_USE_MBEDTLS 0
-#endif
-#define CONFIG_SSL_CLIENT_PRIVATE_IN_TZ 1
-
 /* For Simple Link */
 #define CONFIG_INCLUDE_SIMPLE_CONFIG		1
 #define CONFIG_INCLUDE_DPP_CONFIG		0
 /*For fast reconnection*/
+#ifdef PLATFORM_OHOS
+#define CONFIG_EXAMPLE_WLAN_FAST_CONNECT	0
+#else
 #define CONFIG_EXAMPLE_WLAN_FAST_CONNECT	1
+#endif
 #if CONFIG_EXAMPLE_WLAN_FAST_CONNECT
 #define CONFIG_FAST_DHCP 1
 #else
@@ -137,6 +130,17 @@
 
 #endif //end of #if CONFIG_WLAN
 /*******************************************************************************/
+
+/* For SSL/TLS */
+#define CONFIG_USE_POLARSSL     0 //polarssl is no longer suppported for AmebaZ2
+#define CONFIG_USE_MBEDTLS      1
+#if ((CONFIG_USE_POLARSSL == 0) && (CONFIG_USE_MBEDTLS == 0)) || ((CONFIG_USE_POLARSSL == 1) && (CONFIG_USE_MBEDTLS == 1))
+#undef CONFIG_USE_POLARSSL
+#define CONFIG_USE_POLARSSL 1
+#undef CONFIG_USE_MBEDTLS
+#define CONFIG_USE_MBEDTLS 0
+#endif
+#define CONFIG_SSL_CLIENT_PRIVATE_IN_TZ 1
 
 /* For LWIP configuration */
 #define CONFIG_LWIP_DHCP_COARSE_TIMER 60
