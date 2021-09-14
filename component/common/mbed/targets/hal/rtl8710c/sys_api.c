@@ -1,20 +1,32 @@
-/* mbed Microcontroller Library
- *******************************************************************************
- * Copyright (c) 2014, Realtek
- * All rights reserved.
+/**************************************************************************//**
+ * @file     sys_api.c
+ * @brief    This file implements system related API functions.
+ * 
+ * @version  V1.00
+ * @date     2017-05-31
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *******************************************************************************
- */
+ * @note
+ *
+ ******************************************************************************
+ *
+ * Copyright(c) 2007 - 2017 Realtek Corporation. All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the License); you may
+ * not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an AS IS BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ ******************************************************************************/
+ 
 #include "cmsis.h"
 #include "sys_api.h"
 #include "flash_api.h"
@@ -68,6 +80,15 @@ SECTION_NS_ENTRY_FUNC void NS_ENTRY hal_sys_set_fast_boot_nsc(uint32_t pstart_tb
 
 SECTION_NS_ENTRY_FUNC void NS_ENTRY uart_download_mode_nsc(void){
 	uart_download_mode();
+}
+
+extern hal_uart_adapter_t log_uart;	//extern log_uart adapter
+SECTION_NS_ENTRY_FUNC void NS_ENTRY sys_log_uart_off_nsc(void){
+	log_uart.is_inited = 0;
+}
+
+SECTION_NS_ENTRY_FUNC void NS_ENTRY sys_log_uart_on_nsc(void){
+	log_uart.is_inited = 1;
 }
 #endif
 
@@ -198,6 +219,8 @@ int32_t sys_update_ota_set_boot_fw_idx(uint32_t boot_idx)
 	uint32_t currentFWaddr;
 	uint32_t fw1_sn;
 	uint32_t fw2_sn;
+	_irqL irqL;
+	
 	cur_idx = get_cur_fw_idx();
 	if(cur_idx == boot_idx) {
 		return 0;
@@ -214,7 +237,7 @@ int32_t sys_update_ota_set_boot_fw_idx(uint32_t boot_idx)
 	}
 	
 	// need to enter critical section to prevent executing the XIP code at first sector after we erase it.
-	rtw_enter_critical(NULL, NULL);
+	rtw_enter_critical(NULL, &irqL);
 	device_mutex_lock(RT_DEV_LOCK_FLASH);
 	flash_stream_read(&flash, currentFWaddr, FLASH_SECTOR_SIZE, pbuf);
 	// NOT the first byte of ota signature to make it invalid
@@ -222,7 +245,7 @@ int32_t sys_update_ota_set_boot_fw_idx(uint32_t boot_idx)
 	flash_erase_sector(&flash, currentFWaddr);
 	flash_burst_write(&flash, currentFWaddr, FLASH_SECTOR_SIZE, pbuf);
 	device_mutex_unlock(RT_DEV_LOCK_FLASH);
-	rtw_exit_critical(NULL, NULL);
+	rtw_exit_critical(NULL, &irqL);
 	rtw_free(pbuf);
 	return 0; 
 }
@@ -292,12 +315,25 @@ void sys_jtag_off(void)
 }
 
 /**
+  * @brief  Turn off the SWD function.
+  * @retval none
+  */
+void sys_swd_off(void)
+{
+	hal_misc_swd_pin_ctrl(0);
+}
+
+#if !(defined(CONFIG_BUILD_SECURE) && (CONFIG_BUILD_SECURE==1))
+/**
   * @brief  open log uart.
   * @retval none
   */
 void sys_log_uart_on(void)
 {
 	log_uart_port_init(STDIO_UART_TX_PIN, STDIO_UART_RX_PIN, ((uint32_t)115200));
+#if defined(CONFIG_BUILD_NONSECURE) && (CONFIG_BUILD_NONSECURE==1)
+	sys_log_uart_on_nsc();
+#endif
 }
 
 /**
@@ -309,8 +345,11 @@ void sys_log_uart_off(void)
 	log_uart_flush_wait();
 	hal_gpio_pull_ctrl (log_uart.rx_pin, Pin_PullNone);
 	hal_uart_deinit(&log_uart);
+#if defined(CONFIG_BUILD_NONSECURE) && (CONFIG_BUILD_NONSECURE==1)
+	sys_log_uart_off_nsc();
+#endif
 }
-
+#endif
 /**
   * @brief  Enter uart download mode.
   * @retval none
@@ -330,5 +369,27 @@ void sys_uart_download_mode(void)
 	__enable_irq();
 #endif
 	uart_download_mode();
+}
+
+/**
+  * @brief  Enter system download mode.
+  * @retval none
+  */
+void sys_download_mode(u8 mode)
+{
+	sys_log_uart_off();
+	sys_disable_fast_boot();
+	hci_tp_close();  
+	hal_wlan_pwr_off();
+	crypto_deinit();
+#if defined(CONFIG_FLASH_XIP_EN) && (CONFIG_FLASH_XIP_EN == 1)
+	__disable_irq();
+	if (pglob_spic_adaptor != NULL) {
+		hal_flash_return_spi (pglob_spic_adaptor);
+	}
+	__enable_irq();
+#endif
+	extern void system_download_mode(u8 mode);
+	system_download_mode(mode);
 }
 

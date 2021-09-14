@@ -290,7 +290,7 @@ int ble_app_init(void)
 	//int bt_stack_already_on = 0;
 	//(void) bt_stack_already_on;
 	T_GAP_DEV_STATE new_state;
-#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && (CONFIG_BT_ONLY_WITHOUT_WLAN == 0)	/*Wait WIFI init complete*/
+#if !defined(CONFIG_BT_ONLY_WITHOUT_WLAN) || (CONFIG_BT_ONLY_WITHOUT_WLAN == 0)	/*Wait WIFI init complete*/
 	while(!(wifi_is_up(RTW_STA_INTERFACE) || wifi_is_up(RTW_AP_INTERFACE))) {
 		os_delay(1000);
 	}
@@ -305,7 +305,7 @@ int ble_app_init(void)
 	}
 	else
 		ble_app_main();
-#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && (CONFIG_BT_ONLY_WITHOUT_WLAN == 0)
+#if !defined(CONFIG_BT_ONLY_WITHOUT_WLAN) || (CONFIG_BT_ONLY_WITHOUT_WLAN == 0)
 	bt_coex_init();
 #endif
 	/*Wait BT init complete*/
@@ -313,7 +313,7 @@ int ble_app_init(void)
 		os_delay(100);
 		le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state);
 	}while(new_state.gap_init_state != GAP_INIT_STATE_STACK_READY);
-#if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && (CONFIG_BT_ONLY_WITHOUT_WLAN == 0)	/*Start BT WIFI coexistence*/
+#if !defined(CONFIG_BT_ONLY_WITHOUT_WLAN) || (CONFIG_BT_ONLY_WITHOUT_WLAN == 0)	/*Start BT WIFI coexistence*/
 	wifi_btcoex_set_bt_on();
 #endif 
 	return 0;
