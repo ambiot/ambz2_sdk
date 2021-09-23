@@ -96,7 +96,9 @@
 //#define CONFIG_DEBUG
 //#define CONFIG_DEBUG_RTL871X
 #if (CONFIG_PLATFORM_AMEBA_X == 1)
+#ifndef PLATFORM_OHOS
 	#define CONFIG_MEM_MONITOR	MEM_MONITOR_SIMPLE
+#endif
 	#define WLAN_INTF_DBG		0 
 	//#define CONFIG_DEBUG_DYNAMIC
 	//#define DBG_TX 1
@@ -104,7 +106,9 @@
 	//#define DBG_XMIT_BUF_EXT 1
 	#define DBG_TX_DROP_FRAME
 #else
+#ifndef PLATFORM_OHOS
 	#define CONFIG_MEM_MONITOR	MEM_MONITOR_SIMPLE
+#endif
 	//#define CONFIG_TRACE_SKB
 	//#define WLAN_INTF_DBG
 #endif // CONFIG_PLATFORM_AMEBA_X
@@ -276,7 +280,11 @@
   #if defined(CONFIG_PLATFORM_8195A) || defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8710C)
     #define CONFIG_RUNTIME_PORT_SWITCH
   #endif
-  #define NET_IF_NUM ((CONFIG_ETHERNET) + (CONFIG_WLAN) + 1)
+  #if (defined(CONFIG_BRIDGE) && CONFIG_BRIDGE)
+    #define NET_IF_NUM ((CONFIG_ETHERNET) + (CONFIG_BRIDGE) + (CONFIG_WLAN) + 1)
+  #else
+    #define NET_IF_NUM ((CONFIG_ETHERNET) + (CONFIG_WLAN) + 1)
+  #endif
 #else
   #define NET_IF_NUM ((CONFIG_ETHERNET) + (CONFIG_WLAN))
 #endif

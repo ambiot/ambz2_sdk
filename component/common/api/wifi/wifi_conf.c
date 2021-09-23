@@ -470,8 +470,10 @@ static void wifi_disconn_hdl( char* buf, int buf_len, int flags, void* userdata)
 	( void ) userdata;
 #define REASON_4WAY_HNDSHK_TIMEOUT 15
 	u16 disconn_reason;
+	signed char cnnctfail_reason = 0;
 	/* buf detail: mac addr + disconn_reason, buf_len = ETH_ALEN+2*/
 	disconn_reason =*(u16*)(buf+6);
+	cnnctfail_reason = *(signed char*)(buf+6+2);
 
 	extern u32 rltk_wlan_get_link_err(void);
 	DBG_8710C("wifi link err:%08x\r\n", rltk_wlan_get_link_err());
@@ -482,13 +484,34 @@ static void wifi_disconn_hdl( char* buf, int buf_len, int flags, void* userdata)
 			if(rtw_join_status & JOIN_NO_NETWORKS)
 				error_flag = RTW_NONE_NETWORK;
 
+			else if(rtw_join_status == JOIN_CONNECTING)
+			{
+				if(-1 == cnnctfail_reason)
+					{error_flag = RTW_AUTH_FAIL;}
+				else if(-4 == cnnctfail_reason)
+					{error_flag = RTW_ASSOC_FAIL;}
+				else if(-2 == cnnctfail_reason)
+					{error_flag = RTW_DEAUTH_DEASSOC;}
+				else
+					{error_flag = RTW_CONNECT_FAIL;}
+				}
+
 		}else if(join_user_data->network_info.security_type == RTW_SECURITY_WEP_PSK){
 
 			if(rtw_join_status & JOIN_NO_NETWORKS)
 				error_flag = RTW_NONE_NETWORK;
 
 			else if(rtw_join_status == JOIN_CONNECTING)
-		 		error_flag = RTW_CONNECT_FAIL;
+			{
+				if(-1 == cnnctfail_reason)
+					{error_flag = RTW_AUTH_FAIL;}
+				else if(-4 == cnnctfail_reason)
+					{error_flag = RTW_ASSOC_FAIL;}
+				else if(-2 == cnnctfail_reason)
+					{error_flag = RTW_DEAUTH_DEASSOC;}
+				else
+					{error_flag = RTW_CONNECT_FAIL;}
+			}
 
 		}else if(join_user_data->network_info.security_type == RTW_SECURITY_WPA2_AES_PSK ||
 		         join_user_data->network_info.security_type == RTW_SECURITY_WPA2_TKIP_PSK ||
@@ -509,8 +532,16 @@ static void wifi_disconn_hdl( char* buf, int buf_len, int flags, void* userdata)
 				error_flag = RTW_NONE_NETWORK;
 
 			else if(rtw_join_status == JOIN_CONNECTING)
-		 		error_flag = RTW_CONNECT_FAIL;
-
+			{
+				if(-1 == cnnctfail_reason)
+					{error_flag = RTW_AUTH_FAIL;}
+				else if(-4 == cnnctfail_reason)
+					{error_flag = RTW_ASSOC_FAIL;}
+				else if(-2 == cnnctfail_reason)
+					{error_flag = RTW_DEAUTH_DEASSOC;}
+				else
+					{error_flag = RTW_CONNECT_FAIL;}
+			}
 			else if(rtw_join_status == (JOIN_COMPLETE | JOIN_SECURITY_COMPLETE | JOIN_ASSOCIATED | JOIN_AUTHENTICATED | JOIN_LINK_READY | JOIN_CONNECTING))
 			{
 				if(disconn_reason == REASON_4WAY_HNDSHK_TIMEOUT)
