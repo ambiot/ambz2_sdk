@@ -562,6 +562,9 @@ enum{
 	RTW_WRONG_PASSWORD = 3 ,
 	RTW_4WAY_HANDSHAKE_TIMEOUT = 4,
 	RTW_DHCP_FAIL = 5,
+	RTW_AUTH_FAIL = 6,
+	RTW_ASSOC_FAIL =7,
+	RTW_DEAUTH_DEASSOC = 8,
 	RTW_UNKNOWN,
 };
 typedef unsigned long rtw_connect_error_flag_t;

@@ -141,6 +141,9 @@ typedef struct _ADAPTER _adapter, ADAPTER,*PADAPTER;
 #include <rtw_cmd.h>
 #include <rtw_xmit.h>
 #include <rtw_recv.h>
+#ifdef CONFIG_IEEE80211K
+#include <rtw_rm.h>
+#endif
 #include <hal_com.h>
 #ifdef RTW_HALMAC
 #include <hal_com_h2c.h>
@@ -148,6 +151,12 @@ typedef struct _ADAPTER _adapter, ADAPTER,*PADAPTER;
 #include <rtw_qos.h>
 #ifdef CONFIG_INCLUDE_WPA_PSK
 #include <rtw_psk.h>
+#endif
+#ifdef CONFIG_SAE_SUPPORT
+#include "rtw_sae.h"
+#endif
+#ifdef CONFIG_PMKSA_CACHING
+#include "rtw_pmksa_cache.h"
 #endif
 #include <rtw_security.h>
 #include <rom_rtw_security.h>
@@ -203,10 +212,22 @@ typedef struct _ADAPTER _adapter, ADAPTER,*PADAPTER;
 #ifdef CONFIG_BT_COEXIST
 	#include <rtw_btcoex.h>
 #endif
+
+#ifdef CONFIG_BT_COEXIST_SOC
+	#include <rtw_btcoex_soc.h>
+#endif
+
 #include <rtw_btcoex_wifionly.h>
 
 #ifdef CONFIG_MCC_MODE
 #include <hal_mcc.h>
+#endif
+
+#ifdef CONFIG_IEEE80211R
+#include <rtw_ft.h>
+#endif
+#if defined(CONFIG_RTW_WNM) || defined(CONFIG_IEEE80211K)
+#include <rtw_wnm.h>
 #endif
 
 #define SPEC_DEV_ID_NONE BIT(0)
@@ -216,7 +237,11 @@ typedef struct _ADAPTER _adapter, ADAPTER,*PADAPTER;
 #define SPEC_DEV_ID_RF_CONFIG_2T2R BIT(4)
 #define SPEC_DEV_ID_ASSIGN_IFNAME BIT(5)
 
+#define BUFLEN(a)	strnlen(a,sizeof(a))
+
+#if !defined(__ICCARM__) || (__VER__ < 8030000)
 typedef unsigned char			BOOLEAN,*PBOOLEAN;
+#endif
 typedef unsigned char			u1Byte,*pu1Byte;
 typedef unsigned short			u2Byte,*pu2Byte;
 typedef unsigned int			u4Byte,*pu4Byte;
@@ -314,6 +339,7 @@ struct registry_priv
 	u8	rf_config ;
 //	u8	low_power ;
 	u8	power_percentage_idx;
+	s8	power_db_offset;
 	u8	wifi_spec;// !turbo_mode
 	u8	channel_plan;
 	u8	map_in_efuse;
@@ -435,6 +461,8 @@ struct registry_priv
 	u8 rtw_mcc_pattern_table_idx;
 	u8 rtw_mcc_enable_rmcc;
 #endif
+	u8 trp_tis_test;
+	u8 anti_interference;
 };
 
 //For registry parameters
@@ -956,13 +984,16 @@ struct _ADAPTER{
 	struct	mlme_ext_priv	mlmeextpriv;
 	struct	cmd_priv	cmdpriv;
 	struct	evt_priv	evtpriv;
+#ifdef CONFIG_IEEE80211K
+	struct	rm_priv 	*rmpriv;
+#endif
 	//struct	io_queue	*pio_queue;
 	struct 	io_priv	iopriv;
 	struct	xmit_priv	xmitpriv;
 	struct	recv_priv	recvpriv;
 	struct	sta_priv	stapriv;
 	struct	security_priv	securitypriv;
-	_lock   security_key_mutex; /* add for CONFIG_IEEE80211W, none 11w also can use */
+	//_lock   security_key_mutex; /* add for CONFIG_IEEE80211W, none 11w also can use */
 	struct	registry_priv	registrypriv;
 	struct	pwrctrl_priv	pwrctrlpriv;
 	struct 	eeprom_priv eeprompriv;
@@ -1059,6 +1090,13 @@ struct _ADAPTER{
 
 #ifdef CONFIG_RECV_TASK_THREAD_MODE
 	struct task_struct	recvtaskThread;
+#endif
+
+#ifdef CONFIG_BT_COEXIST_SOC
+	struct task_struct	btmailboxThread;
+	_queue	btmailboxQueue;
+	_queue	btmailboxPoolQueue; // for scoreboard ISR
+	struct coex_priv *coexpriv;
 #endif
 
 #if !defined(PLATFORM_LINUX) && !defined(PLATFORM_ECOS) && !defined(PLATFORM_FREERTOS) && !defined(PLATFORM_CMSIS_RTOS) && !defined(PLATFORM_CUSTOMER_RTOS)
@@ -1197,7 +1235,8 @@ struct _ADAPTER{
 
 #if defined (CONFIG_AP_MODE)
 	/*
-	 * If is true, driver won't process any rx packets from ap port
+	 * If bit0 is set 1: driver won't process any rx packets from ap port
+	 * If bit1 is set 1: driver will only process rx beacon packets
 	*/
 	u8 b_suspend_ap_rx;
 #endif
@@ -1228,6 +1267,7 @@ struct _ADAPTER{
 #define adapter_to_macidctl(adapter) dvobj_to_macidctl(adapter_to_dvobj((adapter)))
 #define adapter_mac_addr(adapter) (adapter->eeprompriv.mac_addr)
 #define adapter_to_chset(adapter) (adapter->mlmeextpriv.channel_set)
+#define adapter_to_phydm(adapter) (&(GET_HAL_DATA(adapter)->odmpriv))
 
 #define rtw_get_intf_type(adapter) (((PADAPTER)adapter)->interface_type)
 
