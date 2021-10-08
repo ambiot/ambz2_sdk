@@ -1392,7 +1392,14 @@ void fATWB(void *arg)
 #if CONFIG_LWIP_LAYER
 	dhcps_deinit();
 #endif
-        
+
+#if defined(CONFIG_PLATFORM_8710C) && (defined(CONFIG_BT) && CONFIG_BT)
+	if (wifi_set_mode(RTW_MODE_STA_AP) < 0){
+		printf("\n\rERROR: Wifi on failed!");
+		ret = RTW_ERROR;
+		goto exit;
+	}
+#else
 	wifi_off();
 	vTaskDelay(20);
 	if ((ret = wifi_on(RTW_MODE_STA_AP)) < 0){
@@ -1400,6 +1407,7 @@ void fATWB(void *arg)
 		ret = RTW_ERROR;
 		goto exit;
 	}
+#endif
 
 	printf("\n\rStarting AP ...");
 	if((ret = wifi_start_ap((char*)ap.ssid.val, ap.security_type, (char*)ap.password, ap.ssid.len, ap.password_len, ap.channel)) < 0) {
