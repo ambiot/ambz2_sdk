@@ -33,7 +33,11 @@
 #include "gpio_irq_api.h"
 #include "gpio_irq_ex_api.h"
 
-// follow 2 globral variables are declared in gpio_api.c
+/* map mbed pin mode definition to RTK HAL pull control type */
+#define MAX_PIN_MODE            4
+
+// follow globral variables are declared in gpio_api.c
+extern const uint8_t mbed_pinmode_map[];
 extern hal_gpio_comm_adapter_t mbd_gpio_com_adp;
 extern uint32_t is_mbd_gpio_com_inited;
 
@@ -151,22 +155,16 @@ void gpio_irq_deinit(gpio_irq_t *obj)
   */
 void gpio_irq_pull_ctrl(gpio_irq_t *obj, PinMode pull_type)
 {
-	pin_pull_type_t pull_ctrl;
+    pin_pull_type_t io_pull_type;
 
-	switch (pull_type) {
-		case PullNone:
-        case PullDown:
-        case PullUp:
-			pull_ctrl = pull_type;
-            break;
+    if (pull_type < MAX_PIN_MODE) {
+        io_pull_type = (pin_pull_type_t)mbed_pinmode_map[pull_type];
+    } else {
+        // invalid pin mode
+        io_pull_type = Pin_PullNone;
+    }
 
-		case OpenDrain:/* No driver -> Output Low */
-        default:
-			pull_ctrl = Pin_PullNone;
-            break;
-	}
-
-    hal_gpio_pull_ctrl (obj->gpio_irq_adp.pin_name, pull_ctrl);
+    hal_gpio_pull_ctrl (obj->gpio_irq_adp.pin_name, io_pull_type);
 }
 
 /**

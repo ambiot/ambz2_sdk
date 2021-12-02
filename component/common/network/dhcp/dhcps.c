@@ -36,12 +36,20 @@ static volatile uint8_t dhcps_num_of_available_ips;
 static struct dhcp_msg *dhcp_message_repository;
 static int dhcp_message_total_options_lenth;
 
-/* allocated IP range */  
+/* allocated IP range */
+#ifdef PLATFORM_OHOS
+struct table  ip_table;
+#else
 static struct table  ip_table;
+#endif
 static struct ip_addr client_request_ip;
 static uint8_t client_addr[6];
 
+#ifdef PLATFORM_OHOS
+static UINT32 dhcps_ip_table_semaphore = 0xFFFFFFFF;
+#else
 static xSemaphoreHandle dhcps_ip_table_semaphore;
+#endif
 
 static struct netif * dhcps_netif = NULL;
 /**
@@ -55,7 +63,11 @@ static void mark_ip_in_table(uint8_t d)
 #if (debug_dhcps)   
   	printf("\r\nmark ip %d\r\n",d);
 #endif	
+#ifdef PLATFORM_OHOS
+	LOS_SemPend(dhcps_ip_table_semaphore, 0xFFFFFFFF);
+#else
 	xSemaphoreTake(dhcps_ip_table_semaphore, portMAX_DELAY);
+#endif
 	if (0 < d && d <= 32) {
 		ip_table.ip_range[0] = MARK_RANGE1_IP_BIT(ip_table, d);	
 #if (debug_dhcps)		
@@ -99,8 +111,11 @@ static void mark_ip_in_table(uint8_t d)
 	} else {
 		printf("\r\n Request ip over the range(1-128) \r\n");
 	}
+#ifdef PLATFORM_OHOS
+	LOS_SemPost(dhcps_ip_table_semaphore);
+#else
 	xSemaphoreGive(dhcps_ip_table_semaphore);
-	
+#endif	
 }
 #ifdef CONFIG_DHCPS_KEPT_CLIENT_INFO
 static void save_client_addr(struct ip_addr *client_ip, uint8_t *hwaddr)
@@ -110,8 +125,12 @@ static void save_client_addr(struct ip_addr *client_ip, uint8_t *hwaddr)
 #else
 	uint8_t d = (uint8_t)ip4_addr4(client_ip);
 #endif
-	
+
+#ifdef PLATFORM_OHOS
+	LOS_SemPend(dhcps_ip_table_semaphore, 0xFFFFFFFF);
+#else
 	xSemaphoreTake(dhcps_ip_table_semaphore, portMAX_DELAY);
+#endif
 	memcpy(ip_table.client_mac[d - DHCP_POOL_START], hwaddr, 6); 
 #if (debug_dhcps)	
 #if LWIP_VERSION_MAJOR >= 2
@@ -124,7 +143,11 @@ static void save_client_addr(struct ip_addr *client_ip, uint8_t *hwaddr)
 		hwaddr[0], hwaddr[1], hwaddr[2], hwaddr[3], hwaddr[4], hwaddr[5]);
 #endif
 #endif	
+#ifdef PLATFORM_OHOS
+	LOS_SemPost(dhcps_ip_table_semaphore);
+#else
 	xSemaphoreGive(dhcps_ip_table_semaphore);
+#endif
 }
 
 static uint8_t check_client_request_ip(struct ip_addr *client_req_ip, uint8_t *hwaddr)
@@ -146,7 +169,11 @@ static uint8_t check_client_request_ip(struct ip_addr *client_req_ip, uint8_t *h
 #endif	
 #endif
 
+#ifdef PLATFORM_OHOS
+	LOS_SemPend(dhcps_ip_table_semaphore, 0xFFFFFFFF);
+#else
 	xSemaphoreTake(dhcps_ip_table_semaphore, portMAX_DELAY);
+#endif
 	for(i=DHCP_POOL_START;i<=DHCP_POOL_END;i++)
 	{
 		//printf("client[%d] = %2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x\n",i,ip_table.client_mac[i][0],ip_table.client_mac[i][0],ip_table.client_mac[i][1],ip_table.client_mac[i][2],ip_table.client_mac[i][3],ip_table.client_mac[i][4],ip_table.client_mac[i][5]);
@@ -157,7 +184,11 @@ static uint8_t check_client_request_ip(struct ip_addr *client_req_ip, uint8_t *h
 			}
 		}
 	}
+#ifdef PLATFORM_OHOS	
+	LOS_SemPost(dhcps_ip_table_semaphore);
+#else
 	xSemaphoreGive(dhcps_ip_table_semaphore);
+#endif
 
 	if(i == DHCP_POOL_END+1)
 		ip_addr4 = 0;
@@ -204,7 +235,11 @@ static uint8_t check_client_direct_request_ip(struct ip_addr *client_req_ip, uin
 		ip_addr4 = 0;
 		goto Exit;
 	}
+#ifdef PLATFORM_OHOS	
+	LOS_SemPend(dhcps_ip_table_semaphore, 0xFFFFFFFF);
+#else
 	xSemaphoreTake(dhcps_ip_table_semaphore, portMAX_DELAY);
+#endif
 	printf("ip_table[%d] = %x,%x,%x,%x,%x,%x\n", ip_addr4,	ip_table.client_mac[ip_addr4 - DHCP_POOL_START][0],
 												ip_table.client_mac[ip_addr4 - DHCP_POOL_START][1],
 												ip_table.client_mac[ip_addr4 - DHCP_POOL_START][2],
@@ -230,8 +265,12 @@ static uint8_t check_client_direct_request_ip(struct ip_addr *client_req_ip, uin
 	{
 		ip_addr4 = 0; // the ip is used
 	}
-	
+
+#ifdef PLATFORM_OHOS	
+	LOS_SemPost(dhcps_ip_table_semaphore);
+#else
 	xSemaphoreGive(dhcps_ip_table_semaphore);
+#endif
 
 Exit:
 	return ip_addr4;
@@ -280,18 +319,30 @@ static uint8_t search_next_ip(void)
 		start = 0;
 		end = 255;
 	}
+#ifdef PLATFORM_OHOS	
+	LOS_SemPend(dhcps_ip_table_semaphore, 0xFFFFFFFF);
+#else
 	xSemaphoreTake(dhcps_ip_table_semaphore, portMAX_DELAY);
+#endif
 	for (range_count = 0; range_count < (max_count = 8); range_count++) {
 		for (offset_count = 0;offset_count < 32; offset_count++) {
 			if ((((ip_table.ip_range[range_count] >> offset_count) & 0x01) == 0) 
 				&&(((range_count * 32) + (offset_count + 1)) >= start)
 				&&(((range_count * 32) + (offset_count + 1)) <= end)) {
+#ifdef PLATFORM_OHOS	
+				LOS_SemPost(dhcps_ip_table_semaphore); 
+#else
 				xSemaphoreGive(dhcps_ip_table_semaphore); 
+#endif
 				return ((range_count * 32) + (offset_count + 1));
 			}
 		}
 	}
+#ifdef PLATFORM_OHOS	
+	LOS_SemPost(dhcps_ip_table_semaphore);
+#else
 	xSemaphoreGive(dhcps_ip_table_semaphore); 
+#endif
 	return 0;
 }
 #endif
@@ -944,16 +995,51 @@ void dhcps_set_addr_pool(int addr_pool_set, struct ip_addr * addr_pool_start, st
 }
 
 
+#define DOMAIN_NAME "ameba.com"
+char *domain_name = DOMAIN_NAME;
+uint8_t domain_name_buf[sizeof(DOMAIN_NAME) + 1];
 static void dnss_receive_udp_packet_handler(void *arg, struct udp_pcb *udp_pcb,
 struct pbuf *udp_packet_buffer, struct ip_addr *sender_addr, uint16_t sender_port)
 {
 	/* To avoid gcc warnings */
 	( void ) arg;
 	
-	struct dns_hdr *dns_rsp;
+	struct dns_hdr *hdr = (struct dns_hdr*) udp_packet_buffer->payload;
+
+	if(memcmp((uint8_t *) hdr + sizeof(struct dns_hdr), domain_name_buf, sizeof(domain_name_buf)) == 0) {
+		printf("\n\r query %s \n\r", domain_name);
+
+		struct pbuf *p = pbuf_alloc(PBUF_TRANSPORT, sizeof(struct dns_hdr) + sizeof(domain_name_buf) + 20, PBUF_RAM);
+
+		if(p) {
+			struct dns_hdr *rsp_hdr = (struct dns_hdr*) p->payload;
+			rsp_hdr->id = hdr->id;
+			rsp_hdr->flags1 = 0x85;
+			rsp_hdr->flags2 = 0x80;
+			rsp_hdr->numquestions = PP_HTONS(1);
+			rsp_hdr->numanswers = PP_HTONS(1);
+			rsp_hdr->numauthrr = PP_HTONS(0);
+			rsp_hdr->numextrarr = PP_HTONS(0);
+			memcpy((uint8_t *) rsp_hdr + sizeof(struct dns_hdr), domain_name_buf, sizeof(domain_name_buf));
+			*(uint16_t *)((uint8_t *) rsp_hdr + sizeof(struct dns_hdr) + sizeof(domain_name_buf)) = PP_HTONS(1);
+			*(uint16_t *)((uint8_t *) rsp_hdr + sizeof(struct dns_hdr) + sizeof(domain_name_buf) + 2) = PP_HTONS(1);
+			*((uint8_t *) rsp_hdr + sizeof(struct dns_hdr) + sizeof(domain_name_buf) + 4) = 0xc0;
+			*((uint8_t *) rsp_hdr + sizeof(struct dns_hdr) + sizeof(domain_name_buf) + 5) = 0x0c;
+			*(uint16_t *)((uint8_t *) rsp_hdr + sizeof(struct dns_hdr) + sizeof(domain_name_buf) + 6) = PP_HTONS(1);
+			*(uint16_t *)((uint8_t *) rsp_hdr + sizeof(struct dns_hdr) + sizeof(domain_name_buf) + 8) = PP_HTONS(1);
+			*(uint32_t *)((uint8_t *) rsp_hdr + sizeof(struct dns_hdr) + sizeof(domain_name_buf) + 10) = PP_HTONL(0);
+			*(uint16_t *)((uint8_t *) rsp_hdr + sizeof(struct dns_hdr) + sizeof(domain_name_buf) + 14) = PP_HTONS(4);
+			memcpy((uint8_t *) rsp_hdr + sizeof(struct dns_hdr) + sizeof(domain_name_buf) + 16, (void *)&dhcps_local_address, 4);
+
+			udp_sendto(udp_pcb, p, sender_addr, sender_port);
+			pbuf_free(p);
+		}
+	}
+	else {
+		struct dns_hdr *dns_rsp;
 
 /*
-	printf("\n%s: Receive DNS query,ip = %d.%d.%d.%d, port = %d(%x)\n",__func__,\
+		printf("\n%s: Receive DNS query,ip = %d.%d.%d.%d, port = %d(%x)\n",__func__,\
 			sender_addr->addr & 0xff,\
 			sender_addr->addr>>8 & 0xff,\
 			sender_addr->addr>>16 & 0xff,\
@@ -961,12 +1047,13 @@ struct pbuf *udp_packet_buffer, struct ip_addr *sender_addr, uint16_t sender_por
 			sender_port,sender_port);
 */
 
-	dns_rsp = (struct dns_hdr*) udp_packet_buffer->payload;
+		dns_rsp = (struct dns_hdr*) udp_packet_buffer->payload;
 
-	dns_rsp->flags1 |= 0x80; // 0x80 : Response;
-	dns_rsp->flags2 = 0x05;  //0x05 : Reply code (Query Refused)
+		dns_rsp->flags1 |= 0x80; // 0x80 : Response;
+		dns_rsp->flags2 = 0x05;  //0x05 : Reply code (Query Refused)
 
-	udp_sendto(udp_pcb, udp_packet_buffer, sender_addr, sender_port);
+		udp_sendto(udp_pcb, udp_packet_buffer, sender_addr, sender_port);
+	}
 
 	/* free the UDP connection, so we can accept new clients */
 	udp_disconnect(udp_pcb);
@@ -980,7 +1067,23 @@ void dns_server_init(struct netif * pnetif)
 {
 	/* To avoid gcc warnings */
 	( void ) pnetif;
-	
+
+	// convert domain name
+	memset(domain_name_buf, 0, sizeof(domain_name_buf));
+	uint8_t *ptr = domain_name_buf;
+	unsigned int idx, len = 0;
+	for(idx = 0; idx < strlen(domain_name) + 1; idx ++) {
+		if((domain_name[idx] != '.') && (domain_name[idx] != 0)) {
+			ptr[1 + len] = domain_name[idx];
+			len ++;
+		}
+		else {
+			*ptr = len;
+			ptr += (1 + len);
+			len = 0;
+		}
+	}
+
 	if (dns_server_pcb != NULL) {
 		udp_remove(dns_server_pcb);
 		dns_server_pcb = NULL;
@@ -1090,11 +1193,19 @@ void dhcps_init(struct netif * pnetif)
 					(ip4_addr4(&dhcps_local_address)) + 1 );
 #endif
 #else
+#ifdef PLATFORM_OHOS	
+	if (dhcps_ip_table_semaphore != 0xFFFFFFFF) {	
+		LOS_SemDelete(dhcps_ip_table_semaphore);
+		dhcps_ip_table_semaphore = 0xFFFFFFFF;
+	}
+	LOS_BinarySemCreate(1, &dhcps_ip_table_semaphore);
+#else
 	if (dhcps_ip_table_semaphore != NULL) {	
 		vSemaphoreDelete(dhcps_ip_table_semaphore);
 		dhcps_ip_table_semaphore = NULL;
 	}
 	dhcps_ip_table_semaphore = xSemaphoreCreateMutex();
+#endif
 
 	//dhcps_ip_table = (struct ip_table *)(pvPortMalloc(sizeof(struct ip_table)));
 	memset(&ip_table, 0, sizeof(struct table));
@@ -1139,9 +1250,15 @@ void dhcps_deinit(void)
 		udp_remove(dhcps_pcb);
 		dhcps_pcb = NULL;	
 	}
+#ifdef PLATFORM_OHOS	
+	if (dhcps_ip_table_semaphore != 0xFFFFFFFF) {	
+		LOS_SemDelete(dhcps_ip_table_semaphore);
+		dhcps_ip_table_semaphore = 0xFFFFFFFF;
+#else
 	if (dhcps_ip_table_semaphore != NULL) {	
 		vSemaphoreDelete(dhcps_ip_table_semaphore);
 		dhcps_ip_table_semaphore = NULL;
+#endif		
 	}		   
     //DNS server deinit
 	dns_server_deinit();
