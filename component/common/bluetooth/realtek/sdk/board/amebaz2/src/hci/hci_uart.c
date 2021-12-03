@@ -24,7 +24,7 @@ void *uart_send_done_task = NULL;
 void *uart_send_done_sem = NULL;
 
 #define UART_SEND_DONE_TASK_PRIORITY             5
-#define UART_SEND_DONE_TASK_STACK_SIZE           256
+#define UART_SEND_DONE_TASK_STACK_SIZE           512
 
 #define HCI_UART_TX_BUF_SIZE        512      /* TX buffer size 512 */
 #endif
@@ -82,20 +82,12 @@ extern void bt_uart_tx(uint8_t rc);
 }
 
 //=============================interal=========================
+#if defined(HCI_UART_TX_DMA) && HCI_UART_TX_DMA
 static void uart_send_done(uint32_t id)
 {
-#if defined(HCI_UART_TX_DMA) && HCI_UART_TX_DMA
     os_sem_give(uart_send_done_sem);
-#else
-    T_HCI_UART *hci_rtk_obj = hci_uart_obj;
-    if (hci_rtk_obj->tx_cb)
-    {
-        hci_rtk_obj->tx_cb();
-    }
-#endif
 }
 
-#if defined(HCI_UART_TX_DMA) && HCI_UART_TX_DMA
 static void uart_send_done_handler(void *p_param)
 {
     (void)p_param;
@@ -313,8 +305,9 @@ bool hci_uart_init(P_UART_RX_CB rx_ind)
     hci_serial_obj.uart_adp.base_addr->fcr_b.rxfifo_trigger_level = FifoLvHalf;
     //serial_rx_fifo_level(&comuart_sobj, FifoLvHalf);
     serial_set_flow_control(&hci_serial_obj, FlowControlRTSCTS, NC, NC);
+#if defined(HCI_UART_TX_DMA) && HCI_UART_TX_DMA
     serial_send_comp_handler(&hci_serial_obj, (void *)uart_send_done, (uint32_t)hci_uart_obj);
-
+#endif
     serial_clear_rx(&hci_serial_obj);
     serial_irq_handler(&hci_serial_obj, hciuart_irq, (uint32_t)&hci_serial_obj);
     serial_irq_set(&hci_serial_obj, RxIrq, 0);
