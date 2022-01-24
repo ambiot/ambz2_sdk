@@ -2577,6 +2577,28 @@ int wifi_set_pscan_chan(__u8 * channel_list,__u8 * pscan_config, __u8 length)
 	    return -1;
 }
 
+/*
+ * @brief get WIFI band type
+ *@retval  the support band type.
+ * 	WL_BAND_2_4G: only support 2.4G
+ *	WL_BAND_5G: only support 5G
+ *  WL_BAND_2_4G_5G_BOTH: support both 2.4G and 5G
+ */
+WL_BAND_TYPE wifi_get_band_type(void)
+{
+	u8 ret;
+
+	ret = rltk_get_band_type();
+
+	if (ret == 0) {
+		return WL_BAND_2_4G;
+	} else if (ret == 1) {
+		return WL_BAND_5G;
+	} else {
+		return WL_BAND_2_4G_5G_BOTH;
+	}
+}
+
 //----------------------------------------------------------------------------//
 int wifi_get_setting(const char *ifname, rtw_wifi_setting_t *pSetting)
 {

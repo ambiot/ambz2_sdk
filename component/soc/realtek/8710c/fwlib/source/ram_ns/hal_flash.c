@@ -475,6 +475,7 @@ void hal_flash_set_quad_enable (phal_spic_adaptor_t phal_spic_adaptor)
         case FLASH_TYPE_GD32:
         case FLASH_TYPE_BOYA:
         case FLASH_TYPE_XMC:
+        case FLASH_TYPE_PUYA:
         case FLASH_TYPE_ZBIT:
             status_value = hal_flash_get_status(phal_spic_adaptor, cmd->rdsr2);
             hal_flash_set_status(phal_spic_adaptor, cmd->wrsr2, 0x2 | status_value);
@@ -487,6 +488,7 @@ void hal_flash_set_quad_enable (phal_spic_adaptor_t phal_spic_adaptor)
 
         case FLASH_TYPE_GD:
         case FLASH_TYPE_XTX:
+        case FLASH_TYPE_TSTE:
             data[0] = hal_flash_get_status(phal_spic_adaptor, cmd->rdsr);
             data[1] = hal_flash_get_status(phal_spic_adaptor, cmd->rdsr2) | 0x2;
             hal_flash_set_write_enable(phal_spic_adaptor);
@@ -523,6 +525,7 @@ void hal_flash_unset_quad_enable (phal_spic_adaptor_t phal_spic_adaptor)
         case FLASH_TYPE_GD32:
         case FLASH_TYPE_BOYA:
         case FLASH_TYPE_XMC:
+        case FLASH_TYPE_PUYA:
         case FLASH_TYPE_ZBIT:
             status_value = hal_flash_get_status(phal_spic_adaptor, cmd->rdsr2);
             hal_flash_set_status(phal_spic_adaptor, cmd->wrsr2, ~0x2 & status_value);
@@ -535,6 +538,7 @@ void hal_flash_unset_quad_enable (phal_spic_adaptor_t phal_spic_adaptor)
 
         case FLASH_TYPE_GD:
         case FLASH_TYPE_XTX:
+        case FLASH_TYPE_TSTE:
             data[0] = hal_flash_get_status(phal_spic_adaptor, cmd->rdsr);
             data[1] = hal_flash_get_status(phal_spic_adaptor, cmd->rdsr2) & (~0x2);
             hal_flash_set_write_enable(phal_spic_adaptor);
@@ -983,7 +987,7 @@ void hal_flash_support_new_type (phal_spic_adaptor_t phal_spic_adaptor)
                 phal_spic_adaptor->flash_type = FLASH_TYPE_GD;
             }
             break;
-
+            
         case 0x0B:
             phal_spic_adaptor->cmd = &new_flash_cmd;
             phal_spic_adaptor->flash_type = FLASH_TYPE_XTX;
@@ -1004,10 +1008,20 @@ void hal_flash_support_new_type (phal_spic_adaptor_t phal_spic_adaptor)
             break;
                    
         case 0x5E:
-           phal_spic_adaptor->cmd = &new_flash_cmd;
-           phal_spic_adaptor->flash_type = FLASH_TYPE_ZBIT;
-           break;
+            phal_spic_adaptor->cmd = &new_flash_cmd;
+            phal_spic_adaptor->flash_type = FLASH_TYPE_ZBIT;
+            break;
            
+        case 0xEB:
+            phal_spic_adaptor->cmd = &new_flash_cmd;
+            phal_spic_adaptor->flash_type = FLASH_TYPE_TSTE;
+            break;
+           
+        case 0x85:
+            phal_spic_adaptor->cmd = &new_flash_cmd;
+            phal_spic_adaptor->flash_type = FLASH_TYPE_PUYA;
+            break;
+
         default:
             break;
     }

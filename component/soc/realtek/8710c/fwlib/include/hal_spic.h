@@ -42,31 +42,29 @@ extern "C"
 */
 
 
-
-
 #define SPIC_DATA_BASE 0x1040       //!< Define address offset to store calibration setting
 
-#define FLASH_CS_PIN_SEL0 PB_0
+#define FLASH_CS_PIN_SEL0 PB_8
 #define FLASH_CS_PIN_SEL1 PA_7
 #define FLASH_CS_PIN_SEL2 PA_15
 
-#define FLASH_CLK_PIN_SEL0 PB_1
+#define FLASH_CLK_PIN_SEL0 PB_11
 #define FLASH_CLK_PIN_SEL1 PA_8
 #define FLASH_CLK_PIN_SEL2 PA_16
 
-#define FLASH_D0_PIN_SEL0 PB_2
+#define FLASH_D0_PIN_SEL0 PB_12
 #define FLASH_D0_PIN_SEL1 PA_11
 #define FLASH_D0_PIN_SEL2 PA_19
 
-#define FLASH_D1_PIN_SEL0 PB_3
+#define FLASH_D1_PIN_SEL0 PB_7
 #define FLASH_D1_PIN_SEL1 PA_10
 #define FLASH_D1_PIN_SEL2 PA_20
 
-#define FLASH_D2_PIN_SEL0 PB_4
+#define FLASH_D2_PIN_SEL0 PB_6
 #define FLASH_D2_PIN_SEL1 PA_9
 #define FLASH_D2_PIN_SEL2 PA_17
 
-#define FLASH_D3_PIN_SEL0 PB_5
+#define FLASH_D3_PIN_SEL0 PB_10
 #define FLASH_D3_PIN_SEL1 PA_12
 #define FLASH_D3_PIN_SEL2 PA_18
 

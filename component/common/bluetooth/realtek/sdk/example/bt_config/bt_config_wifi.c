@@ -56,11 +56,8 @@ static rtw_result_t scan_result_handler(rtw_scan_handler_result_t* scan_result)
 
 BC_band_t BC_req_band_hdl(void)
 {
-#if defined(CONFIG_PLATFORM_8721D)
 	u8 Band;
-#endif
 	BC_printf("Band Request");
-#if defined(CONFIG_PLATFORM_8721D)
 	Band = wifi_get_band_type();
 
 	if(Band == WL_BAND_2_4G) {
@@ -70,9 +67,6 @@ BC_band_t BC_req_band_hdl(void)
 	} else {
 		return BC_BAND_2G_5G;
 	}
-#else
-	return BC_BAND_2G;
-#endif
 }
 
 int BC_req_scan_hdl(BC_band_t band, struct BC_wifi_scan_result* BC_scan_result)

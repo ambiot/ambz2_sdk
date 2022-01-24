@@ -2,7 +2,7 @@
  * @file     rtl8710c_peripheral_id.h
  * @brief    Define a identification ID for each peripheral device.
  * @version  V1.00
- * @date     2016-07-20
+ * @date     2021-09-17
  *
  * @note
  *
@@ -53,7 +53,7 @@ enum  peripheral_func_cat_e {
     FUNC_FLASH      = 0x00,
     FUNC_SDIO       = 0x00,
     FUNC_JTAG       = 0x01,
-    FUNC_TST_FLASH  = 0x01,
+    FUNC_FLASH_G1   = 0x01,
     FUNC_UART       = 0x02,
     FUNC_SPI        = 0x03,
     FUNC_WLED       = 0x03,
@@ -75,6 +75,7 @@ enum  peripheral_id_e {
 
   /* pinmux_sel = 0x01 */
   PID_JTAG          = (FUNC_JTAG << 4),
+  PID_FLASH_G1      = (FUNC_FLASH_G1 << 4)| (1 << 2),
 
   /* pinmux_sel = 0x02 */
   PID_UART0         = (FUNC_UART << 4),

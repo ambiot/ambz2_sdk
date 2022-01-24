@@ -11,7 +11,13 @@
 #include "MQTTClient.h"
 #include "wifi_conf.h"
 
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1) && defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) && (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 1)
+#include "device_lock.h"
+#endif
+
+#define STACKSIZE     2048
 #define MQTT_SELECT_TIMEOUT 1
+
 static void messageArrived(MessageData* data)
 {
 	mqtt_printf(MQTT_INFO, "Message arrived on topic %s: %s\n", data->topicName->lenstring.data, (char *)data->message->payload);
@@ -32,6 +38,14 @@ void prvMQTTEchoTask(void *pvParameters)
 	char* address = "gpssensor.ddns.net";
 	char* sub_topic = "LASS/Test/Pm25Ameba/#";
 	char* pub_topic = "LASS/Test/Pm25Ameba/FT1_018";
+
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1) && defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) && (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 1)
+	rtw_create_secure_context(STACKSIZE*2);
+	extern int NS_ENTRY secure_mbedtls_platform_set_calloc_free(void);
+	secure_mbedtls_platform_set_calloc_free();
+	extern void NS_ENTRY secure_set_ns_device_lock(void (*device_mutex_lock_func)(uint32_t), void (*device_mutex_unlock_func)(uint32_t));
+	secure_set_ns_device_lock(device_mutex_lock, device_mutex_unlock);
+#endif
         
 	memset(readbuf, 0x00, sizeof(readbuf));
 	
@@ -130,6 +144,14 @@ static void prvMQTTTask(void *pvParameters)
 	char* sub_topic = "LASS/Test/Pm25Ameba/#";
 	char* pub_topic = "LASS/Test/Pm25Ameba/FT1_018";
 
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1) && defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) && (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 1)
+	rtw_create_secure_context(STACKSIZE*2);
+	extern int NS_ENTRY secure_mbedtls_platform_set_calloc_free(void);
+	secure_mbedtls_platform_set_calloc_free();
+	extern void NS_ENTRY secure_set_ns_device_lock(void (*device_mutex_lock_func)(uint32_t), void (*device_mutex_unlock_func)(uint32_t));
+	secure_set_ns_device_lock(device_mutex_lock, device_mutex_unlock);
+#endif
+        
 	NetworkInit(&network);
 	MQTTClientInit(&client, &network, 30000, sendbuf, sizeof(sendbuf), readbuf, sizeof(readbuf));
 

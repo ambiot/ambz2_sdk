@@ -45,8 +45,9 @@
 
 #include "lwip/opt.h"
 
+#undef LWIP_IPV6_DHCP6	/* struct dhcp6 is not used in lwip v2.0.2 */
+#define LWIP_IPV6_DHCP6 0
 #if LWIP_IPV6_DHCP6  /* don't build if not configured for use in lwipopts.h */
-
 
 struct dhcp6
 {
@@ -54,5 +55,4 @@ struct dhcp6
 };
 
 #endif /* LWIP_IPV6_DHCP6 */
-
 #endif /* LWIP_HDR_IP6_DHCP6_H */
