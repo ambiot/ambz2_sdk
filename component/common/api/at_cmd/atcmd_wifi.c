@@ -934,20 +934,6 @@ void fATWA(void *arg){
 	
 #if CONFIG_LWIP_LAYER
 	dhcps_deinit();
-#if LWIP_VERSION_MAJOR >= 2
-	IP4_ADDR(ip_2_ip4(&ipaddr), GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
-	IP4_ADDR(ip_2_ip4(&netmask), NETMASK_ADDR0, NETMASK_ADDR1 , NETMASK_ADDR2, NETMASK_ADDR3);
-	IP4_ADDR(ip_2_ip4(&gw), GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
-	netif_set_addr(pnetif, ip_2_ip4(&ipaddr), ip_2_ip4(&netmask),ip_2_ip4(&gw));
-#else
-	IP4_ADDR(&ipaddr, GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
-	IP4_ADDR(&netmask, NETMASK_ADDR0, NETMASK_ADDR1 , NETMASK_ADDR2, NETMASK_ADDR3);
-	IP4_ADDR(&gw, GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
-	netif_set_addr(pnetif, &ipaddr, &netmask,&gw);
-#endif
-#ifdef CONFIG_DONT_CARE_TP
-	pnetif->flags |= NETIF_FLAG_IPSWITCH;
-#endif
 #endif
 	
 #if defined(CONFIG_PLATFORM_8710C) && (defined(CONFIG_BT) && CONFIG_BT)
@@ -1002,6 +988,20 @@ void fATWA(void *arg){
 
 #if CONFIG_LWIP_LAYER
 	//LwIP_UseStaticIP(pnetif);
+#if LWIP_VERSION_MAJOR >= 2
+	IP4_ADDR(ip_2_ip4(&ipaddr), GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
+	IP4_ADDR(ip_2_ip4(&netmask), NETMASK_ADDR0, NETMASK_ADDR1 , NETMASK_ADDR2, NETMASK_ADDR3);
+	IP4_ADDR(ip_2_ip4(&gw), GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
+	netif_set_addr(pnetif, ip_2_ip4(&ipaddr), ip_2_ip4(&netmask),ip_2_ip4(&gw));
+#else
+	IP4_ADDR(&ipaddr, GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
+	IP4_ADDR(&netmask, NETMASK_ADDR0, NETMASK_ADDR1 , NETMASK_ADDR2, NETMASK_ADDR3);
+	IP4_ADDR(&gw, GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
+	netif_set_addr(pnetif, &ipaddr, &netmask,&gw);
+#endif
+#ifdef CONFIG_DONT_CARE_TP
+	pnetif->flags |= NETIF_FLAG_IPSWITCH;
+#endif
 	dhcps_init(pnetif);
 #endif
 
