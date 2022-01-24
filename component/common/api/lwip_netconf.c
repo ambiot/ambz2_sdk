@@ -230,7 +230,7 @@ extern struct wlan_fast_reconnect wifi_data_to_flash;
 extern uint32_t offer_ip;
 extern uint32_t server_ip;
 extern u8 is_the_same_ap;
-
+extern void restore_wifi_info_to_flash(uint32_t offer_ip, uint32_t server_ip);
 #endif
 
 #if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
@@ -310,7 +310,11 @@ uint8_t LwIP_DHCP(uint8_t idx, uint8_t dhcp_state)
 						}
 						memset(dhcp, 0, sizeof(struct dhcp));
 						dhcp->offered_ip_addr.addr = (u32_t)offer_ip;
+#if LWIP_VERSION_MAJOR >= 2
+						ip_addr_set_ip4_u32(&dhcp->server_ip_addr, (u32_t)server_ip);
+#else
 						dhcp->server_ip_addr.addr = (u32_t)server_ip;
+#endif
 #if LWIP_VERSION_MAJOR >= 2
 						netif_set_client_data(pnetif, LWIP_NETIF_CLIENT_DATA_INDEX_DHCP, dhcp);
 #else
@@ -391,10 +395,11 @@ uint8_t LwIP_DHCP(uint8_t idx, uint8_t dhcp_state)
 #if defined(CONFIG_FAST_DHCP) && CONFIG_FAST_DHCP
 #if LWIP_VERSION_MAJOR >= 2
 				dhcp = ((struct dhcp*)netif_get_client_data(pnetif, LWIP_NETIF_CLIENT_DATA_INDEX_DHCP));
+				restore_wifi_info_to_flash((uint32_t)dhcp->offered_ip_addr.addr, (uint32_t)(ip_2_ip4(&dhcp->server_ip_addr)));
 #else
 				dhcp = pnetif->dhcp;
-#endif
 				restore_wifi_info_to_flash((uint32_t)dhcp->offered_ip_addr.addr, (uint32_t)dhcp->server_ip_addr.addr);
+#endif
 #endif
 
 #if CONFIG_WLAN
@@ -432,7 +437,11 @@ uint8_t LwIP_DHCP(uint8_t idx, uint8_t dhcp_state)
 					printf("\n\rStatic IP address : %d.%d.%d.%d", iptab[3], iptab[2], iptab[1], iptab[0]);
 
 #if defined(CONFIG_FAST_DHCP) && CONFIG_FAST_DHCP
+#if LWIP_VERSION_MAJOR >= 2
+					restore_wifi_info_to_flash((uint32_t)dhcp->offered_ip_addr.addr, (uint32_t)(ip_2_ip4(&dhcp->server_ip_addr)));
+#else
 					restore_wifi_info_to_flash((uint32_t)dhcp->offered_ip_addr.addr, (uint32_t)dhcp->server_ip_addr.addr);
+#endif
 #endif
 
 #if CONFIG_WLAN
@@ -519,9 +528,7 @@ uint8_t* LwIP_GetIP(struct netif *pnetif)
 #if LWIP_IPV6
 uint8_t LwIP_DHCP6(uint8_t idx, uint8_t dhcp6_state)
 {
-	struct ip_addr ipaddr;
 	uint8_t *ipv6_global;
-	uint32_t ip6tab[8];
 	uint8_t DHCP6_state;
 	struct netif *pnetif = NULL;
 	struct dhcp6 *dhcp6 = NULL;
@@ -571,12 +578,6 @@ uint8_t LwIP_DHCP6(uint8_t idx, uint8_t dhcp6_state)
 			break;
 			case DHCP6_WAIT_ADDRESS:
 			{
-				if(dhcp6->state == DHCP6_STATE_OFF)
-				{
-					printf("\n\rLwIP_DHCP6: dhcp6 stop.");
-					return DHCP6_STOP;
-				}
-
 				/* Read the new IPv6 address */
 				ipv6_global = LwIP_GetIPv6_global(pnetif);
 

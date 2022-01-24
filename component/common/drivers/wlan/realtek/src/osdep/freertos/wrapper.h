@@ -202,10 +202,17 @@ extern void restore_flags(void);
 		#ifdef CONFIG_HIGH_TP_TEST
 			#define MAX_SKB_BUF_SIZE			2104
 		#else
-			#define MAX_SKB_BUF_SIZE			(HAL_INTERFACE_OVERHEAD_SKB_DATA+RX_DRIVER_INFO+\
+			#if (SKB_PRE_ALLOCATE_RX == 1)
+				#define MAX_SKB_BUF_SIZE		(HAL_INTERFACE_OVERHEAD_SKB_DATA+RX_DRIVER_INFO+\
+												RXDESC_SIZE +\
+												(MAX_RX_PKT_LIMIT * 512) +\
+												SKB_RESERVED_FOR_SAFETY)		// 0+32+24+512*4+0 = 2104
+			#else
+				#define MAX_SKB_BUF_SIZE		(HAL_INTERFACE_OVERHEAD_SKB_DATA+RX_DRIVER_INFO+\
 												((TXDESC_SIZE>RXDESC_SIZE)? TXDESC_SIZE:RXDESC_SIZE) +\
 												MAX_RX_PKT_SIZE +\
 												SKB_RESERVED_FOR_SAFETY)	// 0+32+40+1578+0 = 1650
+			#endif
 		#endif
 	#endif
 #else

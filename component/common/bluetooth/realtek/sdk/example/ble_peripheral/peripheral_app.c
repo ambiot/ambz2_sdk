@@ -584,7 +584,7 @@ T_APP_RESULT app_profile_callback(T_SERVER_ID service_id, void *p_data)
                 {
                     uint8_t value[2] = {0x01, 0x02};
                     APP_PRINT_INFO0("SIMP_READ_V1");
-					printf("SIMP_READ_V1: value 0x%x 0x%x\r\n", value[0],value[1]);
+                    printf("SIMP_READ_V1: value 0x%02x 0x%02x\r\n", value[0], value[1]);
                     simp_ble_service_set_parameter(SIMPLE_BLE_SERVICE_PARAM_V1_READ_CHAR_VAL, 2, &value);
                 }
             }
@@ -597,11 +597,11 @@ T_APP_RESULT app_profile_callback(T_SERVER_ID service_id, void *p_data)
                     {
                         APP_PRINT_INFO2("SIMP_WRITE_V2: write type %d, len %d", p_simp_cb_data->msg_data.write.write_type,
                                         p_simp_cb_data->msg_data.write.len);
-                        printf("\n\rSIMP_WRITE_V2: write type %d, len %d\r\n", p_simp_cb_data->msg_data.write.write_type,
+                        printf("SIMP_WRITE_V2: write type %d, len %d\r\n", p_simp_cb_data->msg_data.write.write_type,
                                         p_simp_cb_data->msg_data.write.len);
-                        printf("SIMP_WRITE_V2 value:");
+                        printf("SIMP_WRITE_V2: value ");
                         for(int i = 0; i < p_simp_cb_data->msg_data.write.len; i ++){
-                            printf("0x%2x ", *(p_simp_cb_data->msg_data.write.p_value + i));
+                            printf("0x%02x ", *(p_simp_cb_data->msg_data.write.p_value + i));
                         }
                         printf("\n\r");
                     }
@@ -650,7 +650,7 @@ T_APP_RESULT app_profile_callback(T_SERVER_ID service_id, void *p_data)
                 {
                     uint8_t battery_level = 90;
                     APP_PRINT_INFO1("BAS_READ_BATTERY_LEVEL: battery_level %d", battery_level);
-					printf("BAS_READ_BATTERY_LEVEL: battery_level 0x%x\r\n", battery_level);
+                    printf("BAS_READ_BATTERY_LEVEL: battery_level 0x%x\r\n", battery_level);
                     bas_set_parameter(BAS_PARAM_BATTERY_LEVEL, 1, &battery_level);
                 }
             }

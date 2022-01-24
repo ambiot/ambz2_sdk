@@ -82,6 +82,12 @@
 #define PSCAN_FAST_SURVEY 0x02 //set to select scan time to FAST_SURVEY_TO, otherwise SURVEY_TO
 #define PSCAN_SIMPLE_CONFIG   0x04 //set to select scan time to FAST_SURVEY_TO and resend probe request
 
+typedef enum _WL_BAND_TYPE {
+	WL_BAND_2_4G = 0,
+	WL_BAND_5G,
+	WL_BAND_2_4G_5G_BOTH,
+	WL_BANDMAX
+} WL_BAND_TYPE, *PWL_BAND_TYPE;
 /******************************************************
  *                 Type Definitions
  ******************************************************/
@@ -740,6 +746,15 @@ int wifi_scan_networks_with_ssid_by_extended_security(int (results_handler)(char
 * 	to get scanned results.
 */
 int wifi_set_pscan_chan(__u8 * channel_list,__u8 * pscan_config, __u8 length);
+
+/*
+ * @brief get band type
+ * @return  the support band type.
+ * 	0) WL_BAND_2_4G: only support 2.4G
+ * 	1) WL_BAND_5G: only support 5G
+ * 	2) WL_BAND_2_4G_5G_BOTH: support both 2.4G and 5G
+ */
+WL_BAND_TYPE wifi_get_band_type(void);
 
 /**
  * @brief  Get current Wi-Fi setting from driver.

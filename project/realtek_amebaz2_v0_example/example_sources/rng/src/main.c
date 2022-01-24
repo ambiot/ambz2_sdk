@@ -35,6 +35,7 @@
 
 
 #define DEBUG_LOG_BUF_SIZE      256
+#define STACKSIZE	1024
 
 log_buf_type_t debug_log;
 char debug_log_buf[DEBUG_LOG_BUF_SIZE];
@@ -53,6 +54,7 @@ osThreadDef (log_buf_task, osPriorityNormal, 1, 0);      // thread object
 #endif
 
 #if defined(CONFIG_BUILD_NONSECURE) && (CONFIG_BUILD_NONSECURE==1)
+extern void rtw_create_secure_context(u32 secure_stack_size);
 extern s32 cmd_dump_word_s(u32 argc, u8  *argv[]);
 extern s32 cmd_dump_byte_s(u32 argc, u8 *argv[]);
 extern s32 cmd_dump_helfword_s(u32 argc, u8  *argv[]);
@@ -156,6 +158,11 @@ int test_command3 (int argc, char** argv)
 void cmd_shell_task (void const *argument)
 {
     dbg_printf("cmd_shell_task==>\r\n");
+	
+#if defined(CONFIG_BUILD_NONSECURE) && (CONFIG_BUILD_NONSECURE==1)
+	rtw_create_secure_context(STACKSIZE);    
+#endif
+
     while (1) {
         shell_task ();
     }
@@ -189,7 +196,7 @@ int vrf_crypto_rng (int argc, char** argv)
     }
 #endif
     while(1) {        
-        ret = crypto_random_generate(&rng_buf,4);
+        ret = crypto_random_generate((uint8_t *)&rng_buf,4);
         if (ret != SUCCESS) {
             dbg_printf("crypto_random_generate fail! ret = %d\r\n",ret);
             break;
@@ -252,4 +259,3 @@ int main (void)
 #endif
     return 0;
 }
-

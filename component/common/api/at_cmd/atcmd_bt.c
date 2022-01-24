@@ -415,7 +415,7 @@ void fATBI(void *arg)
 	return;
 
 exit:
-	AT_PRINTK("[ATBI] Get all connected device information, ATBI");
+	AT_PRINTK("[ATBI] Get all connected device information: ATBI");
 	AT_PRINTK("[ATBI] eg:ATBI");
 }
 
@@ -433,7 +433,7 @@ void fATBG(void *arg)
 		goto exit;
 	}
 
-	if (argc < 3) {
+	if ((argc != 3) && (argc != 5) && (argc != 7)) {
 		AT_PRINTK("[AT_PRINTK] ERROR: input parameter error!\n\r");
 		goto exit;
 	}
@@ -450,7 +450,7 @@ exit:
 	AT_PRINTK("[ATBG] Get all services: ATBG=ALL,connect_id");
 	AT_PRINTK("[ATBG] Discover services by uuid: ATBG=SRV,connect_id,uuid_type,uuid");
 	AT_PRINTK("[ATBG] Discover characteristic: ATBG=CHARDIS,connect_id,start_handle,end_handle");
-	AT_PRINTK("[ATBG] Discover characteristic by uuid: ATBG=CHARUUID,connect_id,start_handle,end_handle, type, uuid");
+	AT_PRINTK("[ATBG] Discover characteristic by uuid: ATBG=CHARUUID,connect_id,start_handle,end_handle,type,uuid");
 	AT_PRINTK("[ATBG] Discover characteristic descriptor: ATBG=CHARDDIS,connect_id,start_handle,end_handle");
 	AT_PRINTK("[ATBG] eg:ATBG=ALL,0");
 	AT_PRINTK("[ATBG] eg(uuid16):ATBG=SRV,0,0,1803");
@@ -487,7 +487,7 @@ void fATBS(void *arg)
 
 exit:
 	AT_PRINTK("[ATBS] Scan:ATBS=scan_enable,filter_policy,filter_duplicate");
-	AT_PRINTK("[ATBS] [scan_enable]:0-(start scan),1(stop scan)");
+	AT_PRINTK("[ATBS] [scan_enable]:0-(stop scan), 1(start scan)");
 	AT_PRINTK("[ATBS] [filter_policy]: 0-(any), 1-(whitelist), 2-(any RPA), 3-(whitelist RPA)");
 	AT_PRINTK("[ATBS] [filter_duplicate]: 0-(disable), 1-(enable)");
 	AT_PRINTK("[ATBS] eg:ATBS=1");
@@ -526,7 +526,7 @@ void fATBR(void *arg)
 exit:
 	AT_PRINTK("[ATBR] Read characteristic: ATBR=conn_id,handle");
 	AT_PRINTK("[ATBR] Read characterristic value by uuid: ATBR=conn_id,start_handle,end_handle,uuid_type,uuid");
-	AT_PRINTK("[ATBR] eg(uuid16):ATBR=0,0xa");
+	AT_PRINTK("[ATBR] eg:ATBR=0,0xa");
 	AT_PRINTK("[ATBR] eg(uuid16):ATBR=0,0x1,0xFFFF,0,B001");
 	AT_PRINTK("[ATBR] eg(uuid128):ATBR=0,0x1,0xFFFF,1,00112233445566778899aabbccddeeff");
 }
@@ -763,7 +763,7 @@ void fATBe(void *arg)
 		goto exit;
 	}
 
-	if (argc < 7) {
+	if (argc < 6) {
 		AT_PRINTK("[AT_PRINTK] ERROR: input parameter error!\n\r");
 		goto exit;
 	}
@@ -783,8 +783,8 @@ exit:
 	AT_PRINTK("[ATBe] simple ble service send notification:ATBe=0,1,0x7,1,0x2,0x1,0x2");
 	AT_PRINTK("[ATBe] bas service send notification:ATBe=0,2,0x2,1,0x1,0x1");
 }
-
 #endif
+
 #if defined(CONFIG_BT_GOOGLE_SEAMLESS) && CONFIG_BT_GOOGLE_SEAMLESS
 extern int google_seamless_app_init(void);
 extern void google_seamless_app_deinit(void);
@@ -1332,7 +1332,7 @@ void fATBr(void *arg)
 	memset(bt_at_cmd_buf, 0, 256);
 
 	if (arg) {
-		strcpy(bt_at_cmd_buf, arg);
+		strncpy(bt_at_cmd_buf, arg, sizeof(bt_at_cmd_buf));
 		argc = parse_param(bt_at_cmd_buf, argv);
 	} else {
 		goto exit;
@@ -1360,7 +1360,7 @@ void fATBt(void *arg)
 	memset(bt_at_cmd_buf, 0, 256);
 
 	if (arg) {
-		strcpy(bt_at_cmd_buf, arg);
+		strncpy(bt_at_cmd_buf, arg, sizeof(bt_at_cmd_buf));
 		argc = parse_param(bt_at_cmd_buf, argv);
 	} else {
 		goto exit;
@@ -1604,7 +1604,6 @@ exit:
 }
 #endif
 
-
 #if defined(CONFIG_BT_DATATRANS) && CONFIG_BT_DATATRANS
 extern void bt_datatrans_app_init(void);
 extern void bt_datatrans_app_deinit(void);
@@ -1615,10 +1614,11 @@ void fATBT(void *arg)
 	int param = 0;
 	char *argv[MAX_ARGC] = {0};
 
-	if (arg)
+	if (arg) {
 		argc = parse_param(arg, argv);
-	else
+	} else {
 		goto exit;
+	}
 
 	if (argc != 2) {
 		AT_PRINTK("[AT_PRINTK] ERROR: input parameter error!\n\r");
@@ -1632,8 +1632,9 @@ void fATBT(void *arg)
 	} else if (param == 0) {
 		AT_PRINTK("[ATBT]:_AT_BT_DATATRANS_[OFF]\n\r");
 		bt_datatrans_app_deinit();
-	} else
+	} else {
 		goto exit;
+	}
 
 	return;
 
@@ -1657,7 +1658,6 @@ extern void bt_mesh_param_user_cmd(unsigned int argc, char **argv);
 extern void bt_mesh_dfu_param_user_cmd(unsigned int argc, char **argv);
 #endif
 #endif
-
 static void bt_mesh_set_cmd(unsigned int argc, char *argv[])
 {
 	unsigned int i = 0, j = 0;
