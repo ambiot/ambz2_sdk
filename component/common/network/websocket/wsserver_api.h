@@ -3,6 +3,7 @@
 
 #include "platform_stdlib.h"
 #include "platform_opts.h"
+#include "osdep_service.h"
 
 
 /********************Define the secure level***************************/
@@ -96,7 +97,8 @@ typedef struct _ws_conn {
 	uint8_t *txbuf;					/*!< Pointer to transmission buffer of ws server will send */
 	uint8_t *rxbuf;					/*!< Pointer to receiving buffer which received from client */
 	uint8_t *receivedData;			/*!< Pointer to decoded receiving data which received from client */
-	ws_conn_state state;		/*!< Connection state */
+	ws_conn_state state;			/*!< Connection state */
+	struct task_struct task;		/*!< Connection task context */
 }ws_conn;
 
 /**

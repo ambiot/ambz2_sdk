@@ -19,6 +19,7 @@
 #define NDIS_802_11_LENGTH_SSID         32
 #define A_SHA_DIGEST_LEN		20
 
+#define FAST_RECONN_VERSION		        (FAST_RECONNECT_DATA + 0xFF0)
 
 struct wlan_fast_reconnect {
 	unsigned char psk_essid[NDIS_802_11_LENGTH_SSID + 4];
@@ -29,6 +30,20 @@ struct wlan_fast_reconnect {
 #if defined(CONFIG_FAST_DHCP) && CONFIG_FAST_DHCP
 	uint32_t offer_ip;
 	uint32_t server_ip;
+#endif
+#if ATCMD_VER == ATVER_2
+	uint32_t    enable;
+#endif
+};	
+
+struct wlan_fast_reconnect_prior {
+	unsigned char psk_essid[32 + 4];
+	unsigned char psk_passphrase[64 + 1];
+	unsigned char wpa_global_PSK[20 * 2];
+	uint32_t	channel;
+	uint32_t    security_type;
+#if defined(CONFIG_FAST_DHCP) && CONFIG_FAST_DHCP
+	uint32_t offer_ip;
 #endif
 #if ATCMD_VER == ATVER_2
 	uint32_t    enable;
