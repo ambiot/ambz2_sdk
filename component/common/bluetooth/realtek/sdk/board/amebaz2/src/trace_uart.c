@@ -41,7 +41,7 @@ static uint32_t traceuart_dma_tx_complete(void *data)
 
 bool trace_uart_init(void)
 {
-   if (!CHECK_SW(EFUSE_SW_TRACE_SWITCH))
+   if (!check_sw((int)EFUSE_SW_TRACE_SWITCH))
    {
         printf("trace_uart_init: TRACE OPEN\r\n");
         hal_pinmux_unregister(TRACE_TX, 0x01 << 4);
@@ -72,7 +72,7 @@ bool trace_uart_init(void)
 
 bool trace_uart_deinit(void)
 {
-    if (!CHECK_SW(EFUSE_SW_TRACE_SWITCH))
+    if (!check_sw((int)EFUSE_SW_TRACE_SWITCH))
     {
         if (g_uart_obj.tx_switch == true) {
             serial_free(&trace_sobj);

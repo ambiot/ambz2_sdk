@@ -107,6 +107,15 @@ const BAUDRATE_MAP baudrates[] =
 };
 unsigned int baudrates_length = sizeof(baudrates) / sizeof(BAUDRATE_MAP);
 
+int check_sw(int x)
+{
+	int ret=0;
+	device_mutex_lock(RT_DEV_LOCK_FLASH);
+	ret = (HAL_READ32(SPI_FLASH_BASE, FLASH_BT_PARA_ADDR) & x);
+	device_mutex_unlock(RT_DEV_LOCK_FLASH);
+	return ret;
+}
+
 bool hci_rtk_parse_config(uint8_t *config_buf, uint16_t config_len, uint8_t *efuse_buf)
 {
 #define BT_CONFIG_SIGNATURE             0x8723ab55
@@ -160,7 +169,7 @@ bool hci_rtk_parse_config(uint8_t *config_buf, uint16_t config_len, uint8_t *efu
         switch (entry_offset)
         {
         case 0x000c:
-            if ((rltk_wlan_is_mp())||(!CHECK_SW(EFUSE_SW_UPPERSTACK_SWITCH))) 
+            if ((rltk_wlan_is_mp())||(!check_sw((int)EFUSE_SW_UPPERSTACK_SWITCH))) 
             {
                 //default use the 115200
                 hci_board_debug("\r\ndefault use the 115200\r\n");
@@ -185,13 +194,13 @@ bool hci_rtk_parse_config(uint8_t *config_buf, uint16_t config_len, uint8_t *efu
                              p_hci_rtk->baudrate,p_hci_rtk->hw_flow_cntrl);
 #endif
 
-            if(!CHECK_SW(EFUSE_SW_DRIVER_DEBUG_LOG))
+            if(!check_sw((int)EFUSE_SW_DRIVER_DEBUG_LOG))
             {
                   hci_board_debug("hci_rtk_parse_config: baudrate 0x%08x\n",(unsigned int)hci_tp_baudrate);
             }
             break;
         case 0x0018:
-           if ((rltk_wlan_is_mp())||(!CHECK_SW(EFUSE_SW_UPPERSTACK_SWITCH))) 
+           if ((rltk_wlan_is_mp())||(!check_sw((int)EFUSE_SW_UPPERSTACK_SWITCH))) 
            {
                p[0] = p[0] & (~BIT2);
                hci_board_debug("close hci uart flow ctrl: 0x%02x\n", p[0]);
@@ -201,20 +210,20 @@ bool hci_rtk_parse_config(uint8_t *config_buf, uint16_t config_len, uint8_t *efu
         case 0x0030:
             if (entry_len == 6)
             {
-                if ((efuse_buf[0] != 0xff) && (efuse_buf[1] != 0xff))
-                {                    
-                   // memcpy(p,&efuse_buf[0],6);
-                    hci_board_debug("\r\nBT ADDRESS:\r\n");
-                    for(int i = 0 ;i <6;i ++)
-                    {
-                        p[i] = efuse_buf[5-i];
-                        hci_board_debug("%02x:",efuse_buf[i]);
+                if ((efuse_buf[0] != 0xff) || (efuse_buf[1] != 0xff) || (efuse_buf[2] != 0xff) || \
+                    (efuse_buf[3] != 0xff) || (efuse_buf[4] != 0xff) || (efuse_buf[5] != 0xff))
+                {
+                    for (int i = 0; i < 6; i++)
+                    { 
+                        p[i] = efuse_buf[5-i]; 
                     }
-                    hci_board_debug("\r\n");
+
+                    hci_board_debug("BT ADDRESS: %02x:%02x:%02x:%02x:%02x:%02x\r\n",
+                        efuse_buf[0], efuse_buf[1], efuse_buf[2], efuse_buf[3], efuse_buf[4], efuse_buf[5]);
                 }
                 else
                 {
-                    hci_board_debug("hci_rtk_parse_config: BT ADDRESS  %02x %02x %02x %02x %02x %02x, use the defaut config\n",
+                    hci_board_debug("hci_rtk_parse_config: BT ADDRESS %02x %02x %02x %02x %02x %02x, use the default config\r\n",
                               p[0], p[1], p[2], p[3], p[4], p[5]);
                 }
             }
@@ -283,7 +292,7 @@ bool hci_rtk_parse_config(uint8_t *config_buf, uint16_t config_len, uint8_t *efu
                 }
             }
 
-            if(!CHECK_SW(EFUSE_SW_DRIVER_DEBUG_LOG))
+            if(!check_sw((int)EFUSE_SW_DRIVER_DEBUG_LOG))
             {
                 for(i = 0;i < entry_len;i ++)
                 {
@@ -297,7 +306,7 @@ bool hci_rtk_parse_config(uint8_t *config_buf, uint16_t config_len, uint8_t *efu
                 if(efuse_buf[LEFUSE(0x19c+i)] != 0xff)
                 {
                     p[i]= efuse_buf[LEFUSE(0x19c+i)];
-                    if(!CHECK_SW(EFUSE_SW_DRIVER_DEBUG_LOG))
+                    if(!check_sw((int)EFUSE_SW_DRIVER_DEBUG_LOG))
                     {
                         hci_board_debug("\r\n logic efuseMap[%x] = %x\r\n",0x19c+i, p[i]);
                     }
@@ -310,7 +319,7 @@ bool hci_rtk_parse_config(uint8_t *config_buf, uint16_t config_len, uint8_t *efu
                 if(efuse_buf[LEFUSE(0x1a2+i)] != 0xff)
                 {
                     p[i]= efuse_buf[LEFUSE(0x1A2+i)];
-                    if(!CHECK_SW(EFUSE_SW_DRIVER_DEBUG_LOG))
+                    if(!check_sw((int)EFUSE_SW_DRIVER_DEBUG_LOG))
                     {
                         hci_board_debug("\r\n logic efuseMap[%x] = %x\r\n",0x1A2+i, p[i]);
                     }
@@ -364,7 +373,7 @@ uint8_t *hci_rtk_combine_config(void)
 
    
     LE_UINT16_TO_STREAM(p_len, config_length);  //just avoid the length is not coreect
-    if(!CHECK_SW(EFUSE_SW_DRIVER_DEBUG_LOG))
+    if(!check_sw((int)EFUSE_SW_DRIVER_DEBUG_LOG))
     {
 		hci_board_debug("hci_rtk_combine_config: all config length is %u\r\n", config_length);
 		for(uint8_t i=0;i< config_length;i++)
@@ -408,7 +417,7 @@ bool hci_rtk_find_patch(uint8_t bt_hci_chip_id)
 #define HCI_CHIP_VER    (((hci_board_32reg_read(0x400001F0) & (BIT4|BIT5|BIT6|BIT7)) >>4) + 1)
 
     //check the switch
-    if (CHECK_SW(EFUSE_SW_USE_FLASH_PATCH))
+    if (check_sw((int)EFUSE_SW_USE_FLASH_PATCH))
     {
         //use the default sdk patch
 #if defined(CONFIG_BT_ONLY_WITHOUT_WLAN) && CONFIG_BT_ONLY_WITHOUT_WLAN
@@ -424,23 +433,31 @@ bool hci_rtk_find_patch(uint8_t bt_hci_chip_id)
         //hci_board_debug("use flash patch\r\n");
 
         //check flash img
+        device_mutex_lock(RT_DEV_LOCK_FLASH);
         flash_stream_read(&flash, MERGE_PATCH_ADDRESS ,8, tmp_patch_head);
+        device_mutex_unlock(RT_DEV_LOCK_FLASH);
         if(!memcmp(tmp_patch_head, rtb_patch_smagic, sizeof(rtb_patch_smagic)))
         {
             hci_board_debug("=========use the changed patch===========\r\n");
+            device_mutex_lock(RT_DEV_LOCK_FLASH);
             flash_stream_read(&flash, MERGE_PATCH_ADDRESS+8 ,4, (uint8_t *)&lmp_subversion);
             flash_stream_read(&flash, MERGE_PATCH_ADDRESS+12 ,2, (uint8_t *)&mp_num_of_patch);
+            device_mutex_unlock(RT_DEV_LOCK_FLASH);
             hci_board_debug("patch mp_num_of_patch = %d\r\n", mp_num_of_patch);
             for(i = 0 ; i < mp_num_of_patch; i++)
             {
+                device_mutex_lock(RT_DEV_LOCK_FLASH);
                 flash_stream_read(&flash, MERGE_PATCH_ADDRESS+0x0e + 2*i ,2, (uint8_t *)&fw_chip_id);
+                device_mutex_unlock(RT_DEV_LOCK_FLASH);
                 //LE_ARRAY_TO_UINT16(fw_chip_id, p_merge_addr+0x0e + 2*i);
                 hci_board_debug("fw_chip_id patch = 0x%x\r\n", fw_chip_id);
                 if(fw_chip_id == bt_hci_chip_id)
                 {
+                    device_mutex_lock(RT_DEV_LOCK_FLASH);
                     flash_stream_read(&flash,MERGE_PATCH_ADDRESS+0x0e +2*mp_num_of_patch + 2*i ,2, (uint8_t *)&fw_len);
                     //LE_ARRAY_TO_UINT16(fw_len, p_merge_addr+0x0e +2*mp_num_of_patch + 2*i);
                     flash_stream_read(&flash,MERGE_PATCH_ADDRESS+0x0e +4*mp_num_of_patch + 4*i,4, (uint8_t *)&fw_offset);
+                    device_mutex_unlock(RT_DEV_LOCK_FLASH);
                     //LE_ARRAY_TO_UINT32(fw_offset, p_merge_addr+0x0e +4*mp_num_of_patch + 4*i);
                     hci_board_debug("lmp_subversion = 0x%x , fw_len = 0x%x, fw_offset = 0x%x\r\n", (unsigned int)lmp_subversion, fw_len, (unsigned int)fw_offset);
                     break;
@@ -462,7 +479,9 @@ bool hci_rtk_find_patch(uint8_t bt_hci_chip_id)
                 }
                 else
                 {
+                    device_mutex_lock(RT_DEV_LOCK_FLASH);
                     flash_stream_read(&flash, MERGE_PATCH_ADDRESS+fw_offset ,fw_len, fw_buf);
+                    device_mutex_unlock(RT_DEV_LOCK_FLASH);
                     //memcpy(fw_buf,p_merge_addr+fw_offset, fw_len);
                     LE_UINT32_TO_ARRAY(fw_buf+fw_len-4,lmp_subversion);
                     goto parse_config;
@@ -615,7 +634,7 @@ bool hci_read_efuse(void)
 
     //int8_t bd_ddr[]={0x01, 0x02, 0x03,0x04, 0x05,0x06};
     // efuse_logical_write(0x197,3,bd_ddr);
-    if(!CHECK_SW(EFUSE_SW_DRIVER_DEBUG_LOG))
+    if(!check_sw((int)EFUSE_SW_DRIVER_DEBUG_LOG))
     {
         //0
         hci_board_debug("\r\n==bt phy_efuse 0x120~0x130:==\r\n ");
@@ -659,7 +678,7 @@ bool hci_board_init(void)
   //efuse_logical_write(0x1A1,1,&debug_bit);
   
   extern void bt_trace_set_switch(bool flag);
-  if(!CHECK_SW(EFUSE_SW_DRIVER_DEBUG_LOG))
+  if(!check_sw((int)EFUSE_SW_DRIVER_DEBUG_LOG))
   {
       hci_board_debug("\r\n We use Debug Val: 0x%x\r\n", HAL_READ32(SPI_FLASH_BASE, FLASH_BT_PARA_ADDR));
       //bt_trace_set_switch(true);
@@ -712,7 +731,7 @@ void bt_reset(void)
 	set_reg_value(0x40000244, BIT9|BIT8, 3);
 	os_delay(5);
 
-	if(!CHECK_SW(EFUSE_SW_BT_FW_LOG))
+	if(!check_sw((int)EFUSE_SW_BT_FW_LOG))
 	{
 		hci_board_debug("BT FW LOG OPEN\n");
 		set_reg_value(0x400000cc, BIT2|BIT1|BIT0, 6);

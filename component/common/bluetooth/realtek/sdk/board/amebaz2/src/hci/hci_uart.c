@@ -112,14 +112,14 @@ void hci_uart_rx_disable(T_HCI_UART *hci_adapter)
      * the rx data will stay in UART FIFO, and RTS will be pulled high if
      * the watermark is higher than rx trigger level. */
     hci_board_debug("hci_uart_rx_disable\r\n");
-    serial_rts_control(&hci_serial_obj,0); 
+    serial_irq_set(&hci_serial_obj, RxIrq, 0);
     hci_adapter->rx_disabled = true;
 }
 
 void hci_uart_rx_enable(T_HCI_UART *hci_adapter)
 {
     hci_board_debug("hci_uart_rx_enable\r\n");
-    serial_rts_control(&hci_serial_obj,1); 
+    serial_irq_set(&hci_serial_obj, RxIrq, 1);
     hci_adapter->rx_disabled = false;
 }
 

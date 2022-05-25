@@ -1351,7 +1351,7 @@ exit:
 #if defined(CONFIG_BT_OTA_CENTRAL_CLIENT) && CONFIG_BT_OTA_CENTRAL_CLIENT
 extern bool bt_ota_central_client_set_image(uint8_t *image);
 extern bool bt_ota_central_client_set_key(uint8_t *key);
-extern void bt_ota_central_client_app_init(void);
+extern int bt_ota_central_client_app_init(void);
 extern void bt_ota_central_client_app_deinit(void);
 
 extern unsigned char rtl8762c_image[];
@@ -1485,7 +1485,7 @@ exit:
 #endif
 
 #if defined(CONFIG_BT_DATATRANS) && CONFIG_BT_DATATRANS
-extern void bt_datatrans_app_init(void);
+extern int bt_datatrans_app_init(void);
 extern void bt_datatrans_app_deinit(void);
 
 void fATBT(void *arg)

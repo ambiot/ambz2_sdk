@@ -85,7 +85,8 @@ void hci_uart_out(void);
 #define EFUSE_SW_TRACE_SWITCH        BIT5
 #define EFUSE_SW_DRIVER_DEBUG_LOG    BIT6
 //#define EFUSE_SW                     BIT7
-#define CHECK_SW(x)                  (HAL_READ32(SPI_FLASH_BASE, FLASH_BT_PARA_ADDR) & x)
+
+int check_sw(int x);
 
 #ifdef __cplusplus
 }

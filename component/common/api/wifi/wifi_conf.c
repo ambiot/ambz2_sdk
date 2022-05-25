@@ -476,7 +476,10 @@ static void wifi_disconn_hdl( char* buf, int buf_len, int flags, void* userdata)
 	cnnctfail_reason = *(signed char*)(buf+6+2);
 
 	extern u32 rltk_wlan_get_link_err(void);
-	DBG_8710C("wifi link err:%08x\r\n", rltk_wlan_get_link_err());
+
+	if(rltk_wlan_get_link_err() != 0U){
+		DBG_8710C("wifi link err:%08x\r\n", rltk_wlan_get_link_err());
+	}
 
 	if(join_user_data != NULL){
 		if(join_user_data->network_info.security_type == RTW_SECURITY_OPEN){
@@ -1288,7 +1291,7 @@ int wifi_get_ap_info(rtw_bss_info_t * ap_info, rtw_security_t* security)
 
 	snprintf(buf, 24, "get_security");
 	ret = wext_private_command_with_retval(ifname, buf, buf, 24);
-	sscanf(buf, "%d", tmp);
+	sscanf(buf, "%d", &tmp);
 	*security = tmp;
 
 	return ret;

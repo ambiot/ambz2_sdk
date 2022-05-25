@@ -16,6 +16,7 @@
 #define _APP_FLAGS_H_
 
 #include "bt_flags.h"
+#include <app_common_flags.h>
 
 /** @defgroup  PERIPH_Config Peripheral App Configuration
     * @brief This file is used to config app functions.

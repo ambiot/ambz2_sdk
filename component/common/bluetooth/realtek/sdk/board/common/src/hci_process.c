@@ -174,7 +174,7 @@ uint8_t hci_thermal_check(uint8_t len, uint8_t *p_buf)
 
     if (vendor_flow > 2)   /* fortime */
     {
-        if(!CHECK_SW(EFUSE_SW_DRIVER_DEBUG_LOG))
+        if(!check_sw((int)EFUSE_SW_DRIVER_DEBUG_LOG))
         {
             hci_board_debug("%s: thermal_check 0x%02x\n",__FUNCTION__,thermal);
         }
@@ -189,7 +189,7 @@ uint8_t hci_thermal_check(uint8_t len, uint8_t *p_buf)
     }
     else
     {
-        if(!CHECK_SW(EFUSE_SW_DRIVER_DEBUG_LOG))
+        if(!check_sw((int)EFUSE_SW_DRIVER_DEBUG_LOG))
         {
             hci_board_debug("%s: thermal_check 0x%02x, time %x\n",__FUNCTION__,thermal, vendor_flow);
         }

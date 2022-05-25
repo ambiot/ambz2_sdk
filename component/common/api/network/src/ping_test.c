@@ -73,7 +73,8 @@ void ping_test(void *param)
 	struct sockaddr_in to_addr, from_addr;
 	int from_addr_len = sizeof(struct sockaddr);
 	int ping_size, reply_size, ret_size;
-	unsigned char *ping_buf, *reply_buf;
+	unsigned char *ping_buf = NULL;
+	unsigned char *reply_buf = NULL;
 	unsigned int ping_time, reply_time;
 	struct icmp_echo_hdr *pecho;
 	unsigned int min_time = 1000, max_time = 0;
@@ -81,12 +82,11 @@ void ping_test(void *param)
 	char *host = param;
 #if LWIP_IPV6
 	int from_addr6_len = sizeof(struct sockaddr_in6);
-	struct sockaddr_in6 to_addr6, from_addr6;
+	struct sockaddr_in6 to_addr6, from_addr6, src_addr6;
 	int ping_addr_is_ipv6;
 	int ipv6_addr_equal = 0;
-	LwIP_AUTOIP_IPv6(&xnetif[0]);
-	//Wait for ipv6 addr process conflict done
-	while(!ip6_addr_isvalid(netif_ip6_addr_state(&xnetif[0],0)));
+	ip6_addr_t *dest_addr6 = NULL;
+	unsigned int recv_time;
 #endif
 
 	ping_total_time = 0;
@@ -108,16 +108,15 @@ void ping_test(void *param)
 	printf("\n\r[%s] PING %s %d(%d) bytes of data\n", __FUNCTION__, host, data_size, sizeof(struct ip_hdr) + sizeof(struct icmp_echo_hdr) + data_size);			
 
 #if LWIP_IPV6
-	//check whether the host addr is ipv4 or ipv6 addr
-	if(inet_pton(AF_INET, host, &to_addr.sin_addr)){
+	if(inet_pton(AF_INET6, host, &to_addr6.sin6_addr)){
+		ping_addr_is_ipv6 = 1;
+		reply_size = ping_size + IP6_HLEN;
+	}else{
 		ping_addr_is_ipv6 = 0;
 #endif
 		reply_size = ping_size + IP_HLEN;
 #if LWIP_IPV6
-	}else if(inet_pton(AF_INET6, host, &to_addr6.sin6_addr)){
-		ping_addr_is_ipv6 = 1;
-		reply_size = ping_size + IP6_HLEN;
-	}	
+	}
 #endif
 
 	reply_buf = pvPortMalloc(reply_size);
@@ -150,6 +149,29 @@ void ping_test(void *param)
 			printf("\n\r[%s] Set sockopt failed\n", __func__);
 			close(ping_socket);
 			goto Exit;
+		}
+#endif
+
+#if LWIP_IPV6
+		dest_addr6 = pvPortMalloc(sizeof(ip6_addr_t));
+		if(NULL == dest_addr6){
+			printf("\n\r[ERROR] %s: Allocate dest_addr6 failed",__func__);
+			goto Exit;
+		}
+
+		if(ping_addr_is_ipv6){
+			inet6_addr_to_ip6addr(dest_addr6, &to_addr6.sin6_addr);
+		}
+		if(ping_addr_is_ipv6 && ip6_addr_islinklocal(dest_addr6)){
+			memset(&src_addr6, 0, sizeof(src_addr6));
+			src_addr6.sin6_family = AF_INET6;
+			src_addr6.sin6_port = 0;
+			inet6_addr_from_ip6addr(&src_addr6.sin6_addr, (ip6_addr_t*)&xnetif[0].ip6_addr[0]);
+			if(bind(ping_socket, (struct sockaddr*)&src_addr6, sizeof(src_addr6)) != 0){
+				printf("\n\r[ERROR] Bind socket failed\n");
+				closesocket(ping_socket);
+				return;
+			}
 		}
 #endif
 
@@ -202,10 +224,26 @@ void ping_test(void *param)
 		
 		ping_time = xTaskGetTickCount();
 #if LWIP_IPV6
+		if(ping_addr_is_ipv6)
+			pecho = (struct icmp_echo_hdr *)(reply_buf + IP6_HLEN);
+		else
+#endif
+			pecho = (struct icmp_echo_hdr *)(reply_buf + IP_HLEN);
+
+#if LWIP_IPV6
 	if(ping_addr_is_ipv6){
 		ret_size = recvfrom(ping_socket, reply_buf, reply_size, 0, (struct sockaddr *) &from_addr6, (socklen_t *) &from_addr6_len);
 		if(!memcmp((void *)&from_addr6.sin6_addr, (void *)&to_addr6.sin6_addr, sizeof(from_addr6.sin6_addr)))
 			ipv6_addr_equal = TRUE;
+		recv_time = xTaskGetTickCount();
+		//keep receiving until get Echo reply frame from ping destination
+		while((pecho->type != ICMP6_TYPE_EREP)||(ipv6_addr_equal != TRUE)){
+			ret_size = recvfrom(ping_socket, reply_buf, reply_size, 0, (struct sockaddr *) &from_addr6, (socklen_t *) &from_addr6_len);
+			if(!memcmp((void *)&from_addr6.sin6_addr, (void *)&to_addr6.sin6_addr, sizeof(from_addr6.sin6_addr)))
+				ipv6_addr_equal = TRUE;
+			if((xTaskGetTickCount() - recv_time) > 5000)
+				break;
+		}
 	}
 	else
 #endif
@@ -213,12 +251,6 @@ void ping_test(void *param)
 
 		if(ret_size >= (int)(sizeof(struct ip_hdr) + sizeof(struct icmp_echo_hdr))) {
 			reply_time = xTaskGetTickCount();
-#if LWIP_IPV6
-			if(ping_addr_is_ipv6)
-				pecho = (struct icmp_echo_hdr *)(reply_buf + IP6_HLEN);
-			else
-#endif
-				pecho = (struct icmp_echo_hdr *)(reply_buf + IP_HLEN);
 #if LWIP_IPV6
 			if(ping_addr_is_ipv6 && ipv6_addr_equal){
 				if((pecho->id == PING_ID_6) && (pecho->seqno == htons(ping_seq))) {
@@ -261,8 +293,10 @@ Exit:
 		vPortFree(ping_buf);
 	if(reply_buf)
 		vPortFree(reply_buf);
-	if(host)
-		vPortFree(host);
+#if LWIP_IPV6
+	if(dest_addr6)
+		vPortFree(dest_addr6);
+#endif
 
 	if(!ping_call)
 		vTaskDelete(NULL);
@@ -360,12 +394,12 @@ void do_ping_test(char *ip, int size, int count, int interval)
 	if(ip == NULL){
 		host = pvPortMalloc(strlen(PING_IP) + 1);
 		memset(host, 0, (strlen(PING_IP) + 1));
-		strcpy(host, PING_IP);
+		strncpy(host, PING_IP, (strlen(PING_IP) + 1));
 	}
 	else{
 		host = pvPortMalloc(strlen(ip) + 1);
 		memset(host, 0, (strlen(ip) + 1));
-		strcpy(host, ip);
+		strncpy(host, ip, (strlen(PING_IP) + 1));
 	}
 
 	ping_call = 0;

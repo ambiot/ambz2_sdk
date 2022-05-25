@@ -442,6 +442,7 @@ free_socket(struct lwip_sock *sock, int is_tcp)
   sock->lastdata   = NULL;
   sock->lastoffset = 0;
   sock->err        = 0;
+  sock->select_waiting = 0;
 
   /* Protect socket array */
   SYS_ARCH_SET(sock->conn, NULL);
