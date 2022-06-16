@@ -66,6 +66,10 @@
 #include LWIP_HOOK_FILENAME
 #endif
 
+#ifdef LWIP_HOOK_TCP_ISN
+#include <tcp_isn.h>
+#endif
+
 #ifndef TCP_LOCAL_PORT_RANGE_START
 /* From http://www.iana.org/assignments/port-numbers:
    "The Dynamic and/or Private Ports are those from 49152 through 65535" */
@@ -1099,16 +1103,16 @@ tcp_slowtmr_start:
         }
       }
     }
-    /* Check if this PCB has stayed too long in FIN-WAIT-2 */
-    if (pcb->state == FIN_WAIT_2) {
-      /* If this PCB is in FIN_WAIT_2 because of SHUT_WR don't let it time out. */
+    /* Check if this PCB has stayed too long in FIN_WAIT_1 or FIN-WAIT-2 */
+    if (pcb->state == FIN_WAIT_1 || pcb->state == FIN_WAIT_2) {
+      /* If this PCB is FIN_WAIT_1 or in FIN_WAIT_2 because of SHUT_WR don't let it time out. */
       if (pcb->flags & TF_RXCLOSED) {
         /* PCB was fully closed (either through close() or SHUT_RDWR):
            normal FIN-WAIT timeout handling. */
         if ((u32_t)(tcp_ticks - pcb->tmr) >
             TCP_FIN_WAIT_TIMEOUT / TCP_SLOW_INTERVAL) {
           ++pcb_remove;
-          LWIP_DEBUGF(TCP_DEBUG, ("tcp_slowtmr: removing pcb stuck in FIN-WAIT-2\n"));
+          LWIP_DEBUGF(TCP_DEBUG, ("tcp_slowtmr: removing pcb stuck in FIN_WAIT_1 or FIN-WAIT-2\n"));
         }
       }
     }
@@ -1925,6 +1929,22 @@ tcp_next_iss(struct tcp_pcb *pcb)
   return iss;
 #endif /* LWIP_HOOK_TCP_ISN */
 }
+
+#ifdef LWIP_HOOK_TCP_ISN
+void tcp_isn_init(void)
+{
+	// Seed lwip random
+    LWIP_SRAND();
+	//printf("seed: %d\r\n", sys_now());
+	// Initialise TCP sequence number
+	uint32_t tcp_isn_secret[4];
+	for (int i = 0; i < 4; i++) {
+		tcp_isn_secret[i] = LWIP_RAND();
+		//printf("tcp_isn_secret: %d\r\n", tcp_isn_secret[i]);
+	}
+	lwip_init_tcp_isn(sys_now(), (u8_t *) &tcp_isn_secret);
+}
+#endif
 
 #if TCP_CALCULATE_EFF_SEND_MSS
 /**

@@ -11,7 +11,6 @@
 #include "app_msg.h"
 #include "gap_le.h"
 #include "gap_msg.h"
-#include "gap_customer.h"
 
 #if defined(CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT) && CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT
 #include "bt_ota_central_client_app_flags.h"
@@ -785,44 +784,6 @@ exit:
 }
 #endif
 
-#if defined(CONFIG_BT_GOOGLE_SEAMLESS) && CONFIG_BT_GOOGLE_SEAMLESS
-extern int google_seamless_app_init(void);
-extern void google_seamless_app_deinit(void);
-void fATBH(void *arg)
-{
-	int argc = 0;
-	int param = 0;
-	char *argv[MAX_ARGC] = {0};
-
-	if (arg) {
-		argc = parse_param(arg, argv);
-	} else {
-		goto exit;
-	}
-
-	if (argc != 2) {
-		AT_PRINTK("[AT_PRINTK] ERROR: input parameter error!\n\r");
-		goto exit;
-	}
-
-	param = atoi(argv[1]);
-	if (param == 1) {
-		AT_PRINTK("[ATBH]:_AT_BLE_GOOGLE_SEAMLESS_SETUP_[ON]\n\r");
-		google_seamless_app_init();
-	} else if (param == 0) {
-		AT_PRINTK("[ATBH]:_AT_BLE_GOOGLE_SEAMLESS_SETUP_[OFF]\n\r");
-		google_seamless_app_deinit();
-	} else {
-		goto exit;
-	}
-
-	return;
-
-exit:
-	AT_PRINTK("[ATBH] Start Google Seamless: ATBH=1");
-	AT_PRINTK("[ATBH] Stop Google Seamless: ATBH=0");
-}
-#endif
 #if ((defined(CONFIG_BT_CENTRAL) && CONFIG_BT_CENTRAL) || \
 	(defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL) || \
 	(defined(CONFIG_BT_MESH_CENTRAL) && CONFIG_BT_MESH_CENTRAL) || \
@@ -1390,7 +1351,7 @@ exit:
 #if defined(CONFIG_BT_OTA_CENTRAL_CLIENT) && CONFIG_BT_OTA_CENTRAL_CLIENT
 extern bool bt_ota_central_client_set_image(uint8_t *image);
 extern bool bt_ota_central_client_set_key(uint8_t *key);
-extern void bt_ota_central_client_app_init(void);
+extern int bt_ota_central_client_app_init(void);
 extern void bt_ota_central_client_app_deinit(void);
 
 extern unsigned char rtl8762c_image[];
@@ -1485,87 +1446,6 @@ exit:
 }
 #endif
 
-#if defined(CONFIG_BT_OTA_CENTRAL_CLIENT_W_REQ_CONFLICT) && CONFIG_BT_OTA_CENTRAL_CLIENT_W_REQ_CONFLICT
-extern void *bt_ota_central_client_evt_queue_handle;
-extern void *bt_ota_central_client_io_queue_handle;
-
-static u8 ctoi(char c)
-{
-	if((c >= 'A') && (c <= 'F')) {
-		return (c - 'A' + 0x0A);
-	}
-
-	if((c >= 'a') && (c <= 'f')) {
-		return (c - 'a' + 0x0A);
-	}
-
-	if((c >= '0') && (c <= '9')) {
-		return (c - '0' + 0x00);
-	}
-
-	return 0xFF;
-}
-
-static int hex_str_to_int(u32 str_len, s8*str)
-{
-	int result = 0;
-	unsigned int n = 2;
-	if((str_len < 3) || (str[0] != '0') || ((str[1] != 'x') && (str[1] != 'X'))){
-		return -1;
-	}
-	while(n < str_len){
-		result = (result << 4) | (ctoi(str[n++]));
-	}
-	return result;
-}
-
-/* example of sending user write request*/
-void fATBh(void *arg)
-{
-	int argc = 0;
-	int param = 0;
-	char *argv[MAX_ARGC] = {0};
-
-	if (arg) {
-		argc = parse_param(arg, argv);
-	} else {
-		goto exit;
-	}
-
-	if (argc != 4) {
-		AT_PRINTK("[AT_PRINTK] ERROR: input parameter error!\n\r");
-		goto exit;
-	}
-
-	param = atoi(argv[1]);
-
-	if (param == 1) {
-		uint8_t event = EVENT_IO_TO_APP;
-		T_IO_MSG io_msg;
-
-		io_msg.type = IO_MSG_TYPE_QDECODE;
-		io_msg.subtype = atoi(argv[2]);
-		io_msg.u.param = hex_str_to_int(strlen(argv[3]), (s8 *)argv[3]);
-
-		if (bt_ota_central_client_evt_queue_handle != NULL && bt_ota_central_client_io_queue_handle != NULL) {
-			if (os_msg_send(bt_ota_central_client_io_queue_handle, &io_msg, 0) == false) {
-				AT_PRINTK("bt at cmd send msg fail: subtype 0x%x", io_msg.subtype);	
-			} else if (os_msg_send(bt_ota_central_client_evt_queue_handle, &event, 0) == false) {
-				AT_PRINTK("bt at cmd send event fail: subtype 0x%x", io_msg.subtype);
-			}
-		} else {
-			goto exit;
-		}
-	}
-
-	return;
-
-exit:
-	AT_PRINTK("[ATBh] BT OTA Central Client write: ATBh=1,conn_id,handle");
-	AT_PRINTK("[ATBh] e.g. ATBh=1,0,0x13");
-}
-#endif
-
 void fATBo(void *arg)
 {
 	int argc = 0;
@@ -1605,7 +1485,7 @@ exit:
 #endif
 
 #if defined(CONFIG_BT_DATATRANS) && CONFIG_BT_DATATRANS
-extern void bt_datatrans_app_init(void);
+extern int bt_datatrans_app_init(void);
 extern void bt_datatrans_app_deinit(void);
 
 void fATBT(void *arg)
@@ -1921,30 +1801,6 @@ void fATBE(void *arg)
 #endif
 #endif
 
-void fATBV(void *arg)
-{
-	bool ret;
-	T_GAP_DEV_STATE state;
-	T_BT_VERSION_INFO bt_version;
-
-	le_get_gap_param(GAP_PARAM_DEV_STATE, &state);
-	if (state.gap_init_state != GAP_INIT_STATE_STACK_READY) {
-		AT_PRINTK("[ATBV] BT stack version can be got after BT init!\r\n");
-		return;
-	}
-
-	ret = gap_get_bt_version_info(&bt_version);
-	if (ret == false) {
-		AT_PRINTK("[ATBV] gap_get_bt_version_info fail!\r\n");
-		return;
-	}
-
-	AT_PRINTK("[ATBV] hci_version = 0x%x", bt_version.hci_revision);
-	AT_PRINTK("[ATBV] lmp_subversion = 0x%x", bt_version.lmp_subversion);
-	AT_PRINTK("[ATBV] btgap_revision = %d", bt_version.btgap_revision);
-	AT_PRINTK("[ATBV] btgap_buildnum = %d", bt_version.btgap_buildnum);
-}
-
 log_item_t at_bt_items[ ] = {
 #if ((defined(CONFIG_BT_CENTRAL) && CONFIG_BT_CENTRAL) || \
 	(defined(CONFIG_BT_MESH_CENTRAL) && CONFIG_BT_MESH_CENTRAL) || \
@@ -1972,9 +1828,8 @@ log_item_t at_bt_items[ ] = {
 	{"ATBA", fATBA, {NULL, NULL}}, // Modify adv interval
 	{"ATBe", fATBe, {NULL, NULL}}, // BLE send indiaction/notification
 #endif
-#if defined(CONFIG_BT_GOOGLE_SEAMLESS) && CONFIG_BT_GOOGLE_SEAMLESS
-	{"ATBH", fATBH, {NULL, NULL}}, // Start/stop Google Seamless example
-#endif
+
+
 #if ((defined(CONFIG_BT_CENTRAL) && CONFIG_BT_CENTRAL) || \
 	(defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL) || \
 	(defined(CONFIG_BT_MESH_CENTRAL) && CONFIG_BT_MESH_CENTRAL) || \
@@ -2007,9 +1862,7 @@ log_item_t at_bt_items[ ] = {
 #endif
 #if defined(CONFIG_BT_OTA_CENTRAL_CLIENT) && CONFIG_BT_OTA_CENTRAL_CLIENT
 	{"ATBo", fATBo, {NULL, NULL}}, // Start/Stop BT OTA Central Client
-#if defined(CONFIG_BT_OTA_CENTRAL_CLIENT_W_REQ_CONFLICT) && CONFIG_BT_OTA_CENTRAL_CLIENT_W_REQ_CONFLICT
-	{"ATBh", fATBh, {NULL, NULL}}, // Send user write request example
-#endif
+
 #if defined(CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT) && CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT
 	{"ATBs", fATBs, {NULL, NULL}}, // Scan start/stop BT OTA Central Client
 	{"ATBl", fATBl, {NULL, NULL}}, // Connection start/stop BT OTA Central Client
@@ -2030,7 +1883,6 @@ log_item_t at_bt_items[ ] = {
 	{"ATBE", fATBE, {NULL, NULL}},
 #endif
 #endif
-	{"ATBV", fATBV, {NULL, NULL}}, // Get BT stack version
 };
 
 void at_bt_init(void)
