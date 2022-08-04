@@ -104,7 +104,7 @@ extern uint32_t SystemCoreClock;
 /* Software timer definitions. */
 #define configUSE_TIMERS							1
 #define configTIMER_TASK_PRIORITY					( configMAX_PRIORITIES - 1 )
-#define configTIMER_QUEUE_LENGTH					( 10 + 32)
+#define configTIMER_QUEUE_LENGTH					( 10 + 64 )
 #define configTIMER_TASK_STACK_DEPTH				( 512 )
 
 /* Set the following definitions to 1 to include the API function, or zero
@@ -274,6 +274,7 @@ In wlan usage, this value is suggested to use value less than 80 milliseconds */
 
 #undef configMINIMAL_STACK_SIZE
 #define configMINIMAL_STACK_SIZE		( ( unsigned short ) 192 )
+#undef configASSERT
 #endif //#if defined(configUSE_CUSTOMIZED_TICKLESS_IDLE) && configUSE_CUSTOMIZED_TICKLESS_IDLE
 #endif // #if !defined(CONFIG_BUILD_SECURE) || (CONFIG_BUILD_SECURE == 0)
 #endif // #if !defined(__IASMARM__) || (__IASMARM__ != 1)
