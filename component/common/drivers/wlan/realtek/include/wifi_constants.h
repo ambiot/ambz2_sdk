@@ -608,6 +608,7 @@ enum _WIFI_EVENT_INDICATE{
 	WIFI_EVENT_STA_GOT_IP = 23,
 	WIFI_EVENT_STA_LOST_IP = 24,
 	WIFI_EVENT_NO_BEACON = 25,
+	WIFI_EVENT_TARGET_SSID_RSSI = 26,
 	WIFI_EVENT_MAX,
 };
 typedef unsigned long rtw_event_indicate_t;

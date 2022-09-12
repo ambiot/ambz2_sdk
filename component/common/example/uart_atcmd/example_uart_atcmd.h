@@ -16,7 +16,7 @@
 #define AMEBAZ2		4
 
 /*UART Pinmux*/
-#define CONFIG_AMEBA AMEBAD
+#define CONFIG_AMEBA AMEBAZ2
 #if (CONFIG_AMEBA == AMEBA1 )
 #define UART_TX			PA_4
 #define UART_RX			PA_0

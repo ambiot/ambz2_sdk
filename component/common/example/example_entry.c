@@ -98,6 +98,10 @@
 #include <azure_iothub_x509/example_azure_iothub_x509.h>
 #endif
 
+#if defined(CONFIG_EXAMPLE_AZURE) && CONFIG_EXAMPLE_AZURE 
+#include <azure/example_azure_iot_entry.h>
+#endif
+
 #if defined(CONFIG_EXAMPLE_GOOGLE_NEST) && CONFIG_EXAMPLE_GOOGLE_NEST
 #include <googlenest/example_google.h>  
 #define FromDevice            1
@@ -350,6 +354,10 @@
 #include <amazon_freertos/example_amazon_freertos.h>
 #endif
 
+#if defined(CONFIG_EXAMPLE_MBEDTLS_ECDHE) && (CONFIG_EXAMPLE_MBEDTLS_ECDHE == 1)
+#include <mbedtls_ecdhe/example_mbedtls_ecdhe.h>
+#endif
+
 /*
 	Preprocessor of example
 */
@@ -403,6 +411,10 @@ void pre_example_entry(void)
     example_tickless_wifi_roaming_init();
 #endif
 }
+
+#if ((defined CONFIG_BT_MESH_PROVISIONER_RTK_DEMO && CONFIG_BT_MESH_PROVISIONER_RTK_DEMO) || (defined CONFIG_BT_MESH_DEVICE_RTK_DEMO && CONFIG_BT_MESH_DEVICE_RTK_DEMO))
+extern void example_bt_mesh(void);
+#endif
 
 /*
   	All of the examples are disabled by default for code size consideration
@@ -708,6 +720,10 @@ void example_entry(void)
     example_azure_iothub_x509();
 #endif
     
+#if defined(CONFIG_EXAMPLE_AZURE) && CONFIG_EXAMPLE_AZURE 
+    example_azure();
+#endif    
+
 #if CONFIG_ALINK
 	example_alink();
 #endif
@@ -815,5 +831,14 @@ example_hilink();
 #if defined(CONFIG_LINKKIT_AWSS) && (CONFIG_LINKKIT_AWSS == 1)
 	extern void example_ali_awss();
 	example_ali_awss();
+#endif
+
+#if defined(API_TEST_MODE)
+	#include <api_test_entry.h>
+	api_test_entry();
+#endif
+
+#if defined(CONFIG_EXAMPLE_MBEDTLS_ECDHE) && (CONFIG_EXAMPLE_MBEDTLS_ECDHE == 1)
+	example_mbedtls_ecdhe();
 #endif
 }

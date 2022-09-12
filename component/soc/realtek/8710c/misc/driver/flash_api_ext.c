@@ -73,4 +73,114 @@ void flash_erase_dword(u32 address, u32 dword_num)
 		flash_stream_write(&flash, (opt_sector + idx), 8, (u8*)data);
 	}
 }
+/**
+  * @brief  This function is used to check flash type and read flash status register and unlock it.
+  * @note   
+  *	    - this function only support three main types that current use.
+  *	    - this function will check some flash protect related bits and set them.
+  * @retval -1, check flash type or set flash status failed.
+  *          1, check flash type and set flash status success.
+  */
+int flash_register_check_and_unlock(void){
+    flash_t flash;
+    int ret;
+    u8 flash_id = 0;
+    int len = 3;
+    int SR1 = 0, SR2 = 0, SR3 = 0;
+
+    //get flash id
+    ret = flash_read_id(&flash, &flash_id, len);
+    if(ret < 0){
+        dbg_printf("[%s] get flash id failed\r\n", __func__);
+        return -1;
+    }
+    //dbg_printf("[%s] flash id is 0x%02X\r\n", __func__, flash_id);
+    switch(flash_id){
+        case 0xEF://Winbond
+            //printf("flash type is Winbond\r\n");
+            //SR1
+            SR1 = flash_get_status(&flash);
+            if(SR1 & (BIT2 | BIT3 | BIT4 | BIT5 | BIT6)){
+                dbg_printf("SR1 is %02X, reset bit 2~6 as 0 \r\n", SR1);
+                flash_set_status(&flash, (SR1 & ~(BIT2 | BIT3 | BIT4 | BIT5 | BIT6)));
+            }
+            //read SR1 back 
+            SR1 = flash_get_status(&flash);
+            if(SR1 & (BIT2 | BIT3 | BIT4 | BIT5 | BIT6)){
+                dbg_printf("[%s] set SR1 failed\r\n", __func__);
+                return -1;
+            }
+            //SR2
+            SR2 = flash_get_status2(&flash);
+            if( SR2 & (BIT6)){
+                dbg_printf("SR2 is %02X, reset bit 6 as 0 \r\n", SR2);
+                flash_set_status2(&flash, (SR2 & ~(BIT6)));
+            }
+            //read SR2 back 
+            SR2 = flash_get_status2(&flash);
+            if( SR2 & (BIT6)){
+                dbg_printf("[%s] set SR2 failed\r\n", __func__);
+                return -1;
+            }
+            //SR3
+            SR3 = flash_get_status3(&flash);
+            if( SR3 & (BIT2)){
+                dbg_printf("SR3 is %02X,  reset bit 2 as 0 \r\n", SR3);
+                flash_set_status3(&flash, SR3 & ~(BIT2));
+            }
+            //read SR3 back 
+            SR2 = flash_get_status3(&flash);
+            if( SR3 & (BIT2)){
+                dbg_printf("[%s] set SR3 failed\r\n", __func__);
+                return -1;
+            }
+            break;
+        case 0xC8://GD
+            //printf("flash type is GD\r\n");
+            //SR1
+            SR1 = flash_get_status(&flash);
+            if(SR1 & (BIT2 | BIT3 | BIT4 | BIT5 | BIT6)){
+                dbg_printf("SR1 is %02X, reset bit 2~6 as 0 \r\n", SR1);
+                flash_set_status(&flash, (SR1 & ~(BIT2 | BIT3 | BIT4 | BIT5 | BIT6)));
+            }
+            //read SR1 back 
+            SR1 = flash_get_status(&flash);
+            if(SR1 & (BIT2 | BIT3 | BIT4 | BIT5 | BIT6)){
+                dbg_printf("[%s] set SR1 failed\r\n", __func__);
+                return -1;
+            }
+            //SR2
+            SR2 = flash_get_status2(&flash);
+            if( SR2 & (BIT6)){
+                dbg_printf("SR2 is %02X, reset bit 6 as 0 \r\n", SR2);
+                flash_set_status2(&flash, (SR2 & ~(BIT6)));
+            }
+            //read SR2 back 
+            SR2 = flash_get_status2(&flash);
+            if( SR2 & (BIT6)){
+                dbg_printf("[%s] set SR2 failed\r\n", __func__);
+                return -1;
+            }
+            break;
+        case 0x1C://ESMT
+            //printf("flash type is ESMT\r\n");
+            //SR1
+            SR1 = flash_get_status(&flash);
+            if(SR1 & (BIT2 | BIT3 | BIT4 | BIT5)){
+                dbg_printf("SR1 is %02X, reset bit 2~5 as 0 \r\n", SR1);
+                flash_set_status(&flash, SR1 & ~(BIT2 | BIT3 | BIT4 | BIT5));
+            }
+            //read SR1 back
+            SR1 = flash_get_status(&flash);
+            if(SR1 & (BIT2 | BIT3 | BIT4 | BIT5)){
+                dbg_printf("[%s] set SR1 failed\r\n", __func__);
+                return -1;
+            }
+            break;
+        default:
+            dbg_printf("[%s] flash type is others\r\n", __func__);
+            return -1;
+        }
+    return 1;
+}
 

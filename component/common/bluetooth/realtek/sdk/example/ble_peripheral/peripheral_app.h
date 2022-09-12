@@ -80,6 +80,8 @@ T_APP_RESULT app_profile_callback(T_SERVER_ID service_id, void *p_data);
   */
 T_APP_RESULT app_gap_callback(uint8_t cb_type, void *p_cb_data);
 
+void app_vendor_callback(uint8_t cb_type, void *p_cb_data);
+
 #if (F_BT_LE_USE_RANDOM_ADDR==1)
 /**
  * @brief   Save static random address information into flash.

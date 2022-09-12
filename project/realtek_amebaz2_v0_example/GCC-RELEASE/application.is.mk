@@ -161,8 +161,8 @@ INCLUDES += -I../../../component/os/freertos/freertos_v10.0.1/Source/include
 INCLUDES += -I../../../component/os/freertos/freertos_v10.0.1/Source/portable/GCC/ARM_RTL8710C
 INCLUDES += -I../../../component/os/os_dep/include
 
-INCLUDES += -I../../../component/common/application/amazon/amazon-ffs/libffs/include
-INCLUDES += -I../../../component/common/application/amazon/amazon-ffs/ffs_linux/libffs/include
+INCLUDES += -I../../../component/common/application/amazon/amazon-ffs/ffs_demo/common/include
+INCLUDES += -I../../../component/common/application/amazon/amazon-ffs/ffs_demo/realtek/configs
 
 # Source file list
 # -------------------------------------------------------------------
@@ -600,7 +600,7 @@ LFLAGS += -Wl,-wrap,atoui   -Wl,-wrap,atol     -Wl,-wrap,atoul
 LFLAGS += -Wl,-wrap,atoull  -Wl,-wrap,atof
 LFLAGS += -Wl,-wrap,malloc  -Wl,-wrap,realloc
 LFLAGS += -Wl,-wrap,calloc  -Wl,-wrap,free
-LFLAGS += -Wl,-wrap,_malloc_r  -Wl,-wrap,_calloc_r
+LFLAGS += -Wl,-wrap,_malloc_r  -Wl,-wrap,_calloc_r  -Wl,-wrap,_realloc_r  -Wl,-wrap,_free_r
 LFLAGS += -Wl,-wrap,memcmp  -Wl,-wrap,memcpy
 LFLAGS += -Wl,-wrap,memmove -Wl,-wrap,memset
 LFLAGS += -Wl,-wrap,printf  -Wl,-wrap,sprintf

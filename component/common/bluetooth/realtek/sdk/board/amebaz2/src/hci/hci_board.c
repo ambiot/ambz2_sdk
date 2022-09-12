@@ -372,7 +372,7 @@ uint8_t *hci_rtk_combine_config(void)
    // hci_board_debug("hci_rtk_combine_config: invalid len, calculated %u\r\n", config_length);
 
    
-    LE_UINT16_TO_STREAM(p_len, config_length);  //just avoid the length is not coreect
+    LE_UINT16_TO_STREAM(p_len, config_length - HCI_CONFIG_HEAD);  //just avoid the length is not coreect
     if(!check_sw((int)EFUSE_SW_DRIVER_DEBUG_LOG))
     {
 		hci_board_debug("hci_rtk_combine_config: all config length is %u\r\n", config_length);
@@ -680,7 +680,11 @@ bool hci_board_init(void)
   extern void bt_trace_set_switch(bool flag);
   if(!check_sw((int)EFUSE_SW_DRIVER_DEBUG_LOG))
   {
-      hci_board_debug("\r\n We use Debug Val: 0x%x\r\n", HAL_READ32(SPI_FLASH_BASE, FLASH_BT_PARA_ADDR));
+      u32 val;
+      device_mutex_lock(RT_DEV_LOCK_FLASH);
+      val = HAL_READ32(SPI_FLASH_BASE, FLASH_BT_PARA_ADDR);
+      device_mutex_unlock(RT_DEV_LOCK_FLASH);
+      hci_board_debug("\r\n We use Debug Val: 0x%x\r\n", val);
       //bt_trace_set_switch(true);
   }
 

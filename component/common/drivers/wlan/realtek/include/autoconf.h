@@ -274,6 +274,7 @@
       #ifndef CONFIG_RX_PACKET_APPEND_FCS
         #define CONFIG_RX_PACKET_APPEND_FCS
       #endif
+      #define CONFIG_SOFTAP_KEEP_SILENT_TABLE
     #endif
   #endif
   #if defined(CONFIG_PLATFORM_8195A) || defined(CONFIG_PLATFORM_8195BHP) || defined(CONFIG_PLATFORM_8710C)
@@ -789,6 +790,22 @@ extern unsigned int g_ap_sta_num;
 		#define EXCHANGE_LXBUS_RX_SKB 0
 	#endif
 #endif
+
+// Fine tune T-put for LG
+#ifdef CONFIG_MCC_STA_AP_MODE
+	#ifdef CONFIG_HIGH_TP_TEST
+		#undef CONFIG_HIGH_TP_TEST
+	#endif
+	#ifdef SKB_PRE_ALLOCATE_RX
+		#undef SKB_PRE_ALLOCATE_RX
+	#endif
+	#define SKB_PRE_ALLOCATE_RX	1
+	#ifdef EXCHANGE_LXBUS_RX_SKB
+		#undef EXCHANGE_LXBUS_RX_SKB
+	#endif
+	#define EXCHANGE_LXBUS_RX_SKB	1
+#endif
+
 #if (defined(CONFIG_FPGA) && !defined(CONFIG_PLATFORM_8710C))\
 	|| (defined(CONFIG_PLATFORM_8710C) && defined(CONFIG_MAC_LOOPBACK_DRIVER_RTL8710C) && (CONFIG_MAC_LOOPBACK_DRIVER_RTL8710C == 1))
 	//Enable mac loopback for test mode (Ameba)

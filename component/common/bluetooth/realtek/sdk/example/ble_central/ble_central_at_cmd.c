@@ -53,6 +53,16 @@ extern int bt_mesh_multiple_profile_scan_state;
 extern int bt_mesh_scatternet_central_app_max_links;
 #endif
 
+#if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
+#if defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE
+#include "bt_mesh_device_matter_app_flags.h"
+#include "bt_mesh_device_matter_app_task.h"
+extern T_GAP_DEV_STATE bt_mesh_device_matter_gap_dev_state;
+extern int bt_mesh_device_matter_scan_state;
+extern int bt_mesh_device_matter_central_app_max_links;
+#endif
+#endif
+
 #if defined (CONFIG_BT_WHITE_LIST_TO_FLASH) && CONFIG_BT_WHITE_LIST_TO_FLASH
 #include <flash_api.h>
 #include "device_lock.h"
@@ -531,6 +541,17 @@ void ble_central_at_cmd_send_msg(uint16_t sub_type)
 			BLE_PRINT("ble central at cmd send event fail: subtype 0x%x", io_msg.subtype);
 		}
 	}
+#endif //device multiple profile end
+#endif
+#if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
+#if defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE
+	if (bt_mesh_device_matter_evt_queue_handle != NULL && bt_mesh_device_matter_io_queue_handle != NULL) {
+		if (os_msg_send(bt_mesh_device_matter_io_queue_handle, &io_msg, 0) == false) {
+			BLE_PRINT("ble central at cmd send msg fail: subtype 0x%x", io_msg.subtype);
+		} else if (os_msg_send(bt_mesh_device_matter_evt_queue_handle, &event, 0) == false) {
+			BLE_PRINT("ble central at cmd send event fail: subtype 0x%x", io_msg.subtype);
+		}
+	}
 #endif
 #endif
 }
@@ -546,6 +567,12 @@ int ble_central_at_cmd_connect(int argc, char **argv)
 #endif
 #if defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET
 	if(bt_mesh_scatternet_central_app_max_links >= BLE_SCATTERNET_CENTRAL_APP_MAX_LINKS){
+		BLE_PRINT("scatternet: exceed the max links number\r\n");
+		return 0;
+	}
+#endif
+#if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
+	if (bt_mesh_device_matter_central_app_max_links >= BT_MESH_DEVICE_MATTER_CENTRAL_APP_MAX_LINKS) {
 		BLE_PRINT("scatternet: exceed the max links number\r\n");
 		return 0;
 	}
@@ -567,8 +594,10 @@ int ble_central_at_cmd_connect(int argc, char **argv)
 	else if(strcmp(argv[1], "R") == 0)
 		DestAddrType = GAP_REMOTE_ADDR_LE_RANDOM;
 
-	if (strlen(argv[2]) != 2*BD_ADDR_LEN)
+	if (strlen(argv[2]) != 2*BD_ADDR_LEN) {
+		BLE_PRINT("ERROR: mac address length error!\r\n");
 		return -1;
+	}
 
 	hex_str_to_bd_addr(strlen(argv[2]), ( s8 *)argv[2], (u8*)DestAddr);
 
@@ -680,6 +709,10 @@ int ble_central_at_cmd_get_conn_info(int argc, char **argv)
 	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET))
 	conn_max_link = BLE_SCATTERNET_APP_MAX_LINKS;
 #endif
+#if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
+	conn_max_link = BT_MESH_DEVICE_MATTER_APP_MAX_LINKS;
+#endif
+
 	for (conn_id = 0; conn_id < conn_max_link; conn_id++)
 	{
 		if (le_get_conn_info(conn_id, &conn_info))
@@ -887,11 +920,16 @@ int ble_central_at_cmd_scan(int argc, char **argv)
 #endif
 
 #if ((defined(CONFIG_BT_MESH_CENTRAL) && CONFIG_BT_MESH_CENTRAL) || \
-	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET))
+	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET) || \
+	(defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER))
 #if defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE
 	new_state = bt_mesh_provisioner_multiple_profile_gap_dev_state;
 #elif defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE
+#if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
+	new_state = bt_mesh_device_matter_gap_dev_state;
+#else
 	new_state = bt_mesh_device_multiple_profile_gap_dev_state;
+#endif
 #endif
 	if (new_state.gap_init_state) {
 		if (scan_enable) {
@@ -915,12 +953,19 @@ int ble_central_at_cmd_scan(int argc, char **argv)
 					os_delay(1);
 					le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state);
 				} while (new_state.gap_scan_state != GAP_SCAN_STATE_SCANNING);
-
+#if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
+				bt_mesh_device_matter_scan_state = 1;
+#else
 				bt_mesh_multiple_profile_scan_state = 1;
+#endif
 			}
 		} else {
 			if (scan_is_processing) {
+#if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
+				bt_mesh_device_matter_scan_state = 0;
+#else
 				bt_mesh_multiple_profile_scan_state = 0;
+#endif
 
 				ble_central_at_cmd_send_msg(2);
 				do {

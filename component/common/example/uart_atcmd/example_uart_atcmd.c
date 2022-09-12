@@ -563,11 +563,13 @@ static void uart_atcmd_thread(void *param)
 	rtw_create_secure_context(configMINIMAL_SECURE_STACK_SIZE);
 #endif
 	p_wlan_init_done_callback = NULL;
+	uart_atcmd_main();
+	at_printf("\r\nAT COMMAND READY");
+	
 	atcmd_wifi_restore_from_flash();
 	atcmd_lwip_restore_from_flash();
 	rtw_msleep_os(20);
-	uart_atcmd_main();
-	at_printf("\r\nAT COMMAND READY");
+	
 	if(atcmd_lwip_is_tt_mode())
 		at_printf(STR_END_OF_ATDATA_RET);
 	else
