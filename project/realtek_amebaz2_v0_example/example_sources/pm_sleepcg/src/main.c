@@ -184,7 +184,7 @@ int main (void)
         pwmout_period_int(&my_PWM, (pwm_period_callback_t)PWM_period_handler, 1);
         SleepCG(SLP_PWM, SLEEP_DURATION, CLOCK, 0);
 #endif
-
+        __enable_irq();
         dbg_printf("\r\n   SleepCG resume   \r\n");
         hal_delay_ms(2 * 1000);
     }

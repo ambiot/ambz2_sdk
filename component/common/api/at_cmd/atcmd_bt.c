@@ -60,6 +60,11 @@ extern void *bt_mesh_provisioner_multiple_profile_io_queue_handle;
 #endif
 
 #if defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE
+#if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
+#include "ble_peripheral_at_cmd.h"
+#include "ble_central_at_cmd.h"
+#include "bt_mesh_device_matter_app_task.h"
+#else
 #include "bt_mesh_device_multiple_profile_app_flags.h"
 #if (defined(CONFIG_BT_MESH_PERIPHERAL) && CONFIG_BT_MESH_PERIPHERAL)
 #include "ble_peripheral_at_cmd.h"
@@ -192,7 +197,8 @@ uint8_t bt_command_type(uint16_t command_type)
 	(defined(CONFIG_BT_FUZZ_TEST) && CONFIG_BT_FUZZ_TEST) || \
 	(defined(CONFIG_BT_MESH_CENTRAL) && CONFIG_BT_MESH_CENTRAL) || \
 	(defined(CONFIG_BT_MESH_PERIPHERAL) && CONFIG_BT_MESH_PERIPHERAL) || \
-	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET))
+	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET) || \
+	(defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER))
 char bt_at_cmd_buf[256] = {0};
 void bt_at_cmd_send_msg(uint16_t subtype, void *arg)
 {
@@ -251,6 +257,15 @@ void bt_at_cmd_send_msg(uint16_t subtype, void *arg)
 	}
 #endif
 #if defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE
+#if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
+	if (bt_mesh_device_matter_evt_queue_handle != NULL && bt_mesh_device_matter_io_queue_handle != NULL) {
+		if (os_msg_send(bt_mesh_device_matter_io_queue_handle, &io_msg, 0) == false) {
+			AT_PRINTK("bt at cmd send msg fail: subtype 0x%x", io_msg.subtype);
+		} else if (os_msg_send(bt_mesh_device_matter_evt_queue_handle, &event, 0) == false) {
+			AT_PRINTK("bt at cmd send event fail: subtype 0x%x", io_msg.subtype);
+		}
+	}
+#else
 	if (bt_mesh_device_multiple_profile_evt_queue_handle != NULL && bt_mesh_device_multiple_profile_io_queue_handle != NULL) {
 		if (os_msg_send(bt_mesh_device_multiple_profile_io_queue_handle, &io_msg, 0) == false) {
 			AT_PRINTK("bt at cmd send msg fail: subtype 0x%x", io_msg.subtype);
@@ -258,6 +273,7 @@ void bt_at_cmd_send_msg(uint16_t subtype, void *arg)
 			AT_PRINTK("bt at cmd send event fail: subtype 0x%x", io_msg.subtype);
 		}
 	}
+#endif
 #endif
 #if defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE
 	if (bt_mesh_provisioner_multiple_profile_evt_queue_handle != NULL && bt_mesh_provisioner_multiple_profile_io_queue_handle != NULL) {
@@ -273,7 +289,8 @@ void bt_at_cmd_send_msg(uint16_t subtype, void *arg)
 
 #if ((defined(CONFIG_BT_CENTRAL) && CONFIG_BT_CENTRAL) || \
 	(defined(CONFIG_BT_MESH_CENTRAL) && CONFIG_BT_MESH_CENTRAL) || \
-	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET))
+	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET) || \
+	(defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER))
 #if defined(CONFIG_BT_CENTRAL) && CONFIG_BT_CENTRAL
 extern int ble_central_app_init(void);
 extern void ble_central_app_deinit(void);
@@ -669,7 +686,8 @@ exit:
 
 #if ((defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL) || \
 	(defined(CONFIG_BT_MESH_PERIPHERAL) && CONFIG_BT_MESH_PERIPHERAL) || \
-	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET))
+	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET) || \
+	(defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER))
 #if defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL
 extern int ble_app_init(void);
 extern void ble_app_deinit(void);
@@ -716,6 +734,55 @@ void fATBp(void *arg)
 exit:
 	AT_PRINTK("[ATBp] Start BLE Peripheral: ATBp=1");
 	AT_PRINTK("[ATBp] Stop  BLE Peripheral: ATBp=0");
+}
+
+#if (LEGACY_ADV_CONCURRENT == 1)
+extern void legacy_adv_concurrent_init(uint32_t adv_interval_0, uint32_t adv_interval_1);
+extern void legacy_adv_concurrent_start(void);
+extern void legacy_adv_concurrent_stop(void);
+extern void legacy_adv_concurrent_deinit(void);
+#endif
+void fATBP(void *arg)
+{
+#if (LEGACY_ADV_CONCURRENT == 1)
+	int argc = 0;
+	int param = 0;
+	char *argv[MAX_ARGC] = {0};
+
+	if (arg) {
+		argc = parse_param(arg, argv);
+	} else {
+		goto exit;
+	}
+
+	if ((argc != 2) && (argc != 4)) {
+		AT_PRINTK("[AT_PRINTK] ERROR: input parameter error!\n\r");
+		goto exit;
+	}
+
+	param = atoi(argv[1]);
+	if (param == 1 && argc == 4) {
+		uint32_t adv_int_0 = atoi(argv[2]);
+		uint32_t adv_int_1 = atoi(argv[3]);
+		legacy_adv_concurrent_init(adv_int_0, adv_int_1);
+	} else if (param == 0) {
+		legacy_adv_concurrent_deinit();
+	} else if (param == 2) {
+		legacy_adv_concurrent_start();
+	} else if (param == 3) {
+		legacy_adv_concurrent_stop();
+	} else {
+		goto exit;
+	}
+
+	return;
+
+exit:
+	AT_PRINTK("[ATBP] Init   legacy adv concurrent: ATBP=1,adv_int_0(ms),adv_int_1(ms)");
+	AT_PRINTK("[ATBP] Deinit legacy adv concurrent: ATBP=0");
+	AT_PRINTK("[ATBP] Start  legacy adv concurrent: ATBP=2");
+	AT_PRINTK("[ATBP] Stop   legacy adv concurrent: ATBP=3");
+#endif
 }
 #endif
 
@@ -784,11 +851,50 @@ exit:
 }
 #endif
 
+#if defined(CONFIG_BT_GOOGLE_SEAMLESS) && CONFIG_BT_GOOGLE_SEAMLESS
+extern int google_seamless_app_init(void);
+extern void google_seamless_app_deinit(void);
+void fATBH(void *arg)
+{
+	int argc = 0;
+	int param = 0;
+	char *argv[MAX_ARGC] = {0};
+
+	if (arg) {
+		argc = parse_param(arg, argv);
+	} else {
+		goto exit;
+	}
+
+	if (argc != 2) {
+		AT_PRINTK("[AT_PRINTK] ERROR: input parameter error!\n\r");
+		goto exit;
+	}
+
+	param = atoi(argv[1]);
+	if (param == 1) {
+		AT_PRINTK("[ATBH]:_AT_BLE_GOOGLE_SEAMLESS_SETUP_[ON]\n\r");
+		google_seamless_app_init();
+	} else if (param == 0) {
+		AT_PRINTK("[ATBH]:_AT_BLE_GOOGLE_SEAMLESS_SETUP_[OFF]\n\r");
+		google_seamless_app_deinit();
+	} else {
+		goto exit;
+	}
+
+	return;
+
+exit:
+	AT_PRINTK("[ATBH] Start Google Seamless: ATBH=1");
+	AT_PRINTK("[ATBH] Stop Google Seamless: ATBH=0");
+}
+#endif
 #if ((defined(CONFIG_BT_CENTRAL) && CONFIG_BT_CENTRAL) || \
 	(defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL) || \
 	(defined(CONFIG_BT_MESH_CENTRAL) && CONFIG_BT_MESH_CENTRAL) || \
 	(defined(CONFIG_BT_MESH_PERIPHERAL) && CONFIG_BT_MESH_PERIPHERAL) || \
-	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET))
+	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET) || \
+	(defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER))
 void fATBK(void *arg)
 {
 	int argc = 0;
@@ -1442,7 +1548,88 @@ void fATBq(void *arg)
 	return;
 
 exit:
-	AT_PRINTK("[ATBq] Start OTA: ATBt=conn_id");
+	AT_PRINTK("[ATBq] Start OTA: ATBq=conn_id");
+}
+#endif
+
+#if defined(CONFIG_BT_OTA_CENTRAL_CLIENT_W_REQ_CONFLICT) && CONFIG_BT_OTA_CENTRAL_CLIENT_W_REQ_CONFLICT
+extern void *bt_ota_central_client_evt_queue_handle;
+extern void *bt_ota_central_client_io_queue_handle;
+
+static u8 ctoi(char c)
+{
+	if((c >= 'A') && (c <= 'F')) {
+		return (c - 'A' + 0x0A);
+	}
+
+	if((c >= 'a') && (c <= 'f')) {
+		return (c - 'a' + 0x0A);
+	}
+
+	if((c >= '0') && (c <= '9')) {
+		return (c - '0' + 0x00);
+	}
+
+	return 0xFF;
+}
+
+static int hex_str_to_int(u32 str_len, s8*str)
+{
+	int result = 0;
+	unsigned int n = 2;
+	if((str_len < 3) || (str[0] != '0') || ((str[1] != 'x') && (str[1] != 'X'))){
+		return -1;
+	}
+	while(n < str_len){
+		result = (result << 4) | (ctoi(str[n++]));
+	}
+	return result;
+}
+
+/* example of sending user write request*/
+void fATBh(void *arg)
+{
+	int argc = 0;
+	int param = 0;
+	char *argv[MAX_ARGC] = {0};
+
+	if (arg) {
+		argc = parse_param(arg, argv);
+	} else {
+		goto exit;
+	}
+
+	if (argc != 4) {
+		AT_PRINTK("[AT_PRINTK] ERROR: input parameter error!\n\r");
+		goto exit;
+	}
+
+	param = atoi(argv[1]);
+
+	if (param == 1) {
+		uint8_t event = EVENT_IO_TO_APP;
+		T_IO_MSG io_msg;
+
+		io_msg.type = IO_MSG_TYPE_QDECODE;
+		io_msg.subtype = atoi(argv[2]);
+		io_msg.u.param = hex_str_to_int(strlen(argv[3]), (s8 *)argv[3]);
+
+		if (bt_ota_central_client_evt_queue_handle != NULL && bt_ota_central_client_io_queue_handle != NULL) {
+			if (os_msg_send(bt_ota_central_client_io_queue_handle, &io_msg, 0) == false) {
+				AT_PRINTK("bt at cmd send msg fail: subtype 0x%x", io_msg.subtype);	
+			} else if (os_msg_send(bt_ota_central_client_evt_queue_handle, &event, 0) == false) {
+				AT_PRINTK("bt at cmd send event fail: subtype 0x%x", io_msg.subtype);
+			}
+		} else {
+			goto exit;
+		}
+	}
+
+	return;
+
+exit:
+	AT_PRINTK("[ATBh] BT OTA Central Client write: ATBh=1,conn_id,handle");
+	AT_PRINTK("[ATBh] e.g. ATBh=1,0,0x13");
 }
 #endif
 
@@ -1521,6 +1708,44 @@ void fATBT(void *arg)
 exit:
 	AT_PRINTK("[ATBT] Start BT DATATRANS: ATBT=1");
 	AT_PRINTK("[ATBT] Stop	BT DATATRANS: ATBT=0");
+}
+#endif
+
+#if defined(CONFIG_BT_ANCS) && CONFIG_BT_ANCS
+extern int bt_ancs_app_init(void);
+extern void bt_ancs_app_deinit(void);
+void fATBN(void *arg)
+{
+	int argc = 0;
+	int param = 0;
+	char *argv[MAX_ARGC] = {0};
+
+	if (arg)
+		argc = parse_param(arg, argv);
+	else
+		goto exit;
+
+	if (argc != 2) {
+		AT_PRINTK("[AT_PRINTK] ERROR: input parameter error!\n\r");
+		goto exit;
+	}
+
+	param = atoi(argv[1]);
+	if (param == 1) {
+		AT_PRINTK("[ATBN]:_AT_BT_ANCS_[ON]\n\r");
+		bt_ancs_app_init();
+	} else if (param == 0) {
+		AT_PRINTK("[ATBN]:_AT_BT_ANCS_[OFF]\n\r");
+		bt_ancs_app_deinit();
+	} else
+		goto exit;
+
+	return;
+
+exit:
+	AT_PRINTK("[ATBN] Start BT ANCS: ATBN=1");
+	AT_PRINTK("[ATBN] Stop	BT ANCS: ATBN=0");
+
 }
 #endif
 
@@ -1692,6 +1917,32 @@ void fATBm(void *arg)
 		goto exit;
 	}
 #elif defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE
+#if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
+extern int bt_mesh_device_matter_app_init(void);
+extern void bt_mesh_device_matter_app_deinit(void);
+	if (strcmp(argv[1], "1") == 0) {
+		if (bt_command_type(BT_COMMAND_STACK)) {
+			AT_PRINTK("[AT_PRINTK] ERROR: command type error!\n\r");
+			goto exit;
+		}
+		AT_PRINTK("[ATBm]:_AT_BT_MESH_DEVICE_MATTER_[ON]\n\r");
+		if (bt_mesh_device_matter_app_init()) {
+			AT_PRINTK("[ATBm]:_AT_BT_MESH_DEVICE_MATTER_[ON] FAIL !!! \n\r");
+		} else {
+			set_bt_cmd_type(MESH_BIT | STACK_BIT);
+		}
+	} else if (strcmp(argv[1], "0") == 0) {
+		if (!bt_command_type(BT_COMMAND_MESH)) {
+			AT_PRINTK("[AT_PRINTK] ERROR: command type error!\n\r");
+			goto exit;
+		}
+		AT_PRINTK("[ATBm]:_AT_BT_MESH_DEVICE_MATTER_[OFF]\n\r");
+		bt_mesh_device_matter_app_deinit();
+		set_bt_cmd_type(0);
+	} else {
+		goto exit;
+	}
+#else
 	if (strcmp(argv[1], "1") == 0) {
 		if (bt_command_type(BT_COMMAND_STACK)) {
 			AT_PRINTK("[AT_PRINTK] ERROR: command type error!\n\r");
@@ -1714,6 +1965,7 @@ void fATBm(void *arg)
 	} else {
 		goto exit;
 	}
+#endif
 #elif defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE
 	if (strcmp(argv[1], "1") == 0) {
 		if (bt_command_type(BT_COMMAND_STACK)) {
@@ -1742,8 +1994,13 @@ void fATBm(void *arg)
 exit:
 #if ((defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) || \
 	(defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE))
+#if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
+	AT_PRINTK("[ATBm] Start BT Mesh Device Matter: ATBm=1");
+	AT_PRINTK("[ATBm] Stop	BT Mesh Device Matter: ATBm=0");
+#else
 	AT_PRINTK("[ATBm] Start BT Mesh Mulitple Profile: ATBm=1");
 	AT_PRINTK("[ATBm] Stop  BT Mesh Mulitple Profile: ATBm=0");
+#endif
 #else
 	AT_PRINTK("[ATBm] Start BT Mesh Mulitple Profile: ATBm=1");
 	AT_PRINTK("[ATBm] Stop  BT Mesh Mulitple Profile: ATBm=0");
@@ -1801,10 +2058,35 @@ void fATBE(void *arg)
 #endif
 #endif
 
+void fATBV(void *arg)
+{
+	bool ret;
+	T_GAP_DEV_STATE state;
+	T_BT_VERSION_INFO bt_version;
+
+	le_get_gap_param(GAP_PARAM_DEV_STATE, &state);
+	if (state.gap_init_state != GAP_INIT_STATE_STACK_READY) {
+		AT_PRINTK("[ATBV] BT stack version can be got after BT init!\r\n");
+		return;
+	}
+
+	ret = gap_get_bt_version_info(&bt_version);
+	if (ret == false) {
+		AT_PRINTK("[ATBV] gap_get_bt_version_info fail!\r\n");
+		return;
+	}
+
+	AT_PRINTK("[ATBV] hci_version = 0x%x", bt_version.hci_revision);
+	AT_PRINTK("[ATBV] lmp_subversion = 0x%x", bt_version.lmp_subversion);
+	AT_PRINTK("[ATBV] btgap_revision = %d", bt_version.btgap_revision);
+	AT_PRINTK("[ATBV] btgap_buildnum = %d", bt_version.btgap_buildnum);
+}
+
 log_item_t at_bt_items[ ] = {
 #if ((defined(CONFIG_BT_CENTRAL) && CONFIG_BT_CENTRAL) || \
 	(defined(CONFIG_BT_MESH_CENTRAL) && CONFIG_BT_MESH_CENTRAL) || \
-	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET))
+	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET) || \
+	(defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER))
 #if defined(CONFIG_BT_CENTRAL) && CONFIG_BT_CENTRAL
 	{"ATBc", fATBc, {NULL, NULL}}, // Start/stop BLE central
 #endif
@@ -1821,9 +2103,11 @@ log_item_t at_bt_items[ ] = {
 #endif
 #if ((defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL) || \
 	(defined(CONFIG_BT_MESH_PERIPHERAL) && CONFIG_BT_MESH_PERIPHERAL) || \
-	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET))
+	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET) || \
+	(defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER))
 #if defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL
 	{"ATBp", fATBp, {NULL, NULL}}, // Start/stop BLE peripheral
+	{"ATBP", fATBP, {NULL, NULL}}, // Legacy ADV concurrent test
 #endif
 	{"ATBA", fATBA, {NULL, NULL}}, // Modify adv interval
 	{"ATBe", fATBe, {NULL, NULL}}, // BLE send indiaction/notification
@@ -1834,7 +2118,8 @@ log_item_t at_bt_items[ ] = {
 	(defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL) || \
 	(defined(CONFIG_BT_MESH_CENTRAL) && CONFIG_BT_MESH_CENTRAL) || \
 	(defined(CONFIG_BT_MESH_PERIPHERAL) && CONFIG_BT_MESH_PERIPHERAL) || \
-	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET))
+	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET) || \
+	(defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER))
 	{"ATBK", fATBK, {NULL, NULL}}, // Reply GAP passkey
 	{"ATBY", fATBY, {NULL, NULL}}, // Reply GAP user confirm
 	{"ATBU", fATBU, {NULL, NULL}}, // Update connection request
@@ -1862,7 +2147,9 @@ log_item_t at_bt_items[ ] = {
 #endif
 #if defined(CONFIG_BT_OTA_CENTRAL_CLIENT) && CONFIG_BT_OTA_CENTRAL_CLIENT
 	{"ATBo", fATBo, {NULL, NULL}}, // Start/Stop BT OTA Central Client
-
+#if defined(CONFIG_BT_OTA_CENTRAL_CLIENT_W_REQ_CONFLICT) && CONFIG_BT_OTA_CENTRAL_CLIENT_W_REQ_CONFLICT
+	{"ATBh", fATBh, {NULL, NULL}}, // Send user write request example
+#endif
 #if defined(CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT) && CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT
 	{"ATBs", fATBs, {NULL, NULL}}, // Scan start/stop BT OTA Central Client
 	{"ATBl", fATBl, {NULL, NULL}}, // Connection start/stop BT OTA Central Client
@@ -1871,6 +2158,9 @@ log_item_t at_bt_items[ ] = {
 #endif
 #if defined(CONFIG_BT_DATATRANS) && CONFIG_BT_DATATRANS
 	{"ATBT", fATBT, {NULL, NULL}}, // Start/stop BT datatrans
+#endif
+#if defined(CONFIG_BT_ANCS) && CONFIG_BT_ANCS
+	{"ATBN", fATBN, {NULL, NULL}}, // Start/stop BT ancs
 #endif
 #if ((defined(CONFIG_BT_MESH_PROVISIONER) && CONFIG_BT_MESH_PROVISIONER) || \
 	(defined(CONFIG_BT_MESH_DEVICE) && CONFIG_BT_MESH_DEVICE) || \
