@@ -303,7 +303,6 @@ int ble_scatternet_app_main(void)
     return 0;
 }
 
-extern void wifi_btcoex_set_bt_on(void);
 int ble_scatternet_app_init(void)
 {
 	//(void) bt_stack_already_on;
@@ -336,10 +335,6 @@ int ble_scatternet_app_init(void)
 		le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state);
 	}while(new_state.gap_init_state != GAP_INIT_STATE_STACK_READY);
 
-#if !defined(CONFIG_BT_ONLY_WITHOUT_WLAN) || (CONFIG_BT_ONLY_WITHOUT_WLAN == 0)
-	/*Start BT WIFI coexistence*/
-	wifi_btcoex_set_bt_on();
-#endif
 	return 0;
 }
 

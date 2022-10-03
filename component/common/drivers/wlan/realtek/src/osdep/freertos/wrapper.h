@@ -401,6 +401,7 @@ extern unsigned char *skb_pull(struct sk_buff *skb, unsigned int len);
 // Device structure
 //----- ------------------------------------------------------------------
 struct net_device_stats {
+  	unsigned long   rx_data_packets;             /* total packets received       */
 	unsigned long   rx_packets;             /* total packets received       */
 	unsigned long   tx_packets;             /* total packets transmitted    */
 	unsigned long   rx_dropped;             /* no space in linux buffers    */

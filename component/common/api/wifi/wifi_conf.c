@@ -438,6 +438,86 @@ extern void dhcp6_stop(struct netif *netif);
 #endif
 #endif
 
+extern u32 rltk_wlan_get_link_err(void);
+static void wifi_rssi_report_hdl( char* buf, int buf_len, int flags, void* userdata)
+{
+	printf("%s, rssi: %d\n", __func__, flags);
+}
+
+static void wifi_link_err_parse(u16 reason_code)
+{
+	u32 link_err;
+	link_err = rltk_wlan_get_link_err();
+
+	if(link_err != 0U){
+		printf("wifi link err:%08x\r\n", rltk_wlan_get_link_err());
+	}
+
+	printf("dissconn reason code: %d\n", reason_code);
+
+	if(link_err & BIT(0)) {
+		printf("receive deauth\n");
+	} else if(link_err & BIT(1)) {
+		printf("receive deassoc\n");
+	} else if (link_err & BIT(2)) {
+		printf("scan stage, no beacon while connecting\n");
+	} else if(link_err & BIT(3)) {
+		printf("auth stage, auth timeout\n");
+		if(reason_code == 65531) {
+			printf("request has been declined\n");
+		}
+	} else if(link_err & BIT(4)) {
+		printf("assoc stage, assoc timeout\n");
+	} else if(link_err & (BIT(5) | BIT(6) | BIT(7))) {
+		printf("4handshake stage, 4-way waiting timeout\n");
+	} else if(link_err & BIT(8)) {
+		printf("assoc stage, assoc reject (assoc rsp status > 0)\n");
+	} else if(link_err & BIT(9)) {
+		printf("auth stage, auth fail (auth rsp status > 0)\n");
+	} else if(link_err & BIT(10)){
+		printf("scan stage, scan timeout\n");
+	} else if(link_err & BIT(11)) {
+		printf("auth stage, WPA3 auth fail, ");
+		if(reason_code == 65531) {
+			printf("request has been declined\n");
+		} else {
+			printf("password error\n");
+		}
+	}
+
+	if(link_err & (BIT(0) | BIT(1))) {
+		if(link_err & BIT(20)) {
+			printf("handshake done, connected stage, recv deauth/deassoc\n");
+		} else if(link_err & BIT(19)) {
+			printf("handshake processing, 4handshake stage, recv deauth/deassoc\n");
+		} else if(link_err & BIT(18)) {
+			printf("assoc successed, 4handshake stage, recv deauth/deassoc\n");
+		} else if(link_err & BIT(17)) {
+			printf("auth successed, assoc stage, recv deauth/deassoc\n");
+		} else if(link_err & BIT(16)) {
+			printf("scan done, found ssid, auth stage, recv deauth/deassoc\n");
+		} else {
+			printf("connected stage, recv deauth/deassoc\n");
+		}
+	}
+
+	switch(reason_code) {
+		case 17:
+			printf("auth stage, ap auth full\n");
+			break;
+		case 65534:
+			printf("connected stage, ap changed\n");
+			break;
+		case 65535:
+			printf("connected stage, loss beacon\n");
+			break;
+		default:
+			break;
+	}
+
+	rltk_wlan_set_link_err(0);
+}
+
 /*
  * rltk_wlan_get_link_err(): check wifi link error
  *******************************************************
@@ -451,6 +531,9 @@ extern void dhcp6_stop(struct netif *netif);
  * bit  6: waiting 4-3 timeout
  * bit  7: waiting 2-1 timeout (WPA needs GTK handshake after 4-way immediately)
  * bit  8: assoc reject (assoc rsp status > 0)
+ * bit  9: auth reject (auth rsp status > 0)
+ * bit  10: scan timeout
+ * bit  11: WPA3 auth fail
  *******************************************************
  * link status bit:
  * bit 16: found ssid
@@ -474,12 +557,8 @@ static void wifi_disconn_hdl( char* buf, int buf_len, int flags, void* userdata)
 	/* buf detail: mac addr + disconn_reason, buf_len = ETH_ALEN+2*/
 	disconn_reason =*(u16*)(buf+6);
 	cnnctfail_reason = *(signed char*)(buf+6+2);
-
-	extern u32 rltk_wlan_get_link_err(void);
-
-	if(rltk_wlan_get_link_err() != 0U){
-		DBG_8710C("wifi link err:%08x\r\n", rltk_wlan_get_link_err());
-	}
+	
+	wifi_link_err_parse(disconn_reason);
 
 	if(join_user_data != NULL){
 		if(join_user_data->network_info.security_type == RTW_SECURITY_OPEN){
@@ -819,6 +898,7 @@ int wifi_connect(
 	wifi_reg_event_handler(WIFI_EVENT_CONNECT, wifi_connected_hdl, NULL);
 	wifi_reg_event_handler(WIFI_EVENT_DISCONNECT, wifi_disconn_hdl, NULL);
 	wifi_reg_event_handler(WIFI_EVENT_FOURWAY_HANDSHAKE_DONE, wifi_handshake_done_hdl, NULL);
+	wifi_reg_event_handler(WIFI_EVENT_TARGET_SSID_RSSI, wifi_rssi_report_hdl, NULL);
 
 // if is connected to ap, would trigger disconn_hdl but need to make sure it is invoked before setting join_user_data
 #if CONFIG_WIFI_IND_USE_THREAD
@@ -905,6 +985,7 @@ error:
 	wifi_unreg_event_handler(WIFI_EVENT_CONNECT, wifi_connected_hdl);
 	wifi_unreg_event_handler(WIFI_EVENT_NO_NETWORK,wifi_no_network_hdl);
 	wifi_unreg_event_handler(WIFI_EVENT_FOURWAY_HANDSHAKE_DONE, wifi_handshake_done_hdl);
+	wifi_unreg_event_handler(WIFI_EVENT_TARGET_SSID_RSSI, wifi_rssi_report_hdl);
 	rtw_join_status &= ~JOIN_CONNECTING;
 	return result;
 }
@@ -2988,8 +3069,7 @@ static void wifi_autoreconnect_thread(void *param)
 		assoc_by_bssid = 1;
 	}
 
-#ifdef CONFIG_SAE_SUPPORT
-#if CONFIG_ENABLE_WPS
+#if defined(CONFIG_SAE_SUPPORT) && (CONFIG_ENABLE_WPS==1)
 	unsigned char is_wpa3_disable=0;
 	if((strncmp(wps_profile_ssid, reconnect_param->ssid, reconnect_param->ssid_len) == 0) &&
 		(strncmp(wps_profile_password, reconnect_param->password, reconnect_param->password_len) == 0) &&
@@ -2998,14 +3078,6 @@ static void wifi_autoreconnect_thread(void *param)
 		is_wpa3_disable=1;
 	}
 #endif
-#ifdef CONFIG_PMKSA_CACHING
-	unsigned char is_pmk_disable=0;
-	if(reconnect_param->security_type == RTW_SECURITY_WPA3_AES_PSK) {
-		wifi_set_pmk_cache_enable(DISABLE);
-		is_pmk_disable=1;
-	}
-#endif
-#endif //CONFIG_SAE_SUPPORT
 	
 	if(assoc_by_bssid){
 		ret = wifi_connect_bssid(saved_bssid, reconnect_param->ssid, reconnect_param->security_type,
@@ -3016,16 +3088,10 @@ static void wifi_autoreconnect_thread(void *param)
 							reconnect_param->ssid_len, reconnect_param->password_len, reconnect_param->key_id, NULL);
 	}
 
-#ifdef CONFIG_SAE_SUPPORT
-#if CONFIG_ENABLE_WPS
+#if defined(CONFIG_SAE_SUPPORT) && (CONFIG_ENABLE_WPS==1)
 	if(is_wpa3_disable)
 		wext_set_support_wpa3(ENABLE);
 #endif
-#ifdef CONFIG_PMKSA_CACHING
-	if(is_pmk_disable)
-		wifi_set_pmk_cache_enable(ENABLE);
-#endif
-#endif //CONFIG_SAE_SUPPORT
 
 #if CONFIG_LWIP_LAYER
 	if(ret == RTW_SUCCESS) {

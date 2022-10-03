@@ -207,6 +207,11 @@ void wifi_indication( rtw_event_indicate_t event, char *buf, int buf_len, int fl
 			printf("\n\r%s(): WIFI_EVENT_NO_BEACON\n", __func__);
 #endif
 			break;
+		case WIFI_EVENT_TARGET_SSID_RSSI:
+#if(WIFI_INDICATE_MSG==1)
+			printf("\n\r%s(): WIFI_EVENT_TARGET_SSID_RSSI, rssi: %d\n", __func__, flags);
+#endif
+			break;
 	}
 
 #if CONFIG_INIC_EN

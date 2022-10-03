@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <project>
     <fileVersion>3</fileVersion>
     <configuration>
@@ -787,7 +787,7 @@
             <name>BUILDACTION</name>
             <archiveVersion>1</archiveVersion>
             <data>
-                <prebuild>CSCRIPT  "$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\iar_utility\prebuild.vbs" "$PROJ_DIR$"</prebuild>
+                <prebuild>CSCRIPT  "$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\iar_utility\prebuild.vbs" "$PROJ_DIR$" "$PROJ_FNAME$"</prebuild>
                 <postbuild>CSCRIPT  "$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\iar_utility\postbuild_is.vbs" "$TARGET_DIR$" "$PROJ_DIR$" "$CONFIG_NAME$" "$TOOLKIT_DIR$"</postbuild>
             </data>
         </settings>
@@ -3002,6 +3002,9 @@
         </group>
         <file>
             <name>$PROJ_DIR$\..\..\..\component\common\utilities\cJSON.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\..\component\common\utilities\gb2unicode.c</name>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\..\component\common\utilities\http_client.c</name>

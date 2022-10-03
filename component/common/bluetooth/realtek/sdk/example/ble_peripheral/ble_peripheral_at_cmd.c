@@ -32,10 +32,17 @@ extern void *ble_scatternet_io_queue_handle;
 	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET))
 #if defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE
 extern T_GAP_DEV_STATE bt_mesh_provisioner_multiple_profile_gap_dev_state;
-#elif defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFIL
+#elif defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE
 extern T_GAP_DEV_STATE bt_mesh_device_multiple_profile_gap_dev_state;
 #endif
 extern uint16_t bt_mesh_peripheral_adv_interval;
+#endif
+
+#if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
+#if defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE
+extern T_GAP_DEV_STATE bt_mesh_device_matter_gap_dev_state;
+extern uint16_t bt_mesh_device_matter_adv_interval;
+#endif
 #endif
 
 static u8 ctoi(char c)
@@ -107,13 +114,23 @@ int ble_peripheral_at_cmd_set_adv_int(int argc, char **argv)
 	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET))
 #if defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE
 	new_state = bt_mesh_provisioner_multiple_profile_gap_dev_state;
-#elif defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFIL
+#elif defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE
 	new_state = bt_mesh_device_multiple_profile_gap_dev_state;
 #endif
 	if (new_state.gap_init_state) {
 		bt_mesh_peripheral_adv_interval = adv_int_min;
 		return 0;
 	}
+#endif
+
+#if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
+#if defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE
+	new_state = bt_mesh_device_matter_gap_dev_state;
+	if (new_state.gap_init_state) {
+		bt_mesh_device_matter_adv_interval = adv_int_min;
+		return 0;
+	}
+#endif
 #endif
 
 #if ((defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL) || \

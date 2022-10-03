@@ -382,6 +382,32 @@ int flash_get_status2(flash_t *obj)
     return status;
 }
 
+/*
+Function Description:
+This function aims to read the value of the status register 3.
+It can be used to check the current status of the flash 
+Please refer to the datatsheet of flash for more details of the content of status register.
+
+* @brief  Read Status register 3 to check flash status
+* @param  obj: Specifies the parameter of flash object.
+* @retval status: the value of status register.
+*/
+int flash_get_status3(flash_t *obj)
+{
+    phal_spic_adaptor_t phal_spic_adaptor;
+    pflash_cmd_t cmd;
+    u8 status = 0;
+
+    flash_init(obj);
+    phal_spic_adaptor = (obj->phal_spic_adaptor);
+    cmd = phal_spic_adaptor->cmd;
+
+    flash_resource_lock();
+    status = hal_flash_get_status(phal_spic_adaptor, cmd->rdsr3);
+    flash_resource_unlock();
+
+    return status;
+}
 
 /*
 Function Description:
@@ -501,6 +527,31 @@ int flash_set_status2(flash_t *obj, uint32_t data)
     return 1;
 }
 
+/*
+Function Description:
+This function aims to set the value of the status register 3.
+Please refer to the datatsheet of flash for more details of the content of status register.
+
+* @brief  Set Status register 3 to enable desired operation
+* @param  obj: Specifies the parameter of flash object.
+* @param  data: Specifies which bit users like to set
+   ex: if users want to set the third bit, data = 0x8. 
+* @retval   status: Success:1 or Failure: Others.
+*/
+int flash_set_status3(flash_t *obj, uint32_t data)
+{
+    phal_spic_adaptor_t phal_spic_adaptor;
+    pflash_cmd_t cmd;
+
+    flash_init(obj);
+    phal_spic_adaptor = (obj->phal_spic_adaptor);
+    cmd = phal_spic_adaptor->cmd;
+
+    flash_resource_lock();
+    hal_flash_set_status(phal_spic_adaptor, cmd->wrsr3, (u8)data);
+    flash_resource_unlock();
+    return 1;
+}
 
 /*
 Function Description:

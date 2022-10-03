@@ -33,7 +33,13 @@
 #include <gap_conn_le.h>
 #include "platform_stdlib.h"
 #include "ble_peripheral_at_cmd.h"
-#include "app_common_flags.h"
+#include "app_flags.h"
+#include "os_msg.h"
+#include "os_sync.h"
+#include "os_task.h"
+#include "os_timer.h"
+#include "os_sched.h"
+#include "vendor_cmd_bt.h"
 #if (F_BT_LE_USE_RANDOM_ADDR==1)
 #include "ftl_app.h"
 #endif
@@ -66,6 +72,86 @@ T_SERVER_ID bas_srv_id;  /**< Battery service id */
     */
 T_GAP_DEV_STATE gap_dev_state = {0, 0, 0, 0, 0};                 /**< GAP device state */
 T_GAP_CONN_STATE gap_conn_state = GAP_CONN_STATE_DISCONNECTED; /**< GAP connection state */
+
+#if (LEGACY_ADV_CONCURRENT == 1)
+extern void *evt_queue_handle;
+extern void *io_queue_handle;
+
+typedef struct
+{
+	void *task_handle;
+	void *sem_handle;
+	void *queue_handle;
+	void *timer0_handle;
+	void *timer1_handle;
+	bool start_stop_flag;
+	bool send_adv_flag;
+	bool deinit_flag;
+} T_LEGACY_ADV_CONCURRENT;
+
+typedef struct
+{
+	uint16_t adv_interval;
+	uint8_t local_bd_type;
+	uint8_t adv_data[31];
+	uint8_t scan_rsp_data[31];
+} T_LEGACY_ADV_INFO;
+
+T_LEGACY_ADV_CONCURRENT lac_adapter;
+T_LEGACY_ADV_INFO adv_info_0;
+T_LEGACY_ADV_INFO adv_info_1;
+
+#if (F_BT_LE_USE_RANDOM_ADDR == 1)
+uint8_t local_public_addr[6] = {0};
+uint8_t local_static_random_addr[6] = {0};
+#endif
+
+uint8_t adv_data_0[31] =
+{
+	0x02,
+	GAP_ADTYPE_FLAGS,
+	GAP_ADTYPE_FLAGS_LIMITED | GAP_ADTYPE_FLAGS_BREDR_NOT_SUPPORTED,
+	0x03,
+	GAP_ADTYPE_16BIT_COMPLETE,
+	LO_WORD(0x1234),
+	HI_WORD(0x1234),
+	0x17,
+	GAP_ADTYPE_LOCAL_NAME_COMPLETE,
+	0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+	0x10, 0x11, 0x12, 0x13, 0x14, 0x15
+};
+
+uint8_t scan_rsp_data_0[31] =
+{
+	0x1E,
+	GAP_ADTYPE_MANUFACTURER_SPECIFIC,
+	0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F,
+	0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C
+};
+
+uint8_t adv_data_1[31] =
+{
+	0x02,
+	GAP_ADTYPE_FLAGS,
+	GAP_ADTYPE_FLAGS_LIMITED | GAP_ADTYPE_FLAGS_BREDR_NOT_SUPPORTED,
+	0x03,
+	GAP_ADTYPE_16BIT_COMPLETE,
+	LO_WORD(0x5678),
+	HI_WORD(0x5678),
+	0x17,
+	GAP_ADTYPE_LOCAL_NAME_COMPLETE,
+	0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F,
+	0x50, 0x51, 0x52, 0x53, 0x54, 0x55
+};
+
+uint8_t scan_rsp_data_1[31] =
+{
+	0x1E,
+	GAP_ADTYPE_MANUFACTURER_SPECIFIC,
+	0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F,
+	0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x7B, 0x7C
+};
+#endif
 
 /*============================================================================*
  *                              Functions
@@ -102,6 +188,16 @@ void app_handle_io_msg(T_IO_MSG io_msg)
                 le_adv_stop();
             } else if (io_msg.subtype == 1) {
                 le_adv_start();
+#if (LEGACY_ADV_CONCURRENT == 1)
+            } else if (io_msg.subtype == 2) {
+                if (lac_adapter.start_stop_flag == true)
+                    break;
+                T_GAP_CAUSE ret = GAP_CAUSE_SUCCESS;
+                ret = le_adv_update_param();
+                if (ret != GAP_CAUSE_SUCCESS) {
+                    printf("le_adv_update_param fail! ret = 0x%x\r\n", ret);
+                }
+#endif
             }
         }
         break;
@@ -147,7 +243,13 @@ void app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, uint16_t cause)
 							bt_addr[2],
 							bt_addr[1],
 							bt_addr[0]);
+#if (LEGACY_ADV_CONCURRENT == 1)	//Do not auto start ADV, need legacy_adv_concurrent_init for configuration
+#if (F_BT_LE_USE_RANDOM_ADDR == 1)
+			memcpy(local_public_addr, bt_addr, 6);
+#endif
+#else
 			le_adv_start();
+#endif
 		}
 	}
 
@@ -176,6 +278,10 @@ void app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, uint16_t cause)
     gap_dev_state = new_state;
 }
 
+#if (LEGACY_ADV_CONCURRENT == 1)
+void legacy_adv_concurrent_start();
+void legacy_adv_concurrent_stop();
+#endif
 /**
  * @brief    Handle msg GAP_MSG_LE_CONN_STATE_CHANGE
  * @note     All the gap conn state events are pre-handled in this function.
@@ -198,8 +304,12 @@ void app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE new_state, uint
             {
                 APP_PRINT_ERROR1("app_handle_conn_state_evt: connection lost cause 0x%x", disc_cause);
             }
-			printf("\n\r[BLE peripheral] BT Disconnected, cause 0x%x, start ADV\n\r", disc_cause);
+            printf("\n\r[BLE peripheral] BT Disconnected, cause 0x%x, start ADV\n\r", disc_cause);
+#if (LEGACY_ADV_CONCURRENT == 1)
+            legacy_adv_concurrent_start();
+#else
             le_adv_start();
+#endif
         }
         break;
 
@@ -218,7 +328,12 @@ void app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE new_state, uint
             APP_PRINT_INFO5("GAP_CONN_STATE_CONNECTED:remote_bd %s, remote_addr_type %d, conn_interval 0x%x, conn_latency 0x%x, conn_supervision_timeout 0x%x",
                             TRACE_BDADDR(remote_bd), remote_bd_type,
                             conn_interval, conn_latency, conn_supervision_timeout);
-			printf("\n\r[BLE peripheral] BT Connected\n\r");
+            printf("\n\r[BLE peripheral] BT Connected\n\r");
+#if (LEGACY_ADV_CONCURRENT == 1)
+            legacy_adv_concurrent_stop();
+#else
+            //Do nothing, stack auto stop ADV
+#endif
         }
         break;
 
@@ -473,7 +588,24 @@ T_APP_RESULT app_gap_callback(uint8_t cb_type, void *p_cb_data)
                         p_data->p_le_modify_white_list_rsp->operation,
                         p_data->p_le_modify_white_list_rsp->cause);
         break;
-
+#if (LEGACY_ADV_CONCURRENT == 1)
+    case GAP_MSG_LE_ADV_UPDATE_PARAM:
+        APP_PRINT_INFO1("GAP_MSG_LE_ADV_UPDATE_PARAM: cause 0x%x",
+                      p_data->p_le_adv_update_param_rsp->cause);
+        if (p_data->p_le_adv_update_param_rsp->cause == 0) {
+            if (lac_adapter.start_stop_flag == true)
+                break;
+            T_GAP_CAUSE ret = GAP_CAUSE_SUCCESS;
+#if BT_VENDOR_CMD_ONE_SHOT_SUPPORT
+            ret = le_vendor_one_shot_adv();
+#endif
+            if (ret != GAP_CAUSE_SUCCESS) {
+                printf("le_vendor_one_shot_adv fail! ret = 0x%x\r\n", ret);
+            }
+        } else
+            printf("GAP_MSG_LE_ADV_UPDATE_PARAM: cause 0x%x\r\n", p_data->p_le_adv_update_param_rsp->cause);
+        break;
+#endif
     default:
         APP_PRINT_ERROR1("app_gap_callback: unhandled cb_type 0x%x", cb_type);
         break;
@@ -664,6 +796,48 @@ T_APP_RESULT app_profile_callback(T_SERVER_ID service_id, void *p_data)
     return app_result;
 }
 
+void app_vendor_callback(uint8_t cb_type, void *p_cb_data)
+{
+	T_GAP_VENDOR_CB_DATA cb_data;
+	memcpy(&cb_data, p_cb_data, sizeof(T_GAP_VENDOR_CB_DATA));
+	APP_PRINT_INFO1("app_vendor_callback: command 0x%x", cb_data.p_gap_vendor_cmd_rsp->command);
+	switch (cb_type)
+	{
+		case GAP_MSG_VENDOR_CMD_RSP:
+			switch(cb_data.p_gap_vendor_cmd_rsp->command)
+			{
+#if BT_VENDOR_CMD_ONE_SHOT_SUPPORT
+				case HCI_LE_VENDOR_EXTENSION_FEATURE2:
+					//if(cb_data.p_gap_vendor_cmd_rsp->param[0] == HCI_EXT_SUB_ONE_SHOT_ADV)
+					{
+						APP_PRINT_ERROR1("One shot adv resp: cause 0x%x", cb_data.p_gap_vendor_cmd_rsp->cause);
+#if (LEGACY_ADV_CONCURRENT == 1)
+						if (cb_data.p_gap_vendor_cmd_rsp->cause == 0) {
+							if (lac_adapter.deinit_flag == true)
+								break;
+							if (lac_adapter.sem_handle != NULL) {
+								if (os_sem_give(lac_adapter.sem_handle) == false) {
+									printf("os_sem_give lac_adapter.sem_handle fail!\r\n");
+								}
+							}
+						} else
+							printf("One shot adv resp: cause 0x%x\r\n", cb_data.p_gap_vendor_cmd_rsp->cause);
+#endif
+					}
+					break;
+#endif
+				default:
+					break;
+			}
+			break;
+
+		default:
+			break;
+	}
+
+	return;
+}
+
 /** @} */ /* End of group PERIPH_SEVER_CALLBACK */
 /** @} */
 /** @addtogroup  PERIPHERAL_APP
@@ -704,6 +878,162 @@ uint32_t ble_peripheral_app_load_static_random_address(T_APP_STATIC_RANDOM_ADDR 
     return result;
 }
 #endif
+
+#if (LEGACY_ADV_CONCURRENT == 1)
+void legacy_adv_concurrent_send_msg(void)
+{
+	T_IO_MSG io_msg;
+	io_msg.type = IO_MSG_TYPE_QDECODE;
+	io_msg.subtype = 2;
+
+	uint8_t event = EVENT_IO_TO_APP;
+
+	if (evt_queue_handle != NULL && io_queue_handle != NULL) {
+		if (os_msg_send(io_queue_handle, &io_msg, 0) == false) {
+			printf("legacy_adv_concurrent_send_msg io_queue_handle fail\r\n");
+		} else if (os_msg_send(evt_queue_handle, &event, 0) == false) {
+			printf("legacy_adv_concurrent_send_msg evt_queue_handle fail\r\n");
+		}
+	}
+}
+
+void legacy_adv_concurrent_send_adv_info(T_LEGACY_ADV_INFO *p_adv_info)
+{
+	if (lac_adapter.deinit_flag == true)
+		return;
+
+	if (lac_adapter.queue_handle != NULL) {
+		if (os_msg_send(lac_adapter.queue_handle, p_adv_info, 0) == false) {
+			printf("os_msg_send adv_info_0 lac_adapter.queue_handle fail!\r\n");
+		}
+	} else {
+		printf("lac_adapter.queue_handle is NULL!\r\n");
+	}
+}
+
+void legacy_adv_concurrent_task(void *p_param)
+{
+	T_LEGACY_ADV_INFO adv_info;
+
+	while (1) {
+		if (os_sem_take(lac_adapter.sem_handle, 0xFFFFFFFF) == false) {
+			printf("os_sem_take lac_adapter.sem_handle fail!\r\n");
+		} else {
+			if (lac_adapter.deinit_flag == true) // If deinit, break the outer while loop
+				break;
+
+			while (os_msg_recv(lac_adapter.queue_handle, &adv_info, 0) == false) {
+				os_delay(1);
+				if (lac_adapter.start_stop_flag == true) {	// If stoped, break the inner while loop
+					lac_adapter.send_adv_flag = false;
+					break;
+				}
+			}
+
+			if (lac_adapter.send_adv_flag == true) {
+#if (F_BT_LE_USE_RANDOM_ADDR == 1)
+				if (adv_info.local_bd_type == GAP_LOCAL_ADDR_LE_PUBLIC) {
+					le_cfg_local_identity_address(local_public_addr, GAP_IDENT_ADDR_PUBLIC);
+				} else if (adv_info.local_bd_type == GAP_LOCAL_ADDR_LE_RANDOM) {
+					le_cfg_local_identity_address(local_static_random_addr, GAP_IDENT_ADDR_RAND);
+				}
+				le_adv_set_param(GAP_PARAM_ADV_LOCAL_ADDR_TYPE, sizeof(adv_info.local_bd_type), &adv_info.local_bd_type);
+#endif
+				le_adv_set_param(GAP_PARAM_ADV_DATA, sizeof(adv_info.adv_data), (void *)adv_info.adv_data);
+				le_adv_set_param(GAP_PARAM_SCAN_RSP_DATA, sizeof(adv_info.scan_rsp_data), (void *)adv_info.scan_rsp_data);
+				legacy_adv_concurrent_send_msg();
+			}
+		}
+	}
+
+	os_sem_delete(lac_adapter.sem_handle);
+	os_msg_queue_delete(lac_adapter.queue_handle);
+	os_timer_delete(&lac_adapter.timer0_handle);
+	os_timer_delete(&lac_adapter.timer1_handle);
+	memset(&lac_adapter, 0, sizeof(lac_adapter));
+	printf("legacy_adv_concurrent_deinit success!\r\n");
+	os_task_delete(NULL);
+}
+
+void legacy_adv_concurrent_timer0_callback(void *p_param)
+{
+	legacy_adv_concurrent_send_adv_info(&adv_info_0);
+}
+
+void legacy_adv_concurrent_timer1_callback(void *p_param)
+{
+	legacy_adv_concurrent_send_adv_info(&adv_info_1);
+}
+
+void legacy_adv_concurrent_init(uint32_t adv_interval_0, uint32_t adv_interval_1)
+{
+	if (adv_interval_0 < 20 || adv_interval_0 > 10240 || adv_interval_1 < 20 || adv_interval_1 > 10240) {
+		printf("ADV interval should in [20ms, 10240ms]!\r\n");
+	}
+
+	adv_info_0.adv_interval = adv_interval_0;
+	adv_info_0.local_bd_type = GAP_LOCAL_ADDR_LE_PUBLIC;
+	memcpy(&adv_info_0.adv_data, adv_data_0, 31);
+	memcpy(&adv_info_0.scan_rsp_data, scan_rsp_data_0, 31);
+
+	adv_info_1.adv_interval = adv_interval_1;
+#if (F_BT_LE_USE_RANDOM_ADDR == 1)
+	adv_info_1.local_bd_type = GAP_LOCAL_ADDR_LE_RANDOM;
+#else if (F_BT_LE_USE_RANDOM_ADDR == 0)
+	adv_info_1.local_bd_type = GAP_LOCAL_ADDR_LE_PUBLIC;
+#endif
+	memcpy(&adv_info_1.adv_data, adv_data_1, 31);
+	memcpy(&adv_info_1.scan_rsp_data, scan_rsp_data_1, 31);
+
+	memset(&lac_adapter, 0, sizeof(lac_adapter));
+	lac_adapter.start_stop_flag = true;
+	lac_adapter.send_adv_flag = true;
+	lac_adapter.deinit_flag = false;
+	if (os_sem_create(&lac_adapter.sem_handle, 0, 1) == false)
+		printf("os_sem_create lac_adapter.sem_handle fail!\r\n");
+	if (os_msg_queue_create(&lac_adapter.queue_handle, 0x20, sizeof(T_LEGACY_ADV_INFO)) == false)
+		printf("os_msg_queue_create lac_adapter.queue_handle fail!\r\n");
+	if (os_timer_create(&lac_adapter.timer0_handle, "lac timer0", 0, adv_interval_0, 1, legacy_adv_concurrent_timer0_callback) == false)
+		printf("os_timer_create lac_adapter.timer0_handle fail!\r\n");
+	if (os_timer_create(&lac_adapter.timer1_handle, "lac timer1", 1, adv_interval_1, 1, legacy_adv_concurrent_timer1_callback) == false)
+		printf("os_timer_create lac_adapter.timer1_handle fail!\r\n");
+	if (os_task_create(&lac_adapter.task_handle, "lac task", legacy_adv_concurrent_task, 0, 1024, 1) == false)
+		printf("os_task_create lac_adapter.task_handle fail!\r\n");
+}
+
+void legacy_adv_concurrent_start()
+{
+	if (lac_adapter.start_stop_flag == true) {
+		lac_adapter.start_stop_flag = false;
+		lac_adapter.send_adv_flag = true;
+		legacy_adv_concurrent_send_adv_info(&adv_info_0);
+		legacy_adv_concurrent_send_adv_info(&adv_info_1);
+		os_sem_give(lac_adapter.sem_handle);
+		os_timer_start(&lac_adapter.timer0_handle);
+		os_timer_start(&lac_adapter.timer1_handle);
+	}
+}
+
+void legacy_adv_concurrent_stop()
+{
+	if (lac_adapter.start_stop_flag == false) {
+		lac_adapter.start_stop_flag = true;
+		os_timer_stop(&lac_adapter.timer0_handle);
+		os_timer_stop(&lac_adapter.timer1_handle);
+	}
+}
+
+void legacy_adv_concurrent_deinit()
+{
+	if (lac_adapter.start_stop_flag == false) {
+		legacy_adv_concurrent_stop();
+	}
+
+	lac_adapter.deinit_flag = true;
+	os_sem_give(lac_adapter.sem_handle);
+}
+#endif
+
 /** @} */
 /** @} */
 /** @} */ /* End of group PERIPH_APP */

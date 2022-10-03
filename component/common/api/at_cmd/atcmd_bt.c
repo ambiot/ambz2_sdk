@@ -77,6 +77,7 @@ extern void *bt_mesh_provisioner_multiple_profile_io_queue_handle;
 extern void *bt_mesh_device_multiple_profile_evt_queue_handle;
 extern void *bt_mesh_device_multiple_profile_io_queue_handle;
 #endif
+#endif
 
 #if defined(CONFIG_BT_BREEZE) && CONFIG_BT_BREEZE
 #include "breeze_hal_ble.h"
@@ -93,53 +94,53 @@ uint8_t bt_command_type(uint16_t command_type)
 {
 	switch (command_type) {
 	case BT_COMMAND_CENTRAL: {
-		if (!((bt_cmd_type & CENTRAL_BIT) >> 7)) {
-			return 0;
+			if (!((bt_cmd_type & CENTRAL_BIT) >> 7)) {
+				return 0;
+			}
 		}
-	}
-	break;
+		break;
 	case BT_COMMAND_PERIPHERAL: {
-		if (!((bt_cmd_type & PERIPHERAL_BIT) >> 6)) {
-			return 0;
+			if (!((bt_cmd_type & PERIPHERAL_BIT) >> 6)) {
+				return 0;
+			}
 		}
-	}
-	break;
+		break;
 	case BT_COMMAND_SCATTERNET: {
-		if (!((bt_cmd_type & SCATTERNET_BIT) >> 5)) {
-			return 0;
+			if (!((bt_cmd_type & SCATTERNET_BIT) >> 5)) {
+				return 0;
+			}
 		}
-	}
-	break;
+		break;
 	case BT_COMMAND_BEACON: {
-		if (!((bt_cmd_type & BEACON_BIT) >> 4)) {
-			return 0;
+			if (!((bt_cmd_type & BEACON_BIT) >> 4)) {
+				return 0;
+			}
 		}
-	}
-	break;
+		break;
 	case BT_COMMAND_CONFIG: {
-		if (!((bt_cmd_type & CONFIG_BIT) >> 3)) {
-			return 0;
+			if (!((bt_cmd_type & CONFIG_BIT) >> 3)) {
+				return 0;
+			}
 		}
-	}
-	break;
+		break;
 	case BT_COMMAND_AIRSYNC_CONFIG: {
-		if (!((bt_cmd_type & AIRSYNC_CONFIG_BIT) >> 2)) {
-			return 0;
+			if (!((bt_cmd_type & AIRSYNC_CONFIG_BIT) >> 2)) {
+				return 0;
+			}
 		}
-	}
-	break;
+		break;
 	case BT_COMMAND_MESH: {
-		if (!((bt_cmd_type & MESH_BIT) >> 1)) {
-			return 0;
+			if (!((bt_cmd_type & MESH_BIT) >> 1)) {
+				return 0;
+			}
 		}
-	}
-	break;
+		break;
 	case BT_COMMAND_STACK: {
-		if (!(bt_cmd_type & STACK_BIT)) {
-			return 0;
+			if (!(bt_cmd_type & STACK_BIT)) {
+				return 0;
+			}
 		}
-	}
-	break;
+		break;
 	case BT_COMMAND_SCAN:
 	case BT_COMMAND_CONNECT:
 	case BT_COMMAND_DISCONNECT:
@@ -150,40 +151,28 @@ uint8_t bt_command_type(uint16_t command_type)
 	case BT_COMMAND_MODIFY_WHITELIST:
 	case BT_COMMAND_SET_SCAN_PARAM:
 	case BT_COMMAND_SET_PHY: {
-		if (!((bt_cmd_type & CENTRAL_BIT) >> 7) && !((bt_cmd_type & SCATTERNET_BIT) >> 5) && !((bt_cmd_type & MESH_BIT) >> 1)) {
-			return 0;
+			if (!((bt_cmd_type & CENTRAL_BIT) >> 7) && !((bt_cmd_type & SCATTERNET_BIT) >> 5) && !((bt_cmd_type & MESH_BIT) >> 1)) {
+				return 0;
+			}
 		}
-	}
-	break;
+		break;
 	case BT_COMMAND_SEND_INDI_NOTI:
 	case BT_COMMAND_MODIFY_ADV_INTERVAL: {
-		if (!((bt_cmd_type & PERIPHERAL_BIT) >> 6) && !((bt_cmd_type & SCATTERNET_BIT) >> 5) && !((bt_cmd_type & MESH_BIT) >> 1)) {
-			return 0;
+			if (!((bt_cmd_type & PERIPHERAL_BIT) >> 6) && !((bt_cmd_type & SCATTERNET_BIT) >> 5) && !((bt_cmd_type & MESH_BIT) >> 1)) {
+				return 0;
+			}
 		}
-	}
-	break;
+		break;
 	case BT_COMMAND_AUTH:
 	case BT_COMMAND_SEND_USERCONF:
 	case BT_COMMAND_UPDATE_CONN_REQUEST:
 	case BT_COMMAND_BOND_INFORMATION: {
-		if (!((bt_cmd_type & CENTRAL_BIT) >> 7) && !((bt_cmd_type & PERIPHERAL_BIT) >> 6) && !((bt_cmd_type & SCATTERNET_BIT) >> 5) &&
-			!((bt_cmd_type & MESH_BIT) >> 1)) {
-			return 0;
+			if (!((bt_cmd_type & CENTRAL_BIT) >> 7) && !((bt_cmd_type & PERIPHERAL_BIT) >> 6) && !((bt_cmd_type & SCATTERNET_BIT) >> 5) &&
+				!((bt_cmd_type & MESH_BIT) >> 1)) {
+				return 0;
+			}
 		}
-	}
-	break;
-	case BT_COMMAND_RECONFIG: {
-		if (!((bt_cmd_type & SCATTERNET_BIT) >> 5)) {
-			return 0;
-		}
-	}
-	break;
-	case BT_COMMAND_MESH_RECONFIG: {
-		if (!((bt_cmd_type & SCATTERNET_BIT) >> 5) && !((bt_cmd_type & MESH_BIT) >> 1)) {
-			return 0;
-		}
-	}
-	break;
+		break;
 	default:
 		break;
 	}

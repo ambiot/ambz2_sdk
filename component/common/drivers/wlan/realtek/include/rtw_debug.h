@@ -224,7 +224,9 @@ extern u16 GlobalDebugLevel;
 #if 	defined (_dbgdump)
 	#undef DBG_871X_LEVEL
 #if defined (__ICCARM__) || defined (__CC_ARM) ||defined(__GNUC__)
-#ifndef PLATFORM_OHOS
+#ifdef PLATFORM_OHOS
+	#include "diag.h"
+#endif
 	#define DBG_871X_LEVEL(level, ...)     \
 	do {\
 		if(GlobalDebugEnable){\
@@ -242,10 +244,6 @@ extern u16 GlobalDebugLevel;
 			_dbgdump(__VA_ARGS__);\
 		} \
 	}while(0)
-#else
-	#define DBG_871X_LEVEL(level, ...)
-	#define RTW_PRINT_MSG(...)
-#endif
 #else
 	#define DBG_871X_LEVEL(level, fmt, arg...)     \
 	do {\
