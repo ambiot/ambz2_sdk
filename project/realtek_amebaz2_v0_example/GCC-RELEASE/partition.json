@@ -16,6 +16,7 @@
             },
             "key_exp_op": 2,
             "user_len": 256,
+            "user_ext": "FFFFFFFFFFFFFFFFFFFFFFFF",
             "user_bin":"user.bin",
             "items":["boot","fw1","fw2"]
         },

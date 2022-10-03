@@ -2,6 +2,7 @@
 ifeq ($(findstring CYGWIN, $(OS)), CYGWIN)
 	ELF2BIN = $(AMEBAZ2_TOOLDIR)/elf2bin.exe
 	CHKSUM = $(AMEBAZ2_TOOLDIR)/checksum.exe
+	LZMA_PY = $(AMEBAZ2_TOOLDIR)/LZMA_GenCompressedFW.exe
 	TOOLCHAIN_FILENAME_CURR = asdk-6.5.0-cygwin-newlib-build-3215-i686.tar.bz2
 	TOOLCHAIN_FILENAME_PREV = asdk-6.4.1-cygwin-newlib-build-2778-i686.tar.bz2
 	TOOLCHAIN_BITS = 32
@@ -18,6 +19,7 @@ endif
 ifeq ($(findstring Linux, $(OS)), Linux)
 	ELF2BIN = $(AMEBAZ2_GCCTOOLDIR)/elf2bin.linux	
 	CHKSUM = $(AMEBAZ2_GCCTOOLDIR)/checksum.linux
+	LZMA_PY = $(AMEBAZ2_GCCTOOLDIR)/./LZMA_GenCompressedFW_linux
 	TOOLCHAIN_FILENAME_CURR = asdk-6.5.0-linux-newlib-build-3215-x86_64.tar.bz2
 	TOOLCHAIN_FILENAME_PREV = asdk-6.4.1-linux-newlib-build-3026-x86_64.tar.bz2
 	TOOLCHAIN_BITS = 64

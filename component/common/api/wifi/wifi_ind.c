@@ -210,8 +210,18 @@ void wifi_indication( rtw_event_indicate_t event, char *buf, int buf_len, int fl
 		case WIFI_EVENT_TARGET_SSID_RSSI:
 #if(WIFI_INDICATE_MSG==1)
 			printf("\n\r%s(): WIFI_EVENT_TARGET_SSID_RSSI, rssi: %d\n", __func__, flags);
+#endif			
+			break;
+		case WIFI_EVENT_DHCP_RENEW:
+#if(WIFI_INDICATE_MSG==1)
+			printf("\n\r%s(): WIFI_EVENT_DHCP_RENEW\n", __func__);
 #endif
 			break;
+		case WIFI_EVENT_SWITCH_CHANNE:
+#if(WIFI_INDICATE_MSG==1)
+			printf("\n\r%s(): WIFI_EVENT_SWITCH_CHANNE, channel: %d\n", __func__, flags);
+#endif
+			break;			
 	}
 
 #if CONFIG_INIC_EN

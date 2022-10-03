@@ -349,6 +349,14 @@ static void ssl_client_handler(void *param){
 	mbedtls_ssl_conf_authmode(&conf, MBEDTLS_SSL_VERIFY_NONE);
 	mbedtls_ssl_conf_rng(&conf, my_random, NULL);
 
+#if (defined(MBEDTLS_SSL_IN_CONTENT_LEN) && (MBEDTLS_SSL_IN_CONTENT_LEN  == 4096)) ||  \
+	(defined(MBEDTLS_SSL_MAX_CONTENT_LEN) && (MBEDTLS_SSL_MAX_CONTENT_LEN  == 4096))
+	if(ret = mbedtls_ssl_conf_max_frag_len(&conf, MBEDTLS_SSL_MAX_FRAG_LEN_4096) < 0) {
+		printf(" failed\n\r  ! mbedtls_ssl_conf_max_frag_len returned %d\n", ret);
+		goto exit;
+	}
+#endif
+
 	if((ret = mbedtls_ssl_setup(&ssl, &conf)) != 0) {
 		printf(" failed\n\r  ! ssl_setup returned %d\n", ret);
 		goto exit;

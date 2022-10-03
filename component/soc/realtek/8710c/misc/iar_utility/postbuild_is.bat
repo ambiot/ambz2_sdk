@@ -93,8 +93,22 @@ if not exist Debug\Exe\firmware_is.bin (
 	goto error_exit
 )
 
+:: delete currently existing compressed LZMA bin file
+::if exist %cfgdir%\Exe\firmware_is_lzma.bin (
+::	DEL /F %cfgdir%\Exe\firmware_is_lzma.bin
+::)
+
+:: generate compressed LZMA bin file
+%tooldir%\LZMA_GenCompressedFW.exe %cfgdir%\Exe\firmware_is.bin
+::if not exist Debug\Exe\firmware_is_lzma.bin (
+::	echo LZMA compressed FW not generated
+::	echo firmware_is_lzma.bin isn't generated > postbuild_is_error.txt
+::	goto error_exit
+::)
+
 :: generate firmware ota image
 %tooldir%\checksum.exe Debug\Exe\firmware_is.bin
+::%tooldir%\checksum.exe Debug\Exe\firmware_is_lzma.bin
 
 ::generate flash image, including partition + bootloader + firmware
 if exist %cfgdir%\Exe\flash_is.bin (

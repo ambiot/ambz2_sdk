@@ -110,31 +110,6 @@ INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_config
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/ble_central
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/ble_peripheral
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_fuzz_test
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_ota_central_client
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_datatrans
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/cmd
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/common
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/gap
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/inc
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/inc/amebaz2
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/realtek
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/platform
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/profile
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/utility
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/provisioner
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/device
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/api/common
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/api/provisioner
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/api/device
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/api
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_provisioner_rtk_demo
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_provisioner_rtk_demo/inc
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_device_rtk_demo
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/device_multiple_profile
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/provisioner_multiple_profile
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_test
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/src/mcu/module/data_uart_cmd
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/board/common/inc
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_airsync_config
@@ -217,6 +192,12 @@ SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_peripheral/
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_peripheral/ble_peripheral_at_cmd.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_peripheral/peripheral_app.c
 
+#bluetooth - example - ble_scatternet
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet/ble_scatternet_app.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet/ble_scatternet_app_main.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet/ble_scatternet_app_task.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet/ble_scatternet_link_mgr.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet/ble_scatternet_user_cmd.c
 #bluetooth - example - bt_config
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_config/bt_config_app_main.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_config/bt_config_app_task.c
@@ -661,7 +642,13 @@ endif
 	$(ELF2BIN) convert amebaz2_bootloader.json BOOTLOADER secure_bit=0
 	$(ELF2BIN) convert amebaz2_bootloader.json PARTITIONTABLE secure_bit=0
 	$(ELF2BIN) convert amebaz2_firmware_is.json FIRMWARE secure_bit=0
+#ifeq ($(findstring Linux, $(OS)), Linux)
+#	chmod 777 $(AMEBAZ2_GCCTOOLDIR)/LZMA_GenCompressedFW_linux
+#endif
+#	$(LZMA_PY) $(BIN_DIR)/firmware_is.bin
+
 	$(CHKSUM) $(BIN_DIR)/firmware_is.bin
+#	$(CHKSUM) $(BIN_DIR)/firmware_is_lzma.bin
 	$(ELF2BIN) combine $(BIN_DIR)/flash_is.bin PTAB=partition.bin,BOOT=$(BOOT_BIN_DIR)/bootloader.bin,FW1=$(BIN_DIR)/firmware_is.bin
 
 # Generate build info

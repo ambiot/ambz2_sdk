@@ -1,6 +1,6 @@
 #ifndef ROM_SSL_FUNC_STUBS_H
 #define ROM_SSL_FUNC_STUBS_H
-
+#include "platform_opts.h"
 #include "mbedtls/bignum.h"
 #include "mbedtls/ecp.h"
 #include "mbedtls/sha1.h"
@@ -16,11 +16,11 @@
 #include "mbedtls/pem.h"
 #include "mbedtls/dhm.h"
 #include "mbedtls/ecjpake.h"
-#include "mbedtls/arc4.h"
 #include "mbedtls/ecdh.h"
 #include "mbedtls/ecdsa.h"
 #include "mbedtls/pk.h"
 #include "mbedtls/pk_internal.h"
+#include "mbedtls/arc4.h"
 
 #if defined(CONFIG_PLATFORM_8710C) && defined(CONFIG_BUILD_SECURE) && (CONFIG_BUILD_SECURE == 1)
 typedef struct ssl_func_stubs_s {

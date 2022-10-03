@@ -1,8 +1,6 @@
-#include "FreeRTOS.h"
-#include "task.h"
+#include "osdep_service.h"
 #include <string.h>
 #include <stdio.h>
-
 #include "platform_opts.h"
 #include "osdep_service.h"
 
@@ -387,6 +385,13 @@ static void ssl_client(void *param)
 	mbedtls_ssl_conf_authmode(&conf, MBEDTLS_SSL_VERIFY_NONE);
 	mbedtls_ssl_conf_rng(&conf, my_random, NULL);
 	mbedtls_ssl_conf_dbg(&conf, my_debug, NULL);
+
+#if MBEDTLS_SSL_MAX_CONTENT_LEN == 4096
+	if(ret = mbedtls_ssl_conf_max_frag_len(&conf, MBEDTLS_SSL_MAX_FRAG_LEN_4096) < 0) {
+		printf(" failed\n\r  ! mbedtls_ssl_conf_max_frag_len %d\n", ret);
+		goto exit;
+	}
+#endif 
 
 #ifdef SSL_CLIENT_EXT
 	if((ret = ssl_client_ext_setup(&conf)) != 0) {

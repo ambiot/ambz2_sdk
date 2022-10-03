@@ -349,6 +349,13 @@ int wifi_get_ap_info(rtw_bss_info_t * ap_info, rtw_security_t* security);
 int wifi_set_country(rtw_country_code_t country_code);
 
 /**
+ * @brief  get the country code from driver
+ * @param[in]  country_code: Specify the country code.
+ * @return  RTW_SUCCESS: The country code is successfully set.
+ * @return  RTW_ERROR: The country code is not successfully set.
+ */
+int wifi_get_country(rtw_country_code_t *country_code);
+/**
  * @brief  get sta mode MAX data rate.
  * @param[out]  inidata_rate: the location will the MAX data rate
  * 	will be stored.
@@ -492,6 +499,14 @@ int wifi_set_mode(rtw_mode_t mode);
  *  	   RTW_ERROR otherwise
  */
 int wifi_off_fastly(void);
+
+/**
+ * @brief  Specify wpa mode for wifi connection.
+ * @param[in] wpa_mode: The desired wpa mode. It is defined as enum rtw_wpa_mode.
+ * @return  RTW_SUCCESS if setting wpa mode successful.
+ * @return  RTW_ERROR otherwise.
+ */
+int wifi_set_wpa_mode(rtw_wpa_mode wpa_mode);
 
 /**
  * @brief  Set IPS/LPS mode.

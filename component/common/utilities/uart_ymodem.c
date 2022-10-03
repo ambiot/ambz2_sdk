@@ -113,11 +113,14 @@ int ymodem_flashwrite(int flashadd, u8 *pbuf, int len)
 		len += 4 - ((len%4)==0 ? 4 : (len%4));
 	
 	while(len){
+		device_mutex_lock(RT_DEV_LOCK_FLASH);
 		if(flash_write_word(&flash, flashadd, *(unsigned int *)pbuf) !=1 ){
 			printf("write flash error!\r\n");
 			ret = -1;
+			device_mutex_unlock(RT_DEV_LOCK_FLASH);
 			return ret;
 		}
+		device_mutex_unlock(RT_DEV_LOCK_FLASH);
 		len -= 4;
 		pbuf += 4;
 		flashadd += 4;
@@ -408,7 +411,13 @@ void flash_dump_data(uart_ymodem_t *ptr)
 	u32 data;
 	printf("flash dump data");
 	for(i = 0;i< ptr->filelen;i+=4){
+		device_mutex_lock(RT_DEV_LOCK_FLASH);
+#if defined(CONFIG_PLATFORM_8710C)
+		flash_read_word(&ptr->flash, ptr->image_address + offset, &data);
+#else
 		flash_read_word(&ptr->flash, ptr->image_address + 0x10 + offset, &data);
+#endif
+		device_mutex_unlock(RT_DEV_LOCK_FLASH);
 		offset += 4;
 		printf("%x ",data);
 	}
@@ -550,7 +559,29 @@ int set_signature(uart_ymodem_t *ptr)
 	}
 	return ret;
 }
+#elif defined(CONFIG_PLATFORM_8710C)
+int data_write_to_flash(uart_ymodem_t *ptr)
+{ 
+	uint32_t NewFWAddr = 0;
+	int ret = 0 ;
+	uint32_t curr_fw_idx = 0;
+	static int offset = 0x0;
+	
+	NewFWAddr = sys_update_ota_prepare_addr();	
+	curr_fw_idx = sys_update_ota_get_curr_fw_idx();
+        
+        if((NewFWAddr+offset)%4096 == 0) 
+		flash_erase_sector(&ptr->flash, NewFWAddr+offset); 
+        
+        device_mutex_lock(RT_DEV_LOCK_FLASH);
+	flash_burst_write(&ptr->flash, NewFWAddr+offset, ptr->len, ptr->uart_rcv_buf);
+	device_mutex_unlock(RT_DEV_LOCK_FLASH);
+        
+	offset += ptr->len;
 
+	return ret;
+
+}
 #else
 int data_write_to_flash(uart_ymodem_t *ptr)
 {
@@ -560,7 +591,7 @@ int data_write_to_flash(uart_ymodem_t *ptr)
 	u32 data;
 	static int flags = 1;	//write update image header only once
 //  int file_blk_size = 0
-	
+	device_mutex_lock(RT_DEV_LOCK_FLASH);	
 	flash_read_word(&ptr->flash, OFFSET_DATA, &data);
 //	file_blk_size = ((ptr->filelen - 1)/4096) + 1;
 	if(data == ~0x0){
@@ -579,7 +610,6 @@ int data_write_to_flash(uart_ymodem_t *ptr)
 		flags = 1;
 	}
 //	ymodem_flashwrite(update_image_address + offset, ptr->uart_rcv_buf, ptr->len);
-	device_mutex_lock(RT_DEV_LOCK_FLASH);
 	flash_stream_write(&ptr->flash, ptr->image_address+offset, ptr->len, ptr->uart_rcv_buf);
 	device_mutex_unlock(RT_DEV_LOCK_FLASH);
 	offset += ptr->len;
@@ -593,6 +623,7 @@ int set_signature(uart_ymodem_t *ptr)
 	uint32_t sig_readback0,sig_readback1;
 	uint32_t oldimg2addr;
 
+	device_mutex_lock(RT_DEV_LOCK_FLASH);
 	//old image address
 	flash_read_word(&ptr->flash, 0x18, &oldimg2addr);
 	oldimg2addr = (oldimg2addr&0xFFFF)*1024;
@@ -611,7 +642,7 @@ int set_signature(uart_ymodem_t *ptr)
 	printf(" old signature %x,%x\n\r",sig_readback0, sig_readback1);
 #endif
 	printf(" set signature success!\n\r");
-
+	device_mutex_unlock(RT_DEV_LOCK_FLASH);
 	return ret;
 }
 
@@ -800,8 +831,12 @@ exit:
 		if(error_bit)
 			printf("error!!! error bit = %d\r\n",error_bit);
 		else{
-			printf(" [%s, %d Bytes] transfer_over!\r\n",ymodem_ptr->filename,ymodem_ptr->filelen);	
+			printf(" [%s, %d Bytes] transfer_over!\r\n",ymodem_ptr->filename,ymodem_ptr->filelen);
+                        
+#if !defined(CONFIG_PLATFORM_8710C)
 			ret = set_signature(ymodem_ptr);
+#endif
+                        
 #if DUMP_DATA
 			flash_dump_data(ymodem_ptr);
 #endif

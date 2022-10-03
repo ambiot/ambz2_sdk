@@ -77,6 +77,8 @@ static void* disconnect_sema = NULL;
 rtw_mode_t wifi_mode = RTW_MODE_STA;
 #endif
 extern rtw_mode_t wifi_mode;
+static rtw_wpa_mode wifi_wpa_mode = WPA_AUTO_MODE;
+
 int error_flag = RTW_UNKNOWN;
 uint32_t rtw_join_status;
 #if ATCMD_VER == ATVER_2
@@ -218,6 +220,8 @@ static int wifi_connect_local(rtw_network_info_t *pWifi)
 				ret = wext_set_key_ext(WLAN0_NAME, IW_ENCODE_ALG_TKIP, NULL, 0, 0, 0, 0, NULL, 0);
 			if(ret == 0)
 				ret = wext_set_passphrase(WLAN0_NAME, pWifi->password, pWifi->password_len);
+			if(ret == 0)
+				ret = rltk_wlan_set_wpa_mode(WLAN0_NAME,wifi_wpa_mode);
 			break;
 		case RTW_SECURITY_WPA_AES_PSK:
 		case RTW_SECURITY_WPA_MIXED_PSK:
@@ -234,6 +238,8 @@ static int wifi_connect_local(rtw_network_info_t *pWifi)
 				ret = wext_set_key_ext(WLAN0_NAME, IW_ENCODE_ALG_CCMP, NULL, 0, 0, 0, 0, NULL, 0);
 			if(ret == 0)
 				ret = wext_set_passphrase(WLAN0_NAME, pWifi->password, pWifi->password_len);
+			if(ret == 0)
+				ret = rltk_wlan_set_wpa_mode(WLAN0_NAME,wifi_wpa_mode);
 			break;
 		default:
 			ret = -1;
@@ -275,6 +281,8 @@ static int wifi_connect_bssid_local(rtw_network_info_t *pWifi)
 				ret = wext_set_key_ext(WLAN0_NAME, IW_ENCODE_ALG_TKIP, NULL, 0, 0, 0, 0, NULL, 0);
 			if(ret == 0)
 				ret = wext_set_passphrase(WLAN0_NAME, pWifi->password, pWifi->password_len);
+			if(ret == 0)
+				ret = rltk_wlan_set_wpa_mode(WLAN0_NAME,wifi_wpa_mode);
 			break;
 		case RTW_SECURITY_WPA_AES_PSK:
 		case RTW_SECURITY_WPA_MIXED_PSK:
@@ -291,6 +299,8 @@ static int wifi_connect_bssid_local(rtw_network_info_t *pWifi)
 				ret = wext_set_key_ext(WLAN0_NAME, IW_ENCODE_ALG_CCMP, NULL, 0, 0, 0, 0, NULL, 0);
 			if(ret == 0)
 				ret = wext_set_passphrase(WLAN0_NAME, pWifi->password, pWifi->password_len);
+			if(ret == 0)
+				ret = rltk_wlan_set_wpa_mode(WLAN0_NAME,wifi_wpa_mode);
 			break;
 		default:
 			ret = -1;
@@ -441,7 +451,12 @@ extern void dhcp6_stop(struct netif *netif);
 extern u32 rltk_wlan_get_link_err(void);
 static void wifi_rssi_report_hdl( char* buf, int buf_len, int flags, void* userdata)
 {
-	printf("%s, rssi: %d\n", __func__, flags);
+	int rssi = flags;
+	unsigned char mac_addr[6] = {0};
+	memcpy(mac_addr,buf,6);
+
+	printf("scan report rssi: %d bssid: %02x:%02x:%02x:%02x:%02x:%02x\n", rssi, 
+		mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
 }
 
 static void wifi_link_err_parse(u16 reason_code)
@@ -504,6 +519,9 @@ static void wifi_link_err_parse(u16 reason_code)
 	switch(reason_code) {
 		case 17:
 			printf("auth stage, ap auth full\n");
+			break;
+		case 65530:
+			printf("SA query timeout\n");
 			break;
 		case 65534:
 			printf("connected stage, ap changed\n");
@@ -647,7 +665,11 @@ static void wifi_disconn_hdl( char* buf, int buf_len, int flags, void* userdata)
 	dhcp6_stop(&xnetif[0]);
 #endif
 #endif
-	netif_set_link_down(&xnetif[0]);
+#if LWIP_ARP
+	if (xnetif[0].flags & NETIF_FLAG_ETHARP) {
+	  etharp_cleanup_netif(&xnetif[0]);
+	}
+#endif /* LWIP_ARP */
 #endif
 #endif
 
@@ -1397,6 +1419,14 @@ int wifi_set_country(rtw_country_code_t country_code)
 	return ret;
 }
 
+int wifi_get_country(rtw_country_code_t *country_code)
+{
+	int ret;
+
+	ret = rltk_wlan_get_country_code(WLAN0_NAME, country_code);
+
+	return ret;
+}
 //----------------------------------------------------------------------------//
 int wifi_set_channel_plan(uint8_t channel_plan)
 {
@@ -1827,6 +1857,16 @@ Exit:
 #endif
 	device_mutex_unlock(RT_DEV_LOCK_WLAN);
 	return -1;
+}
+
+int wifi_set_wpa_mode(rtw_wpa_mode wpa_mode)
+{
+	if(wpa_mode > WPA2_WPA3_MIXED_MODE)
+		return -1;
+	else{
+		wifi_wpa_mode = wpa_mode;
+		return 0;
+	}
 }
 
 int wifi_set_power_mode(unsigned char ips_mode, unsigned char lps_mode)

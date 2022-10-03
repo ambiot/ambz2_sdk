@@ -33,7 +33,11 @@
 #include "polarssl/error.h"
 #include "polarssl/memory.h"
 #elif CONFIG_USE_MBEDTLS
+#if CONFIG_MBEDTLS_VERSION3 == 1 
+#include "mbedtls/build_info.h"
+#else
 #include "mbedtls/config.h"
+#endif
 #include "mbedtls/platform.h"
 #include "mbedtls/net_sockets.h"
 #include "mbedtls/ssl.h"

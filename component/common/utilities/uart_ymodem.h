@@ -8,6 +8,7 @@
 #include "serial_api.h"
 #include "flash_api.h"
 #include "device_lock.h"
+#include "platform_opts.h"
 /***********************************************************************
  *                                Macros                               *
  ***********************************************************************/
@@ -15,6 +16,11 @@
 // 8710B
 #define UART_TX PA_23
 #define UART_RX PA_18
+#elif defined(CONFIG_PLATFORM_8710C)
+//8710C
+#define UART_TX PA_14
+#define UART_RX PA_13
+// 8711AM
 #else
 // 8711AM
 #define UART_TX PA_7
