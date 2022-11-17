@@ -188,12 +188,12 @@ void example_ssl_server(void)
 }
 
 #elif CONFIG_USE_MBEDTLS /* CONFIG_USE_POLARSSL */
-
 #include "mbedtls/config.h"
+#include "mbedtls/certs.h"
 #include "mbedtls/platform.h"
 #include "mbedtls/net_sockets.h"
 #include "mbedtls/ssl.h"
-#include "mbedtls/certs.h"
+
 
 #define SERVER_PORT   "443"
 #define STACKSIZE     2048

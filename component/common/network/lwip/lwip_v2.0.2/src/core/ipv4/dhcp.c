@@ -1927,6 +1927,9 @@ dhcp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *addr,
     /* already bound to the given lease address? */
     else if ((dhcp->state == DHCP_STATE_REBOOTING) || (dhcp->state == DHCP_STATE_REBINDING) ||
              (dhcp->state == DHCP_STATE_RENEWING)) {
+	  if(dhcp->state == DHCP_STATE_RENEWING){
+		wifi_indication(27, NULL,0, 0);
+	  }			   
       dhcp_handle_ack(netif);
       dhcp_bind(netif);
     }

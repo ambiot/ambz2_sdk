@@ -166,6 +166,17 @@ enum {
 };
 typedef unsigned long rtw_security_t;
 
+enum
+{
+	WPA_AUTO_MODE,
+	WPA_ONLY_MODE,
+	WPA2_ONLY_MODE,
+	WPA3_ONLY_MODE,
+	WPA_WPA2_MIXED_MODE,
+	WPA2_WPA3_MIXED_MODE
+};
+typedef unsigned long rtw_wpa_mode;
+
 enum {
     RTW_ENCRYPTION_UNKNOWN = 0,                 
     RTW_ENCRYPTION_OPEN = 1,
@@ -609,6 +620,8 @@ enum _WIFI_EVENT_INDICATE{
 	WIFI_EVENT_STA_LOST_IP = 24,
 	WIFI_EVENT_NO_BEACON = 25,
 	WIFI_EVENT_TARGET_SSID_RSSI = 26,
+	WIFI_EVENT_DHCP_RENEW = 27,
+	WIFI_EVENT_SWITCH_CHANNE = 28,	
 	WIFI_EVENT_MAX,
 };
 typedef unsigned long rtw_event_indicate_t;

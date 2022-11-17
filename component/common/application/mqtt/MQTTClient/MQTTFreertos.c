@@ -718,10 +718,27 @@ int NetworkConnect(Network* n, char* addr, int port)
 		mbedtls_ssl_set_bio(n->ssl, &n->my_socket, mbedtls_net_send, mbedtls_net_recv, NULL);
 		mbedtls_ssl_conf_rng(n->conf, my_random, NULL);	
 
+#if MBEDTLS_SSL_MAX_CONTENT_LEN == 512
+		if(mbedtls_ssl_conf_max_frag_len(n->conf, MBEDTLS_SSL_MAX_FRAG_LEN_512) < 0) {
+			printf("ssl conf max frag len failed!");
+			goto err;
+		}
+#elif MBEDTLS_SSL_MAX_CONTENT_LEN == 1024
+		if(mbedtls_ssl_conf_max_frag_len(n->conf, MBEDTLS_SSL_MAX_FRAG_LEN_1024) < 0) {
+			printf("ssl conf max frag len failed!");
+			goto err;
+		}
+#elif MBEDTLS_SSL_MAX_CONTENT_LEN == 2048
+		if(mbedtls_ssl_conf_max_frag_len(n->conf, MBEDTLS_SSL_MAX_FRAG_LEN_2048) < 0) {
+			printf("ssl conf max frag len failed!");
+			goto err;
+		}
+#elif MBEDTLS_SSL_MAX_CONTENT_LEN == 4096
 		if(mbedtls_ssl_conf_max_frag_len(n->conf, MBEDTLS_SSL_MAX_FRAG_LEN_4096) < 0) {
 			printf("ssl conf max frag len failed!");
 			goto err;
 		}
+#endif
 
 		if((mbedtls_ssl_setup(n->ssl, n->conf)) != 0) {
 			mqtt_printf(MQTT_DEBUG,"mbedtls_ssl_setup failed!");
@@ -758,7 +775,7 @@ int NetworkConnect(Network* n, char* addr, int port)
 			mbedtls_x509_crt_init(client_crt);
 
 #if !defined(configENABLE_TRUSTZONE) || (configENABLE_TRUSTZONE == 0) || !defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) || (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 0)
-                        client_rsa = (mbedtls_pk_context *) mbedtls_calloc( sizeof(mbedtls_pk_context), 1);
+			client_rsa = (mbedtls_pk_context *) mbedtls_calloc( sizeof(mbedtls_pk_context), 1);
 			if ( client_rsa == NULL ) {
 				mqtt_printf(MQTT_DEBUG, "malloc client_rsa failed!");
 				goto err;
@@ -772,22 +789,30 @@ int NetworkConnect(Network* n, char* addr, int port)
 			}
 
 #if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1) && defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) && (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 1)
-                        extern mbedtls_pk_context* NS_ENTRY secure_mbedtls_pk_parse_key(void);
-                        client_rsa = secure_mbedtls_pk_parse_key();
-                        if ( client_rsa == NULL ) {
-                                mqtt_printf(MQTT_DEBUG, "s_parse client_rsa failed!");
-                                goto err;
-                        }
-#else                       
+			extern mbedtls_pk_context* NS_ENTRY secure_mbedtls_pk_parse_key(void);
+			client_rsa = secure_mbedtls_pk_parse_key();
+			if ( client_rsa == NULL ) {
+				mqtt_printf(MQTT_DEBUG, "parse client_rsa failed!");
+				goto err;
+			}
+#else
+
+#if CONFIG_MBEDTLS_VERSION3 == 1
+			if ( mbedtls_pk_parse_key(client_rsa, (const unsigned char *)n->private_key, strlen(n->private_key)+1, NULL, 0, rtw_get_random_bytes_f_rng, 1 ) != 0 ) {
+#else
 			if ( mbedtls_pk_parse_key(client_rsa, (const unsigned char *)n->private_key, strlen(n->private_key)+1, NULL, 0) != 0 ) {
-				mqtt_printf(MQTT_DEBUG, "ns_parse client_rsa failed!");
+#endif
+				mqtt_printf(MQTT_DEBUG, "parse client_rsa failed!");
 				goto err;
 			}
 #endif
 
 			mbedtls_ssl_conf_own_cert(n->conf, client_crt, client_rsa);
 		}
-	
+
+		if( mbedtls_ssl_set_hostname( n->ssl, addr ) == 0 )
+			mqtt_printf(MQTT_DEBUG, "tls server name indication extension exist");
+
 		retVal = mbedtls_ssl_handshake(n->ssl);
 		if (retVal < 0) {
 			mqtt_printf(MQTT_DEBUG, "ssl handshake failed err:-0x%04X", -retVal);
@@ -818,8 +843,13 @@ int NetworkConnect(Network* n, char* addr, int port)
 
 err:
 	if (client_rsa) {
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1) && defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) && (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 1)
+		extern void NS_ENTRY secure_mbedtls_pk_free(mbedtls_pk_context *pk);
+		secure_mbedtls_pk_free(client_rsa);
+#else
 		mbedtls_pk_free(client_rsa);
 		mbedtls_free(client_rsa);
+#endif
 	}
 	if (client_crt) {
 		mbedtls_x509_crt_free(client_crt);

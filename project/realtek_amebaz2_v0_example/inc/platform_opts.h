@@ -134,6 +134,7 @@
 /* For SSL/TLS */
 #define CONFIG_USE_POLARSSL     0 //polarssl is no longer suppported for AmebaZ2
 #define CONFIG_USE_MBEDTLS      1
+#define CONFIG_MBEDTLS_VERSION3	0
 #if ((CONFIG_USE_POLARSSL == 0) && (CONFIG_USE_MBEDTLS == 0)) || ((CONFIG_USE_POLARSSL == 1) && (CONFIG_USE_MBEDTLS == 1))
 #undef CONFIG_USE_POLARSSL
 #define CONFIG_USE_POLARSSL 1
@@ -141,6 +142,9 @@
 #define CONFIG_USE_MBEDTLS 0
 #endif
 #define CONFIG_SSL_CLIENT_PRIVATE_IN_TZ 1
+
+/* For Bridge Mode */
+#define CONFIG_BRIDGE                 0
 
 /* For LWIP configuration */
 #define CONFIG_LWIP_DHCP_COARSE_TIMER 60
@@ -199,6 +203,9 @@
 
 /* For MQTT example */
 #define CONFIG_EXAMPLE_MQTT				0
+#if CONFIG_EXAMPLE_MQTT
+//#define MQTTV5                                          1
+#endif
 
 /* For multicast example */
 #define CONFIG_EXAMPLE_MCAST			0
@@ -400,4 +407,13 @@
 #define CONFIG_MIIO_MP		0 //miio mp test and rw private data
 #endif
 
+#define CONFIG_EXAMPLE_MBEDTLS_ECDHE		0
+
+#endif
+
+#define CONFIG_UART_UPDATE				0
+#if CONFIG_UART_UPDATE
+#undef CONFIG_EXAMPLE_WLAN_FAST_CONNECT
+#define CONFIG_EXAMPLE_WLAN_FAST_CONNECT 0
+#define CONFIG_FAST_DHCP 0
 #endif

@@ -144,7 +144,7 @@ exit:
 		ret = -1;
 		goto exit;
 	}
-
+	
 	if((ret = mbedtls_pk_parse_key(&httpd_key, (const unsigned char *) server_key, strlen(server_key) + 1, NULL, 0)) != 0) {
 		printf("\n[HTTPD] ERROR: mbedtls_pk_parse_key %d\n", ret);
 		ret = -1;

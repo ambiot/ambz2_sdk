@@ -2,6 +2,10 @@
 /*
  * Release Note
  */
+	v1.0.1.179
+	2022/06/10
+	1. Add API le_get_dev_ltk.
+
 	v1.0.1.175
 	2022/05/11
 	1. Fix a bug for multi-link notification and write command send failure issue.

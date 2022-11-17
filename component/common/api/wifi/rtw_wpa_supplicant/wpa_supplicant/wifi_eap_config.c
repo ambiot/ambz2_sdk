@@ -484,12 +484,13 @@ int eap_cert_setup(ssl_context *ssl)
 
 #elif CONFIG_USE_MBEDTLS
 
+
 #include <mbedtls/config.h>
+#include <mbedtls/ssl_internal.h>
 #include <mbedtls/platform.h>
 #include <mbedtls/ssl.h>
-#include <mbedtls/ssl_internal.h>
 
-int max_buf_bio_size = ( MBEDTLS_SSL_MAX_CONTENT_LEN               \
+int max_buf_bio_size = ( MBEDTLS_SSL_MAX_CONTENT_LEN                \
                         + MBEDTLS_SSL_COMPRESSION_ADD               \
                         + 29 /* counter + header + IV */    \
                         + MBEDTLS_SSL_MAC_ADD                       \

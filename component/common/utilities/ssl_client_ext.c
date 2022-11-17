@@ -1,4 +1,4 @@
-#include "FreeRTOS.h"
+#include "osdep_service.h"
 #include "platform_opts.h"
 
 #if CONFIG_USE_POLARSSL

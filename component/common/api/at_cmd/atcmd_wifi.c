@@ -36,6 +36,7 @@
 #define	_AT_WLAN_AP_SET_SEC_KEY_    "ATW4"
 #define	_AT_WLAN_AP_SET_CHANNEL_    "ATW5"
 #define _AT_WLAN_SET_BSSID_         "ATW6"
+#define _AT_WLAN_SET_WPA_MODE_      "ATW8"
 #define	_AT_WLAN_AP_ACTIVATE_       "ATWA"
 #define _AT_WLAN_AP_STA_ACTIVATE_   "ATWB"
 #define _AT_WLAN_AP_STA_CONTROL_    "ATWb"
@@ -156,6 +157,7 @@ int security = -1;
 
 #if ATCMD_VER == ATVER_2 || WIFI_LOGO_CERTIFICATION_CONFIG
 unsigned char sta_ip[4] = {192,168,1,80}, sta_netmask[4] = {255,255,255,0}, sta_gw[4] = {192,168,1,1};
+u8 use_static_ip = 0;
 #endif
 
 #if WIFI_LOGO_CERTIFICATION_CONFIG
@@ -874,6 +876,53 @@ exit:
 	return;
 }
 #endif
+
+void fATW8(void *arg){
+	if(!arg){
+		printf("[ATW8]Usage: ATW8=[WPA_MODE]\n\r");
+		printf("        0 : WPA_AUTO_MODE\n\r");
+		printf("        1 : WPA_ONLY_MODE\n\r");
+		printf("        2 : WPA2_ONLY_MODE\n\r");
+		printf("        3 : WPA3_ONLY_MODE\n\r");
+		printf("        4 : WPA_WPA2_MIXED_MODE\n\r");
+		printf("        5 : WPA2_WPA3_MIXED_MODE\n\r");
+		return;
+	}
+	u32 wpa_mode = (u32) atoi((const char *)arg);
+
+	if(wpa_mode<=WPA2_WPA3_MIXED_MODE){
+		wifi_set_wpa_mode(wpa_mode);
+		switch(wpa_mode){
+			case 0:
+				printf("[ATW8]: _AT_WLAN_AP_SET_WPA_MODE_ [WPA_AUTO_MODE]\n\r");
+				break;
+			case 1:
+				printf("[ATW8]: _AT_WLAN_AP_SET_WPA_MODE_ [WPA_ONLY_MODE]\n\r");
+				break;
+			case 2:
+				printf("[ATW8]: _AT_WLAN_AP_SET_WPA_MODE_ [WPA2_ONLY_MODE]\n\r");
+				break;
+			case 3:
+				printf("[ATW8]: _AT_WLAN_AP_SET_WPA_MODE_ [WPA3_ONLY_MODE]\n\r");
+				break;
+			case 4:
+				printf("[ATW8]: _AT_WLAN_AP_SET_WPA_MODE_ [WPA_WPA2_MIXED_MODE]\n\r");
+				break;
+			case 5:
+				printf("[ATW8]: _AT_WLAN_AP_SET_WPA_MODE_ [WPA2_WPA3_MIXED_MODE]\n\r");
+				break;
+			default:
+				printf("[ATW8]: _AT_WLAN_AP_SET_WPA_MODE_ [WRONG WPA MODE]\n\r");
+				break;
+		}
+	}
+	else{
+		printf("[ATW8] Wrong parameter\n\r");
+	}
+
+	return;
+}
+
 void fATWA(void *arg){
 	/* To avoid gcc warnings */
 	( void ) arg;
@@ -1199,8 +1248,9 @@ void fATWC(void *arg){
 		printf("\n\rERROR: Can't connect to AP");
 		goto EXIT;
 	}
-	tick2 = xTaskGetTickCount();
-	printf("\r\nConnected after %dms.\n", (tick2-tick1));
+	{
+		tick2 = xTaskGetTickCount();
+		printf("\r\nConnected after %dms.\n", (tick2-tick1));
 #if CONFIG_LWIP_LAYER
 		/* Start DHCPClient */
 		LwIP_DHCP(0, DHCP_START);
@@ -1212,6 +1262,7 @@ void fATWC(void *arg){
 	tick3 = xTaskGetTickCount();
 	printf("\r\n\nGot IP after %dms.\n", (tick3-tick1));
 #endif
+	}
 	printf("\n\r");
 
 #if WIFI_LOGO_CERTIFICATION_CONFIG
@@ -1978,8 +2029,10 @@ void fATPE(void *arg)
 	netif_set_addr(&xnetif[0], ip_2_ip4(&ipaddr), ip_2_ip4(&netmask),ip_2_ip4(&gw));
 
 exit:
-    if(error_no==0)
-        at_printf("\r\n[ATPE] OK");
+	if(error_no==0){
+		at_printf("\r\n[ATPE] OK");
+		use_static_ip = 1;
+	}
     else
         at_printf("\r\n[ATPE] ERROR:%d",error_no);
 
@@ -3452,6 +3505,7 @@ log_item_t at_wifi_items[ ] = {
 	{"ATW4", fATW4,{NULL,NULL}},
 	{"ATW5", fATW5,{NULL,NULL}},
 	{"ATW6", fATW6,{NULL,NULL}},	
+	{"ATW8", fATW8,{NULL,NULL}},
 #ifdef CONFIG_FPGA	
 	{"ATW7", fATW7,},
 #endif	
