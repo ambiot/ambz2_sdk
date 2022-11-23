@@ -1,5 +1,5 @@
 #include <platform_opts_bt.h>
-#if (defined(CONFIG_BT_CONFIG) && CONFIG_BT_CONFIG) || (defined(CONFIG_BT_AIRSYNC_CONFIG) && CONFIG_BT_AIRSYNC_CONFIG)
+#if (defined(CONFIG_BT_CONFIG) && CONFIG_BT_CONFIG)
 #include "platform_stdlib.h"
 #if defined(CONFIG_PLATFORM_8721D)
 #include "ameba_soc.h"
@@ -20,13 +20,6 @@
 extern void bt_config_app_deinit(void);
 extern T_GAP_CONN_STATE bt_config_gap_conn_state;
 extern T_GAP_DEV_STATE bt_config_gap_dev_state;
-
-#if defined(CONFIG_BT_AIRSYNC_CONFIG) && CONFIG_BT_AIRSYNC_CONFIG
-#include "bt_airsync_config_app_task.h"
-extern void bt_airsync_config_app_deinit(void);
-extern T_GAP_CONN_STATE bt_airsync_config_gap_conn_state;
-extern T_GAP_DEV_STATE bt_airsync_config_gap_dev_state;
-#endif
 
 // a temp variable for wifi scan
 static void *wifi_scan_sema = NULL;
