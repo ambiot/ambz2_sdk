@@ -488,7 +488,6 @@ SRC_C += ../../../component/common/example/http_client/example_http_client.c
 SRC_C += ../../../component/common/example/http_download/example_http_download.c
 SRC_C += ../../../component/common/example/httpc/example_httpc.c
 SRC_C += ../../../component/common/example/httpd/example_httpd.c
-SRC_C += ../../../component/common/example/mbedtls_ecdhe/example_mbedtls_ecdhe.c
 SRC_C += ../../../component/common/example/mcast/example_mcast.c
 SRC_C += ../../../component/common/example/mqtt/example_mqtt.c
 SRC_C += ../../../component/common/example/nonblock_connect/example_nonblock_connect.c
