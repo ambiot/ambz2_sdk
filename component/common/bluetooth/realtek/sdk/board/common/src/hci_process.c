@@ -263,7 +263,7 @@ uint8_t hci_tp_download_patch(void)
     uint8_t  *p;
     uint8_t  *p_frag;
     uint16_t  sent_len;
-    uint8_t   patch_frag_index;
+    uint8_t   patch_frag_index = 0;
     T_HCI_PATCH *p_hci_rtk = &hci_patch_info;
 
     if (p_hci_rtk->patch_frag_idx < p_hci_rtk->patch_frag_cnt)

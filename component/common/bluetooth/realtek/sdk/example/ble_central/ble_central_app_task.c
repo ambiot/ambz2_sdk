@@ -27,9 +27,6 @@
 #include <app_msg.h>
 #include <ble_central_app_task.h>
 #include <ble_central_client_app.h>
-#include <data_uart.h>
-#include <user_cmd_parse.h>
-#include <user_cmd.h>
 #include <basic_types.h>
 #include <gap_msg.h>
 
@@ -89,11 +86,6 @@ void ble_central_app_main_task(void *p_param)
     os_msg_queue_create(&ble_central_evt_queue_handle, BLE_CENTRAL_MAX_NUMBER_OF_EVENT_MESSAGE, sizeof(uint8_t));
 
     gap_start_bt_stack(ble_central_evt_queue_handle, ble_central_io_queue_handle, BLE_CENTRAL_MAX_NUMBER_OF_GAP_MESSAGE);
-
-    data_uart_init(ble_central_evt_queue_handle, ble_central_io_queue_handle);
-#if	defined (CONFIG_BT_USER_COMMAND) && (CONFIG_BT_USER_COMMAND)
-    user_cmd_init(&user_cmd_if, "central_client");
-#endif
 
     while (true)
     {

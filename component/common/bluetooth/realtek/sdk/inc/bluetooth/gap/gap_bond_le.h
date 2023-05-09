@@ -275,6 +275,7 @@ T_GAP_CAUSE le_bond_get_display_key(uint8_t conn_id, uint32_t *p_key);
 T_GAP_CAUSE le_bond_passkey_input_confirm(uint8_t conn_id, uint32_t passcode,
                                           T_GAP_CFM_CAUSE cause);
 
+#if F_BT_LE_SMP_OOB_SUPPORT
 /**
  * @brief   Send oob data to gap bond manager when pairing with out of bond,
  *          and local should input oob data.
@@ -311,7 +312,6 @@ T_GAP_CAUSE le_bond_passkey_input_confirm(uint8_t conn_id, uint32_t passcode,
     }
  * \endcode
  */
-#if F_BT_LE_SMP_OOB_SUPPORT
 T_GAP_CAUSE le_bond_oob_input_confirm(uint8_t conn_id, T_GAP_CFM_CAUSE cause);
 #endif
 /**
@@ -389,6 +389,7 @@ T_GAP_CAUSE le_bond_just_work_confirm(uint8_t conn_id, T_GAP_CFM_CAUSE cause);
  */
 T_GAP_CAUSE le_bond_passkey_display_confirm(uint8_t conn_id, T_GAP_CFM_CAUSE cause);
 
+#if F_BT_LE_4_2_SC_SUPPORT
 /**
  * @brief   Send user confirmation request to confirm result to upper stack
  * @param[in] conn_id   Connection ID.
@@ -424,7 +425,6 @@ T_GAP_CAUSE le_bond_passkey_display_confirm(uint8_t conn_id, T_GAP_CFM_CAUSE cau
     }
  * \endcode
  */
-#if F_BT_LE_4_2_SC_SUPPORT
 T_GAP_CAUSE le_bond_user_confirm(uint8_t conn_id, T_GAP_CFM_CAUSE cause);
 #endif
 

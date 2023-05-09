@@ -158,6 +158,7 @@ bool MallocCycQueue()
     cyc_buffer = osif_mem_alloc(RAM_TYPE_DATA_ON, MAX_BUFFER_SIZE);
     if (cyc_buffer == NULL) {
         printf("cyc_buffer is NULL, malloc fail\r\n");
+        return false;
     }
     memset(cyc_buffer, 0, MAX_BUFFER_SIZE);
     pRead = 0;

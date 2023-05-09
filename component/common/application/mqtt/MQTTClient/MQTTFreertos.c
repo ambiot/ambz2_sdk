@@ -646,7 +646,7 @@ int NetworkConnect(Network* n, char* addr, int port)
 	int retVal = -1;
 	struct hostent *hptr;
 	char   **pptr;
-	char   str[32];
+	char   str[32] = {0};
 	int	keepalive_enable = 1;
 	int keep_idle = 30;
 	

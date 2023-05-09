@@ -347,7 +347,7 @@ const T_FUN_GATT_SERVICE_CBS bas_cbs =
   */
 T_SERVER_ID bas_add_service(void *p_func)
 {
-    T_SERVER_ID service_id;
+    T_SERVER_ID service_id = 0;
     if (false == server_add_service(&service_id,
                                     (uint8_t *)bas_attr_tbl,
                                     bas_attr_tbl_size,

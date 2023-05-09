@@ -33,7 +33,6 @@
 #include <ble_scatternet_link_mgr.h>
 #include "trace_uart.h"
 #include <bte.h>
-
 #include "wifi_constants.h"
 #include <profile_server.h>
 #include <gap_adv.h>
@@ -230,7 +229,9 @@ void ble_scatternet_app_le_gap_init(void)
 		le_scan_set_param(GAP_PARAM_SCAN_LOCAL_ADDR_TYPE, sizeof(local_bd_type), &local_bd_type);
 #elif (F_BT_LE_USE_RANDOM_ADDR==2) && F_BT_LE_LOCAL_IRK_SETTING_SUPPORT
 		uint8_t irk_auto = true;
+		uint8_t local_bd_type = GAP_LOCAL_ADDR_LE_RANDOM;
 		le_bond_set_param(GAP_PARAM_BOND_GEN_LOCAL_IRK_AUTO, sizeof(uint8_t), &irk_auto);
+		le_adv_set_param(GAP_PARAM_ADV_LOCAL_ADDR_TYPE, sizeof(local_bd_type), &local_bd_type);
 #endif
 #if F_BT_GAPS_CHAR_WRITEABLE
 		uint8_t appearance_prop = GAPS_PROPERTY_WRITE_ENABLE;
@@ -319,7 +320,7 @@ int ble_scatternet_app_init(void)
 	//judge BLE central is already on
 	le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state);
 	if (new_state.gap_init_state == GAP_INIT_STATE_STACK_READY) {
-		printf("[BLE Scatternet]BT Stack already on\n\r");
+		printf("[BLE Scatternet]BT Stack already on\r\n");
 		return 0;
 	}
 	else
@@ -345,14 +346,14 @@ void ble_scatternet_app_deinit(void)
 	T_GAP_DEV_STATE state;
 	le_get_gap_param(GAP_PARAM_DEV_STATE , &state);
 	if (state.gap_init_state != GAP_INIT_STATE_STACK_READY) {
-		printf("[BLE Scatternet]BT Stack is not running\n\r");
+		printf("[BLE Scatternet]BT Stack is not running\r\n");
 	}
 #if F_BT_DEINIT
 	else {
 		gcs_delete_client();
 		bte_deinit();
 		bt_trace_uninit();
-		printf("[BLE Scatternet]BT Stack deinitalized\n\r");
+		printf("[BLE Scatternet]BT Stack deinitalized\r\n");
 	}
 #endif
 }

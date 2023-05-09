@@ -654,6 +654,7 @@ osEvent osSignalWait (int32_t signals, uint32_t millisec)
     osEvent   ret;
     uint32_t wait_ticks;
 
+    memset(&ret, 0, sizeof(osEvent));
     if (signals & (0xFFFFFFFF << osFeature_Signals)) {
         ret.status = osErrorValue;
         ret.value.signals = 0;
@@ -1146,6 +1147,7 @@ osEvent osMessageGet (osMessageQId queue_id, uint32_t millisec)
     portTickType ticks;
     osEvent   retEvent;
 
+    memset(&retEvent, 0, sizeof(osEvent));
     retEvent.def.message_id = queue_id;
     if (inHandlerMode()) {
         if (xQueueReceiveFromISR(queue_id, (void *)retEvent.value.p, &taskWoken) != pdTRUE) {
@@ -1327,6 +1329,7 @@ osEvent osMailGet (osMailQId queue_id, uint32_t millisec)
     portTickType ticks;
     osEvent event;
 
+    memset(&event, 0, sizeof(osEvent));
     event.def.mail_id = queue_id;
 
     if (queue_id == NULL) {

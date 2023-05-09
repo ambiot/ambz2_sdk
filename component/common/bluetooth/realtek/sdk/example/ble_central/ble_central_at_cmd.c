@@ -2,6 +2,9 @@
 #if ((defined(CONFIG_BT_CENTRAL) && CONFIG_BT_CENTRAL) || \
 	(defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) || \
 	(defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE))
+#include "platform_opts.h"
+#include <platform/platform_stdlib.h>
+#if SUPPORT_LOG_SERVICE
 #include <string.h>
 #include <trace_app.h>
 #include <gap_bond_le.h>
@@ -14,7 +17,6 @@
 #include "atcmd_bt.h"
 #include "ble_central_at_cmd.h"
 #include "os_msg.h"
-#include <platform/platform_stdlib.h>
 #include "os_sched.h"
 #include "os_mem.h"
 
@@ -208,7 +210,7 @@ void save_white_list_data(uint8_t white_list_data[ADDR_LEN*ADDR_NO])
 {
 	flash_t flash;
 	if(erase_current_page == 1){
-		//dbg_printf("[%s]erase_current_page: page %d.\n", __func__, page_id);
+		//printf("[%s]erase_current_page: page %d.\r\n", __func__, page_id);
 		device_mutex_lock(RT_DEV_LOCK_FLASH);
 		flash_erase_sector(&flash, BT_WHITELIST_BASE_1 + ((page_id == 1)? 0: 1)*BT_WHITELIST_PAGE_SIZE);
 		device_mutex_unlock(RT_DEV_LOCK_FLASH);
@@ -217,13 +219,13 @@ void save_white_list_data(uint8_t white_list_data[ADDR_LEN*ADDR_NO])
 		erase_current_page = 0;
 		read_white_list_data(page_id, row_id);
 	}else{
-		//dbg_printf("[%s]write white list data to page %d, row %d.\n", __func__, page_id, row_id);
+		//printf("[%s]write white list data to page %d, row %d.\r\n", __func__, page_id, row_id);
 		device_mutex_lock(RT_DEV_LOCK_FLASH);
 		flash_stream_write(&flash, BT_WHITELIST_BASE_1 + (page_id - 1)*BT_WHITELIST_PAGE_SIZE + row_id*ADDR_LEN*ADDR_NO, ADDR_LEN*ADDR_NO, white_list_data);
 		device_mutex_unlock(RT_DEV_LOCK_FLASH);
 
 		if(row_id == 0){
-			//dbg_printf("[%s]erase_last_page: page %d.\n", __func__, (page_id == 1)? 2: 1);
+			//printf("[%s]erase_last_page: page %d.\r\n", __func__, (page_id == 1)? 2: 1);
 			device_mutex_lock(RT_DEV_LOCK_FLASH);
 			flash_erase_sector(&flash, BT_WHITELIST_BASE_1 + ((page_id == 1)? 1: 0)*BT_WHITELIST_PAGE_SIZE);
 			device_mutex_unlock(RT_DEV_LOCK_FLASH);
@@ -233,11 +235,11 @@ void save_white_list_data(uint8_t white_list_data[ADDR_LEN*ADDR_NO])
 		if(row_id == MAX_N){
 			page_id = (page_id == 1)? 2: 1;
 			row_id = 0;
-			//dbg_printf("[%s]row 15 has data, next write to the next page.\n", __func__);
+			//printf("[%s]row 15 has data, next write to the next page.\r\n", __func__);
 		}
 	}
 	/*
-	dbg_printf("[%s]display real-time white_list_data.\n", __func__);
+	printf("[%s]display real-time white_list_data.\r\n", __func__);
 	for(u8 i = 0; i < ADDR_NO; i++){
 			if(white_list_data[i*ADDR_LEN] == VALID_SIGN){
 				if(white_list_data[i*ADDR_LEN + 1] == BT_TYPE_PUBLIC){
@@ -245,13 +247,13 @@ void save_white_list_data(uint8_t white_list_data[ADDR_LEN*ADDR_NO])
 					for(u8 j = 0; j < BD_ADDR_LEN; j++){
 						printf("0x%x ", white_list_data[i*ADDR_LEN + 2 + j]);
 					}
-					printf("\n");
+					printf("\r\n");
 				}else if (white_list_data[i*ADDR_LEN + 1] == BT_TYPE_RANDOM){
 					printf("[Random] ");
 					for(u8 j = 0; j < BD_ADDR_LEN; j++){
 						printf("0x%x ", white_list_data[i*ADDR_LEN + 2 + j]);
 					}
-					printf("\n");
+					printf("\r\n");
 				}
 			}
 		}
@@ -264,7 +266,7 @@ void clear_white_list_data(void)
 		erase_current_page = 1;
 		save_white_list_data(read_data);
 	}else{
-		printf("White list haven't be initiated from flash, enter ATBn = 3 to load white list data from flash.\n");
+		printf("White list haven't be initiated from flash, enter ATBn = 3 to load white list data from flash.\r\n");
 	}
 }
 
@@ -296,20 +298,20 @@ void remove_white_list_data(T_GAP_REMOTE_ADDR_TYPE DestAddrType, u8 DestAddr[BD_
 		}
 
 		if(count == 0){
-			printf("All invalid, no address to remove.\n");
+			printf("All invalid, no address to remove.\r\n");
 		}else if((count == 1) && (find_flag == 1)){
 			clear_white_list_data();
 		}else if(find_flag == 1){
-			printf("Address match, ready to remove.\n");
+			printf("Address match, ready to remove.\r\n");
 			for (u8 j = 0; j < ADDR_LEN; j++){
 				read_data[i*ADDR_LEN + j] = 0xff;
 			}
 			save_white_list_data(read_data);
 		}else{
-			printf("Address wrong.\n");
+			printf("Address wrong.\r\n");
 		}
 	}else{
-		printf("White list haven't be initiated from flash, enter ATBn = 3 to load white list data from flash.\n");
+		printf("White list haven't be initiated from flash, enter ATBn = 3 to load white list data from flash.\r\n");
 	}
 }
 
@@ -372,7 +374,7 @@ void whitelist_flash_init(void)
 	//find which block saved the latest white list data
 	n1 = whitelist_find(BT_WHITELIST_BASE_1);
 	n2 = whitelist_find(BT_WHITELIST_BASE_2);
-	//dbg_printf("[%s] find block %d in 4k(1), find block %d in 4k(2).\n", __func__, n1, n2);
+	//printf("[%s] find block %d in 4k(1), find block %d in 4k(2).\r\n", __func__, n1, n2);
 	if((n1 == n2) && (n1 == INVALID_SIGN)){
 		page_id = 1;
 		row_id = 0;
@@ -422,8 +424,8 @@ void whitelist_flash_init(void)
 	}
 	//whitelist_flash_init complete
 	whitelist_flash_init_flag = 1;
-	//dbg_printf("[%s] record next data in page %d block %d.\n", __func__, page_id, row_id);
-	printf("White list initiated from flash.");
+	//printf("[%s] record next data in page %d block %d.\r\n", __func__, page_id, row_id);
+	printf("White list initiated from flash.\r\n");
 }
 
 void display_white_list_data(uint8_t white_list_data[ADDR_LEN*ADDR_NO])
@@ -436,18 +438,18 @@ void display_white_list_data(uint8_t white_list_data[ADDR_LEN*ADDR_NO])
 					for(u8 j = 0; j < BD_ADDR_LEN; j++){
 						printf("0x%x ", white_list_data[i*ADDR_LEN + 2 + j]);
 					}
-					printf("\n");
+					printf("\r\n");
 				}else if(white_list_data[i*ADDR_LEN + 1] == BT_TYPE_RANDOM){
 					printf("[Random] ");
 					for(u8 j = 0; j < BD_ADDR_LEN; j++){
 						printf("0x%x ", white_list_data[i*ADDR_LEN + 2 + j]);
 					}
-					printf("\n");
+					printf("\r\n");
 				}
 			}
 		}
 	}else{
-		printf("White list haven't be initiated from flash, enter ATBn = 3 to load white list data from flash.\n");
+		printf("White list haven't be initiated from flash, enter ATBn = 3 to load white list data from flash.\r\n");
 	}
 }
 
@@ -465,7 +467,7 @@ void add_white_list_data(T_GAP_REMOTE_ADDR_TYPE DestAddrType, u8 DestAddr[BD_ADD
 			&& (read_data[i*ADDR_LEN+5] == DestAddr[2])
 			&& (read_data[i*ADDR_LEN+6] == DestAddr[1])
 			&& (read_data[i*ADDR_LEN+7] == DestAddr[0])){
-				printf("BT address already saved.\n");
+				printf("BT address already saved.\r\n");
 				return;
 			}
 		}
@@ -484,13 +486,13 @@ void add_white_list_data(T_GAP_REMOTE_ADDR_TYPE DestAddrType, u8 DestAddr[BD_ADD
 
 		if(save_flag){
 			save_white_list_data(read_data);
-			printf("Address saved.\n");
+			printf("Address saved.\r\n");
 			save_flag = 0;
 		}else{
-			printf("Adress list full.\n");
+			printf("Adress list full.\r\n");
 		}
 	}else{
-		printf("White list haven't be initiated from flash, enter ATBn = 3 to load white list data from flash.\n");
+		printf("White list haven't be initiated from flash, enter ATBn = 3 to load white list data from flash.\r\n");
 	}
 }
 #endif
@@ -507,18 +509,18 @@ void ble_central_at_cmd_send_msg(uint16_t sub_type)
 #if defined(CONFIG_BT_CENTRAL) && CONFIG_BT_CENTRAL
 	if (ble_central_evt_queue_handle != NULL && ble_central_io_queue_handle != NULL) {
 		if (os_msg_send(ble_central_io_queue_handle, &io_msg, 0) == false) {
-			BLE_PRINT("ble central at cmd send msg fail: subtype 0x%x", io_msg.subtype);
+			printf("ble central at cmd send msg fail: subtype 0x%x\r\n", io_msg.subtype);
 		} else if (os_msg_send(ble_central_evt_queue_handle, &event, 0) == false) {
-			BLE_PRINT("ble central at cmd send event fail: subtype 0x%x", io_msg.subtype);
+			printf("ble central at cmd send event fail: subtype 0x%x\r\n", io_msg.subtype);
 		}
 	}
 #endif
 #if defined(CONFIG_BT_SCATTERNET) && CONFIG_BT_SCATTERNET
 	if (ble_scatternet_evt_queue_handle != NULL && ble_scatternet_io_queue_handle != NULL) {
 		if (os_msg_send(ble_scatternet_io_queue_handle, &io_msg, 0) == false) {
-			BLE_PRINT("ble central at cmd send msg fail: subtype 0x%x", io_msg.subtype);
+			printf("ble central at cmd send msg fail: subtype 0x%x\r\n", io_msg.subtype);
 		} else if (os_msg_send(ble_scatternet_evt_queue_handle, &event, 0) == false) {
-			BLE_PRINT("ble central at cmd send event fail: subtype 0x%x", io_msg.subtype);
+			printf("ble central at cmd send event fail: subtype 0x%x\r\n", io_msg.subtype);
 		}
 	}
 #endif
@@ -527,18 +529,18 @@ void ble_central_at_cmd_send_msg(uint16_t sub_type)
 #if defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE
 	if (bt_mesh_provisioner_multiple_profile_evt_queue_handle != NULL && bt_mesh_provisioner_multiple_profile_io_queue_handle != NULL) {
 		if (os_msg_send(bt_mesh_provisioner_multiple_profile_io_queue_handle, &io_msg, 0) == false) {
-			BLE_PRINT("ble central at cmd send msg fail: subtype 0x%x", io_msg.subtype);
+			printf("ble central at cmd send msg fail: subtype 0x%x\r\n", io_msg.subtype);
 		} else if (os_msg_send(bt_mesh_provisioner_multiple_profile_evt_queue_handle, &event, 0) == false) {
-			BLE_PRINT("ble central at cmd send event fail: subtype 0x%x", io_msg.subtype);
+			printf("ble central at cmd send event fail: subtype 0x%x\r\n", io_msg.subtype);
 		}
 	}
 #endif
 #if defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE
 	if (bt_mesh_device_multiple_profile_evt_queue_handle != NULL && bt_mesh_device_multiple_profile_io_queue_handle != NULL) {
 		if (os_msg_send(bt_mesh_device_multiple_profile_io_queue_handle, &io_msg, 0) == false) {
-			BLE_PRINT("ble central at cmd send msg fail: subtype 0x%x", io_msg.subtype);
+			printf("ble central at cmd send msg fail: subtype 0x%x\r\n", io_msg.subtype);
 		} else if (os_msg_send(bt_mesh_device_multiple_profile_evt_queue_handle, &event, 0) == false) {
-			BLE_PRINT("ble central at cmd send event fail: subtype 0x%x", io_msg.subtype);
+			printf("ble central at cmd send event fail: subtype 0x%x\r\n", io_msg.subtype);
 		}
 	}
 #endif //device multiple profile end
@@ -547,9 +549,9 @@ void ble_central_at_cmd_send_msg(uint16_t sub_type)
 #if defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE
 	if (bt_mesh_device_matter_evt_queue_handle != NULL && bt_mesh_device_matter_io_queue_handle != NULL) {
 		if (os_msg_send(bt_mesh_device_matter_io_queue_handle, &io_msg, 0) == false) {
-			BLE_PRINT("ble central at cmd send msg fail: subtype 0x%x", io_msg.subtype);
+			printf("ble central at cmd send msg fail: subtype 0x%x\r\n", io_msg.subtype);
 		} else if (os_msg_send(bt_mesh_device_matter_evt_queue_handle, &event, 0) == false) {
-			BLE_PRINT("ble central at cmd send event fail: subtype 0x%x", io_msg.subtype);
+			printf("ble central at cmd send event fail: subtype 0x%x\r\n", io_msg.subtype);
 		}
 	}
 #endif
@@ -561,22 +563,24 @@ int ble_central_at_cmd_connect(int argc, char **argv)
 	(void) argc;
 #if defined(CONFIG_BT_SCATTERNET) && CONFIG_BT_SCATTERNET
 	if(ble_scatternet_central_app_max_links >= BLE_SCATTERNET_CENTRAL_APP_MAX_LINKS){
-		BLE_PRINT("scatternet: exceed the max links number\r\n");
+		printf("scatternet: exceed the max links number\r\n");
 		return 0;
 	}
 #endif
 #if defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET
 	if(bt_mesh_scatternet_central_app_max_links >= BLE_SCATTERNET_CENTRAL_APP_MAX_LINKS){
-		BLE_PRINT("scatternet: exceed the max links number\r\n");
+		printf("scatternet: exceed the max links number\r\n");
 		return 0;
 	}
 #endif
 #if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
 	if (bt_mesh_device_matter_central_app_max_links >= BT_MESH_DEVICE_MATTER_CENTRAL_APP_MAX_LINKS) {
-		BLE_PRINT("scatternet: exceed the max links number\r\n");
+		printf("scatternet: exceed the max links number\r\n");
 		return 0;
 	}
 #endif
+
+		return 0;
 
 	u8 DestAddr[6] = {0};
 	u8 DestAddrType = GAP_REMOTE_ADDR_LE_PUBLIC;
@@ -595,7 +599,7 @@ int ble_central_at_cmd_connect(int argc, char **argv)
 		DestAddrType = GAP_REMOTE_ADDR_LE_RANDOM;
 
 	if (strlen(argv[2]) != 2*BD_ADDR_LEN) {
-		BLE_PRINT("ERROR: mac address length error!\r\n");
+		printf("ERROR: mac address length error!\r\n");
 		return -1;
 	}
 
@@ -611,7 +615,7 @@ int ble_central_at_cmd_connect(int argc, char **argv)
 	conn_req_param.ce_len_max = 2 * (conn_req_param.conn_interval_max - 1);
 	le_set_conn_param(GAP_CONN_PARAM_1M, &conn_req_param);
 
-	BLE_PRINT("cmd_con, DestAddr: 0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X\r\n",
+	printf("cmd_con, DestAddr: 0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X\r\n",
 			DestAddr[5], DestAddr[4], DestAddr[3], DestAddr[2], DestAddr[1], DestAddr[0]);
 
 	le_connect(0, DestAddr, (T_GAP_REMOTE_ADDR_TYPE)DestAddrType, local_addr_type, 1000);
@@ -634,7 +638,7 @@ int ble_central_at_cmd_modify_whitelist(int argc, char **argv)
 #else
 	if((type != 0) && (type != 1) && (type !=2)){
 #endif
-		BLE_PRINT("unknow operation code, return\r\n");
+		printf("unknow operation code, return\r\n");
 		return -1;
 	}
 
@@ -649,7 +653,7 @@ int ble_central_at_cmd_modify_whitelist(int argc, char **argv)
 #endif
 	}else{
 		if (argc != 4){
-			BLE_PRINT("ERROR:input parameter error!\r\n");
+			printf("ERROR:input parameter error!\r\n");
 			return -1;
 		}
 
@@ -668,7 +672,7 @@ int ble_central_at_cmd_modify_whitelist(int argc, char **argv)
 
 		hex_str_to_bd_addr(strlen(argv[3]), ( s8 *)argv[3], (u8*)DestAddr);
 
-		BLE_PRINT("cmd_modify, DestAddr: 0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X\r\n",
+		printf("cmd_modify, DestAddr: 0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X\r\n",
 			DestAddr[5], DestAddr[4], DestAddr[3], DestAddr[2], DestAddr[1], DestAddr[0]);
 
 		ret = le_modify_white_list(operation, DestAddr, DestAddrType);
@@ -717,16 +721,16 @@ int ble_central_at_cmd_get_conn_info(int argc, char **argv)
 	{
 		if (le_get_conn_info(conn_id, &conn_info))
 		{
-			BLE_PRINT("ShowCon conn_id %d state 0x%x role %d\r\n", conn_id,
+			printf("ShowCon conn_id %d state 0x%x role %d\r\n", conn_id,
 							conn_info.conn_state, conn_info.role);
-			BLE_PRINT("RemoteBd = [%02x:%02x:%02x:%02x:%02x:%02x] type = %d\r\n",
+			printf("RemoteBd = [%02x:%02x:%02x:%02x:%02x:%02x] type = %d\r\n",
 							conn_info.remote_bd[5], conn_info.remote_bd[4],
 							conn_info.remote_bd[3], conn_info.remote_bd[2],
 							conn_info.remote_bd[1], conn_info.remote_bd[0],
 							conn_info.remote_bd_type);
 		}
 	}
-	BLE_PRINT("active link num %d, idle link num %d\r\n", le_get_active_link_num(), le_get_idle_link_num());
+	printf("active link num %d, idle link num %d\r\n", le_get_active_link_num(), le_get_idle_link_num());
 	return 0;
 }
 
@@ -762,7 +766,7 @@ int ble_central_at_cmd_bond_information(int argc, char **argv)
 		for (i = 0; i < bond_storage_num; i++) {
 			p_entry = le_find_key_entry_by_idx(i);
 			if (p_entry != NULL) {
-			BLE_PRINT("bond_dev[%d]: bd 0x%02x%02x%02x%02x%02x%02x, addr_type %d, flags 0x%x\r\n",
+			printf("bond_dev[%d]: bd 0x%02x%02x%02x%02x%02x%02x, addr_type %d, flags 0x%x\r\n",
 							p_entry->idx,
 							p_entry->remote_bd.addr[5],
 							p_entry->remote_bd.addr[4],
@@ -798,13 +802,13 @@ int ble_central_at_cmd_get(int argc, char **argv)
 		gcs_all_primary_srv_discovery(conn_id);
 	}else if(strcmp(argv[1], "SRV") == 0){
 		if(argc != 5){
-			BLE_PRINT("ERROR:input parameter error!\n\r");
+			printf("ERROR:input parameter error!\r\n");
 			return -1;
 		}
 		uuid_type = atoi(argv[3]);
 		if(uuid_type == 0){
 			if (strlen(argv[4]) != 2 * UUID_16_LEN){
-				BLE_PRINT("ERROR:uuid length error!\n\r");
+				printf("ERROR:uuid length error!\r\n");
 				return -1;
 			}
 			hex_str_to_bd_addr(strlen(argv[4]), (s8 *)argv[4], (u8 *)uuid);
@@ -812,18 +816,18 @@ int ble_central_at_cmd_get(int argc, char **argv)
 			gcs_by_uuid_srv_discovery(conn_id, uuid16);
 		}else if(uuid_type == 1){
 			if (strlen(argv[4]) != 2 * UUID_128_LEN){
-				BLE_PRINT("ERROR:uuid length error!\n\r");
+				printf("ERROR:uuid length error!\r\n");
 				return -1;
 			}
 			hex_str_to_bd_addr(strlen(argv[4]), (s8 *)argv[4],	(u8 *)uuid);
 			gcs_by_uuid128_srv_discovery(conn_id, uuid);
 		}else{
-			BLE_PRINT("ERROR:uuid type error!\n\r");
+			printf("ERROR:uuid type error!\r\n");
 			return -1;
 		}
 	}	else if(strcmp(argv[1], "CHARDIS") == 0){
 		if(argc != 5){
-			BLE_PRINT("ERROR:input parameter error!\n\r");
+			printf("ERROR:input parameter error!\r\n");
 			return -1;
 		}
 		start_handle = hex_str_to_int(strlen(argv[3]), (s8 *)argv[3]);
@@ -831,7 +835,7 @@ int ble_central_at_cmd_get(int argc, char **argv)
 		gcs_all_char_discovery(conn_id, start_handle, end_handle);
 	}else if(strcmp(argv[1], "CHARUUID") == 0){
 		if(argc != 7){
-			BLE_PRINT("ERROR:input parameter error!\n\r");
+			printf("ERROR:input parameter error!\r\n");
 			return -1;
 		}
 
@@ -840,7 +844,7 @@ int ble_central_at_cmd_get(int argc, char **argv)
 		uuid_type = atoi(argv[5]);
 		if(uuid_type == 0){
 			if (strlen(argv[6]) != 2 * UUID_16_LEN){
-				BLE_PRINT("ERROR:uuid length error!\n\r");
+				printf("ERROR:uuid length error!\r\n");
 				return -1;
 			}
 			hex_str_to_bd_addr(strlen(argv[6]), (s8 *)argv[6], (u8 *)uuid);
@@ -848,13 +852,13 @@ int ble_central_at_cmd_get(int argc, char **argv)
 			gcs_by_uuid_char_discovery(conn_id, start_handle, end_handle, uuid16);
 		}else if(uuid_type == 1){
 			if (strlen(argv[6]) != 2 * UUID_128_LEN){
-				BLE_PRINT("ERROR:uuid length error!\n\r");
+				printf("ERROR:uuid length error!\r\n");
 				return -1;
 			}
 			hex_str_to_bd_addr(strlen(argv[6]), (s8 *)argv[6], (u8 *)uuid);
 			gcs_by_uuid128_char_discovery(conn_id, start_handle, end_handle, uuid);
 		}else{
-			BLE_PRINT("ERROR:uuid type error!\n\r");
+			printf("ERROR:uuid type error!\r\n");
 			return -1;
 		}
 
@@ -900,10 +904,10 @@ int ble_central_at_cmd_scan(int argc, char **argv)
 	{
 		if (scan_enable) {
 			if (scan_is_processing) {
-				BLE_PRINT("Scan is processing, please stop it first\n\r");
+				printf("Scan is processing, please stop it first\r\n");
 			} else {
 				scan_is_processing = 1;
-				BLE_PRINT("Start scan, scan_filter_policy = %d, scan_filter_duplicate = %d\n\r", scan_filter_policy, scan_filter_duplicate);
+				printf("Start scan, scan_filter_policy = %d, scan_filter_duplicate = %d\r\n", scan_filter_policy, scan_filter_duplicate);
 				le_scan_set_param(GAP_PARAM_SCAN_FILTER_POLICY, sizeof(scan_filter_policy), &scan_filter_policy);
 				le_scan_set_param(GAP_PARAM_SCAN_FILTER_DUPLICATES, sizeof(scan_filter_duplicate), &scan_filter_duplicate);
 				ble_central_at_cmd_send_msg(3);
@@ -911,16 +915,15 @@ int ble_central_at_cmd_scan(int argc, char **argv)
 		} else {
 			if (scan_is_processing) {
 				ble_central_at_cmd_send_msg(2);
-				BLE_PRINT("Stop scan\n\r");
+				printf("Stop scan\r\n");
 				scan_is_processing = 0;
 			} else
-				BLE_PRINT("There is no scan\n\r");
+				printf("There is no scan\r\n");
 		}
 	}
 #endif
 
-#if ((defined(CONFIG_BT_MESH_CENTRAL) && CONFIG_BT_MESH_CENTRAL) || \
-	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET))
+#if ((defined(CONFIG_BT_MESH_CENTRAL) && CONFIG_BT_MESH_CENTRAL))
 #if defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE
 	new_state = bt_mesh_provisioner_multiple_profile_gap_dev_state;
 #elif defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE
@@ -933,10 +936,10 @@ int ble_central_at_cmd_scan(int argc, char **argv)
 	if (new_state.gap_init_state) {
 		if (scan_enable) {
 			if (scan_is_processing) {
-				BLE_PRINT("Scan is processing, please stop it first\n\r");
+				printf("Scan is processing, please stop it first\r\n");
 			} else {
 				scan_is_processing = 1;
-				BLE_PRINT("Start scan\n\r");
+				printf("Start scan\r\n");
 
 				ble_central_at_cmd_send_msg(2);
 				do {
@@ -981,10 +984,10 @@ int ble_central_at_cmd_scan(int argc, char **argv)
 					le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state);
 				} while (new_state.gap_scan_state != GAP_SCAN_STATE_SCANNING);
 
-				BLE_PRINT("Stop scan\n\r");
+				printf("Stop scan\r\n");
 				scan_is_processing = 0;
 			} else
-				BLE_PRINT("There is no scan\n\r");
+				printf("There is no scan\r\n");
 		}
 	}
 #endif
@@ -1001,14 +1004,14 @@ int ble_central_at_cmd_auth(int argc, char **argv)
 
 	if(strcmp(argv[1],"SEND") == 0) {
 		if(argc != 3){
-			BLE_PRINT("ERROR:input parameter error!\n\r");
+			printf("ERROR:input parameter error!\r\n");
 			return -1;
 		}
 		conn_id = atoi(argv[2]);
 		le_bond_pair(conn_id);
 	}else if(strcmp(argv[1], "KEY") == 0){
 		if(argc !=4){
-			BLE_PRINT("ERROR:input parameter error!\n\r");
+			printf("ERROR:input parameter error!\r\n");
 			return -1;
 		}
 		conn_id = atoi(argv[2]);
@@ -1020,7 +1023,7 @@ int ble_central_at_cmd_auth(int argc, char **argv)
 		s8* str = (s8 *)argv[3];
 		for(unsigned int i = 0; i < strlen(argv[3]); i ++){
 			if((str[i ++] < '0') || (str[i ++] > '9')){
-				BLE_PRINT("ERROR:input parameter error!\n\r");
+				printf("ERROR:input parameter error!\r\n");
 				return -1;
 			}
 		}
@@ -1028,7 +1031,7 @@ int ble_central_at_cmd_auth(int argc, char **argv)
 		passcode = atoi(argv[3]);
 		if (passcode > GAP_PASSCODE_MAX)
 		{
-			BLE_PRINT("ERROR:passcode is out of range[0-999999] !\n\r");
+			printf("ERROR:passcode is out of range[0-999999] !\r\n");
 			confirm = GAP_CFM_CAUSE_REJECT;
 		}
 		le_bond_passkey_input_confirm(conn_id, passcode, confirm);
@@ -1069,11 +1072,11 @@ int ble_central_at_cmd_auth(int argc, char **argv)
 		ret = gap_set_pairable_mode();
 
 		if(ret == GAP_CAUSE_SUCCESS)
-			BLE_PRINT("\n\rSet pairable mode success!\r\n");
+			printf("Set pairable mode success!\r\n");
 		else
-			BLE_PRINT("\n\rSet pairable mode fail!\r\n");
+			printf("Set pairable mode fail!\r\n");
 	}else{
-		BLE_PRINT("ERROR:input parameter error!\n\r");
+		printf("ERROR:input parameter error!\r\n");
 		return -1;
 	}
 
@@ -1121,26 +1124,26 @@ int ble_central_at_cmd_read(int argc, char **argv)
 		start_handle = hex_str_to_int(strlen(argv[2]), (s8 *)argv[2]);
 		end_handle = hex_str_to_int(strlen(argv[3]), (s8 *)argv[3]);
 		uuid_type = atoi(argv[4]);
-		BLE_PRINT("conn_id = %d, start_handle = 0x%x, end_handle = 0x%x, uuid_type = %d\n\r", conn_id, start_handle, end_handle, uuid_type);
+		printf("conn_id = %d, start_handle = 0x%x, end_handle = 0x%x, uuid_type = %d\r\n", conn_id, start_handle, end_handle, uuid_type);
 		if(uuid_type == 0){
 			if (strlen(argv[5]) != 2 * UUID_16_LEN){
-				BLE_PRINT("ERROR:uuid length error!\n\r");
+				printf("ERROR:uuid length error!\r\n");
 				return -1;
 			}
 			hex_str_to_bd_addr(strlen(argv[5]), (s8 *)argv[5], (u8 *)uuid);
 			uuid16 = uuid[1]<<8 | uuid[0];
-			BLE_PRINT("uuid16 = 0x%x\n\r", uuid16);
+			printf("uuid16 = 0x%x\r\n", uuid16);
 			gcs_attr_read_using_uuid16(conn_id, start_handle, end_handle, uuid16);
 
 		}else if(uuid_type == 1){
 			if (strlen(argv[5]) != 2 * UUID_128_LEN){
-				BLE_PRINT("ERROR:uuid length error!\n\r");
+				printf("ERROR:uuid length error!\r\n");
 				return -1;
 			}
 			hex_str_to_bd_addr(strlen(argv[5]), (s8 *)argv[5], (u8 *)uuid);
 			gcs_attr_read_using_uuid128(conn_id, start_handle, end_handle, uuid);
 		}else{
-			BLE_PRINT("ERROR:uuid type error!\n\r");
+			printf("ERROR:uuid type error!\r\n");
 			return -1;
 		}
 
@@ -1162,10 +1165,10 @@ int ble_central_at_cmd_write(int argc, char **argv)
 	length = hex_str_to_int(strlen(argv[4]), (s8 *)argv[4]);
 
 	if (length == -1) {
-		printf("\n\rError:value length should be hexadecimal and start with '0X' or '0x'\r\n");
+		printf("Error:value length should be hexadecimal and start with '0X' or '0x'\r\n");
 		return -1;
 	} else if (length == 0) {
-		printf("\n\rError:value length should larger than 0\r\n");
+		printf("Error:value length should larger than 0\r\n");
 		return -1;
 	}
 
@@ -1269,9 +1272,11 @@ int ble_central_at_cmd_set_phy(int argc, char **argv)
 	return cause;
 }
 #endif
+#endif
 
 int ble_central_app_handle_at_cmd(uint16_t subtype, void *arg)
 {
+#if SUPPORT_LOG_SERVICE
 	int common_cmd_flag = 0;
 	int argc = 0;
 	char *argv[MAX_ARGC] = {0};
@@ -1334,5 +1339,8 @@ int ble_central_app_handle_at_cmd(uint16_t subtype, void *arg)
 	}
 
 	return common_cmd_flag;
+#else
+	return 0;
+#endif
 }
 #endif

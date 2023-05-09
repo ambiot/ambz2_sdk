@@ -167,7 +167,7 @@ void socket_close(void)
 static void server_start(void *param)
 {
 	int s_mode;
-	int s_sockfd, s_newsockfd;
+	int s_sockfd = 0, s_newsockfd;
 	socklen_t s_client;
 	struct sockaddr_in s_serv_addr, s_cli_addr;
 	int s_local_port;
@@ -603,8 +603,8 @@ static void client_start(void *param)
 {
 	int c_mode;
 	int c_remote_port;
-	char c_remote_addr[16];
-	int c_sockfd;
+	char c_remote_addr[16] = {0};
+	int c_sockfd = 0;
 	struct sockaddr_in c_serv_addr;
 	int error_no = 0;
 #if ATCMD_VER == ATVER_2
@@ -974,6 +974,7 @@ void fATP3(void *arg){
 		printf("[ATP3]Usage: ATP3=REMOTE_IP\n\r");
 		goto exit;
 	}
+	memset(remote_addr, '\0', sizeof(remote_addr));
 	strncpy((char*)remote_addr, (char*)arg, sizeof(remote_addr));
 	printf("[ATP3]: _AT_TRANSPORT_REMOTE_IP_ [%s]\n\r", remote_addr);
 
@@ -2966,7 +2967,7 @@ extern char log_buf[LOG_SERVICE_BUFLEN];
 extern struct netif xnetif[NET_IF_NUM]; 
 extern int atcmd_sntp(char* hostname);
 
-static int select_check = 0;
+static int select_check = 1;
 
 static unsigned char _tx_buffer[MAX_BUFFER];
 static unsigned char _rx_buffer[MAX_BUFFER];
@@ -3134,7 +3135,7 @@ static void server_start(void *param)
 	( void ) param;
 	
 	int s_mode;
-	int s_sockfd, s_newsockfd;
+	int s_sockfd = 0, s_newsockfd = 0;
 	socklen_t s_client;
 	struct sockaddr_in s_serv_addr, s_cli_addr;
 	int s_local_port;
@@ -3868,8 +3869,8 @@ static void client_start(void *param)
 	int select_task_suspend = 0;
 	int c_mode;
 	int c_remote_port;
-	char c_remote_addr[16];
-	int c_sockfd;
+	char c_remote_addr[16] = {0};
+	int c_sockfd = 0;
 	struct sockaddr_in c_serv_addr;
 	int error_no = 0;
 #if ATCMD_VER == ATVER_2
@@ -3957,7 +3958,7 @@ static void client_start(void *param)
 		/***********************************************************
 		*  SSL 1. Setup stuff for this ssl connection
 		************************************************************/
-		if (select_check && (!select_task_suspend)) {
+		if (select_check && (!select_task_suspend) && atcmd_select_task != NULL) {
 			vTaskSuspend(atcmd_select_task); 
 			select_task_suspend = 1;
 		}
@@ -4314,7 +4315,8 @@ void fATP3(void *arg){
 		printf("[ATP3]Usage: ATP3=REMOTE_IP\n\r");
 		goto exit;
 	}
-	strncpy((char*)remote_addr, (char*)arg, sizeof(remote_addr));
+	memset((char*)remote_addr, '\0', sizeof(remote_addr));
+	strncpy((char*)remote_addr, (char*)arg, sizeof(remote_addr) - 1);
 	printf("[ATP3]: _AT_TRANSPORT_REMOTE_IP_ [%s]\n\r", remote_addr);
 
 exit:
@@ -5002,7 +5004,9 @@ void fATPC(void *arg){
 		error_no = 5;
 		goto err_exit;
 	}
-
+#if defined(ATCMD_SUPPORT_SSL) && ATCMD_SUPPORT_SSL
+	printf("\r\n[ATPC] Use ATRV to start auto receive\r\n");
+#endif
 	goto exit;
 err_exit:
 	if(clientnode)
@@ -5377,7 +5381,7 @@ void fATPR(void *arg){
 
 	memset(rx_buffer, 0, rx_buffer_size);
 	if(curnode->protocol == NODE_MODE_SSL) {
-		if (select_check && (!select_task_suspend)) {
+		if (select_check && (!select_task_suspend) && atcmd_select_task != NULL) {
 			vTaskSuspend(atcmd_select_task);
 			select_task_suspend = 1;
 		}
@@ -6071,9 +6075,23 @@ int atcmd_lwip_receive_data(node *curnode, u8 *buffer, u16 buffer_size, int *rec
 	ret = select(curnode->sockfd + 1, &readfds, NULL, NULL, &tv);
 	if(!((ret > 0)&&(FD_ISSET(curnode->sockfd, &readfds))))
 	{
-		//AT_DBG_MSG(AT_FLAG_LWIP, AT_DBG_ALWAYS, 
-		//	"[ATPR] No receive event for con_id %d", curnode->con_id);
-		goto exit;
+#if (ATCMD_VER == ATVER_2) && ATCMD_SUPPORT_SSL 
+		if(curnode->protocol == NODE_MODE_SSL)
+		{
+			if(mbedtls_ssl_get_bytes_avail((mbedtls_ssl_context *)curnode->context) == 0)
+			{
+				//AT_DBG_MSG(AT_FLAG_LWIP, AT_DBG_ALWAYS,
+				// "[ATPR] No receive event for con_id %d", curnode->con_id);
+				goto exit;
+			}
+		}
+		else
+#endif // #if (ATCMD_VER == ATVER_2) && ATCMD_SUPPORT_SSL
+		{
+			//AT_DBG_MSG(AT_FLAG_LWIP, AT_DBG_ALWAYS,
+			// "[ATPR] No receive event for con_id %d", curnode->con_id);
+			goto exit;
+		}
 	}
 
 	if(curnode->protocol == NODE_MODE_UDP) //udp server receive from client
@@ -6159,7 +6177,7 @@ int atcmd_lwip_receive_data(node *curnode, u8 *buffer, u16 buffer_size, int *rec
 	}
 exit:
 	if(error_no == 0)
-		*recv_size = size;
+		*recv_size = size;		
 	else{
 #if (ATCMD_VER == ATVER_2) && ATCMD_SUPPORT_SSL
 		if(curnode->protocol == NODE_MODE_SSL){
@@ -6204,7 +6222,7 @@ static void select_task(void *param)
 				//TCP Server must receive data from the seed
 				continue;
 			}
-			error_no = atcmd_lwip_receive_data(curnode, rx_buffer, packet_size, &recv_size, udp_clientaddr, &udp_clientport);
+			error_no = atcmd_lwip_receive_data(curnode, rx_buffer, packet_size, &recv_size, udp_clientaddr, &udp_clientport);		
 			if(error_no==7 || error_no == 8){
 				#if CONFIG_LOG_SERVICE_LOCK
 				log_service_lock();
@@ -6459,7 +6477,7 @@ void fATRV(void *arg){
 			AT_DBG_MSG(AT_FLAG_LWIP, AT_DBG_ALWAYS, "[ATRV] already enter auto receive mode");
 		}
 		else{
-			if (select_check) vTaskSuspend(atcmd_select_task);
+			if (select_check && atcmd_select_task != NULL) vTaskSuspend(atcmd_select_task);
 			if(start_autorecv_task())
 				error_no = 2;
 			}

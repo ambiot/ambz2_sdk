@@ -365,7 +365,6 @@ uint8_t *hci_rtk_combine_config(void)
     uint8_t *p_len = full_config_buf+4;
 
     memcpy(full_config_buf,rtlbt_init_config, sizeof(rtlbt_init_config));
-    memcpy(full_config_buf+sizeof(rtlbt_init_config),rtlbt_config+HCI_CONFIG_HEAD, rtlbt_config_len-HCI_CONFIG_HEAD);
 
     HCI_PRINT_WARN1("hci_rtk_combine_config: invalid len, calculated %u",
              config_length);
@@ -395,9 +394,9 @@ bool hci_rtk_find_patch(uint8_t bt_hci_chip_id)
     extern unsigned char rtlbt_config[];
     extern unsigned int  rtlbt_config_len;
 
-    uint8_t            *fw_buf;
+    uint8_t            *fw_buf = NULL;
     uint8_t            *config_buf;
-    uint16_t            fw_len;
+    uint16_t            fw_len = 0;
     uint32_t            fw_offset;
     uint16_t            config_len;
     uint32_t            lmp_subversion;;
@@ -408,7 +407,7 @@ bool hci_rtk_find_patch(uint8_t bt_hci_chip_id)
     flash_t flash;
     uint8_t i = 0;
     const uint8_t rtb_patch_smagic[8]= {0x52, 0x65, 0x61, 0x6C, 0x74, 0x65, 0x63, 0x68};
-    uint8_t tmp_patch_head[8];
+    uint8_t tmp_patch_head[8] = {0};
     const uint8_t single_patch_sing[4]= {0xFD, 0x63, 0x05, 0x62};
 
 #define MERGE_PATCH_SWITCH_SINGLE 0xAAAAAAAA
@@ -1046,7 +1045,7 @@ void bt_write_lgc_efuse_value(void)
 int bt_get_mac_address(uint8_t *mac)
 {
     uint8_t addr_size = 6;
-    uint8_t read_ddr[6];
+    uint8_t read_ddr[6] = {0};
 
     //Check BT address
     device_mutex_lock(RT_DEV_LOCK_EFUSE);
@@ -1062,7 +1061,7 @@ int bt_set_mac_address(uint8_t *mac)
 {
     uint8_t addr_size = 6;
     int ret = 0;
-    uint8_t read_ddr[6];
+    uint8_t read_ddr[6] = {0};
 
     device_mutex_lock(RT_DEV_LOCK_EFUSE);
     efuse_logical_write(BOARD_LOGIC_EFUSE_OFFSET, addr_size, mac);

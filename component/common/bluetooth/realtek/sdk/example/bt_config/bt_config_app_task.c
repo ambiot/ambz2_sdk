@@ -64,9 +64,9 @@ void bt_config_send_msg(uint16_t sub_type)
 
     if (evt_queue_handle != NULL && io_queue_handle != NULL) {
         if (os_msg_send(io_queue_handle, &io_msg, 0) == false) {
-            BC_printf("bt config send msg fail: subtype 0x%x", io_msg.subtype);
+            BC_printf("bt config send msg fail: subtype 0x%x\r\n", io_msg.subtype);
         } else if (os_msg_send(evt_queue_handle, &event, 0) == false) {
-            BC_printf("bt config send event fail: subtype 0x%x", io_msg.subtype);
+            BC_printf("bt config send event fail: subtype 0x%x\r\n", io_msg.subtype);
         }
     }
 }
@@ -102,12 +102,12 @@ void bt_config_app_main_task(void *p_param)
 void bt_config_app_task_init()
 {
 	if (app_task_handle == NULL) {
-		BC_printf("bt_config_app_task_init\n\r");
+		BC_printf("bt_config_app_task_init\r\n");
 		os_task_create(&app_task_handle, "bt_config_app", bt_config_app_main_task, 0, APP_TASK_STACK_SIZE,
 					   APP_TASK_PRIORITY);
 	}
 	else {
-		BC_printf("bt_config_app_main_task already on\n\r");
+		BC_printf("bt_config_app_main_task already on\r\n");
 	}
 }
 

@@ -458,6 +458,8 @@
                     <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_ota_central_client</state>
                     <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_harmony_adapter</state>
                     <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_datatrans</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\application\mqtt\MQTTPacket\V5</state>
+                    <state>$PROJ_DIR$\..\..\..\component\common\application\mqtt\MQTTPacket</state>
                 </option>
                 <option>
                     <name>CCStdIncCheck</name>

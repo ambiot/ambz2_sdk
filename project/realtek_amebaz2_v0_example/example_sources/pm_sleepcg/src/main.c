@@ -84,6 +84,7 @@ static int Gtimer_init_count = 0;
 static void Gtimer_timeout_handler (uint32_t id)
 {
     dbg_printf("Gtimer wake up   \r\n");
+    pwmout_period_int(&my_PWM, 0, 0); // disable interrupt to sync the count
 }
 #endif
 
@@ -173,10 +174,12 @@ int main (void)
 
         if (PWM_init_count == 0) {
             pwmout_init(&my_PWM, WAKEUP_PWM_PIN);
+            pwmout_period_int(&my_PWM, 0, 0);
+            pwmout_period(&my_PWM, PWM_SLEEP_DURATION);
+            pwmout_start(&my_PWM);
             PWM_init_count = 1;
         }
-        pwmout_period_int(&my_PWM, 0, 0);
-        pwmout_period(&my_PWM, PWM_SLEEP_DURATION);
+
         for (int i = 5; i > 0; i--) {
             dbg_printf("Enter SleepCG by %d seconds \r\n", i);
             hal_delay_us(1 * 1000 * 1000);

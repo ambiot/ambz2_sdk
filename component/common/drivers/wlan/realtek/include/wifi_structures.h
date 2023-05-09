@@ -272,6 +272,24 @@ typedef struct wowlan_pattern {
 	unsigned char mask[5];
 } wowlan_pattern_t;
 
+#ifdef CONFIG_MCC_STA_AP_MODE
+typedef struct rtw_fw_txrpt_stats {
+	unsigned long tx_pass_cnt;            // tx pass packet count
+	unsigned long tx_drop_cnt;            // tx drop packet count
+	unsigned long tx_rty_cnt;             // tx retry count (due to HW limit, the retry times >=4 is calculated as 4)
+	int txrpt_drop_cnt_ready;             // used to sync txrpt pass & drop count ready
+	int txrpt_rty_cnt_ready;              // used to sync txrpt retry count ready
+}rtw_fw_txrpt_stats_t;
+
+typedef struct rtw_fw_txrpt_retry {
+	unsigned long tx_pass_cnt;           // tx pass packet count
+	unsigned long tx_pass_rty_cnt;       // tx pass packet retry count
+	unsigned long tx_drop_cnt;           // tx drop packet count
+	unsigned long tx_drop_rty_cnt;       // tx drop packet retry count
+	int enable_spe_txrpt;                // enable specific tx report
+	int spe_txrpt_ifid;                  // the interface to enable specific tx report
+}rtw_fw_txrpt_retry_t;
+#endif
 
 #ifdef	__cplusplus
 }
