@@ -2,6 +2,7 @@
 #include "task.h"
 #include <platform/platform_stdlib.h>
 #include <lwip/sockets.h>
+#include "wifi_conf.h"
 
 #define CONNECT_REMOTE  0
 
@@ -29,7 +30,10 @@ static void example_socket_select_thread(void *param)
 	int socket_used[MAX_SOCKETS];
 
 	// Delay to wait for IP by DHCP
-	vTaskDelay(10000);
+  	while(wifi_is_ready_to_transceive(RTW_STA_INTERFACE) != RTW_SUCCESS){
+		printf("\n\rWait for WIFI connection ...\r\n");
+        	vTaskDelay(12000);
+        }
 	printf("\nExample: socket select\n");
 
 	memset(socket_used, 0, sizeof(socket_used));

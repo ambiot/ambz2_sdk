@@ -22,6 +22,7 @@
 #include <lwip_netconf.h>
 
 extern struct netif xnetif[NET_IF_NUM];
+extern u32 g_reconnect_delay;
 
 write_reconnect_ptr p_write_reconnect_ptr;
 
@@ -154,6 +155,10 @@ WIFI_RETRY_LOOP:
 		if(ret != RTW_SUCCESS){
 			wifi_retry_connect--;
 			if(wifi_retry_connect > 0){
+				if (g_reconnect_delay > 0) {
+					vTaskDelay(g_reconnect_delay);
+					g_reconnect_delay = 0;
+				}
 				printf("wifi retry\r\n");
 				goto WIFI_RETRY_LOOP;
 			}
@@ -168,8 +173,10 @@ WIFI_RETRY_LOOP:
 		}
 
 		free(data);
+		return 0;
 	}
-
+	printf("malloc fail\r\n");
+	return -1;
 }
 /*
 * Usage:
@@ -308,6 +315,10 @@ int wlan_init_done_callback(void)
 				wifi_retry_connect--;
 				if(wifi_retry_connect > 0){
 					printf("wifi retry\r\n");
+					if (g_reconnect_delay > 0) {
+						vTaskDelay(g_reconnect_delay);
+						g_reconnect_delay = 0;
+					}
 					goto WIFI_RETRY_LOOP;
 				}
 			}

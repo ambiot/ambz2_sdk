@@ -3,6 +3,7 @@
 #include <platform_stdlib.h>
 #include <httpc/httpc.h>
 
+#define STACKSIZE    2048
 #define USE_HTTPS    0
 #define SERVER_HOST  "httpbin.org"
 

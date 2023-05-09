@@ -62,14 +62,20 @@ static char cBuffer[512];
 
 #if defined(CONFIG_PLATFORM_8710C)
 extern void sys_uart_download_mode(void);
+extern void sys_download_mode(u8 mode);
 void fATXX(void *arg)
 {
 #if defined(CONFIG_BUILD_NONSECURE) && (CONFIG_BUILD_NONSECURE==1)
 	flash_t flash_Ptable;
+	device_mutex_lock(RT_DEV_LOCK_FLASH);
 	flash_erase_sector(&flash_Ptable, 0x00000000);
+	device_mutex_unlock(RT_DEV_LOCK_FLASH);
 	sys_reset();
 #else
-	sys_uart_download_mode();
+	u8 download_mode = 0;
+	if (arg)
+		download_mode = (unsigned char) atoi((const char *)arg);
+	sys_download_mode(download_mode);
 #endif
 }
 #endif
@@ -139,6 +145,7 @@ void fATSK(void *arg)
 	int argc = 0;
 	char *argv[MAX_ARGC] = {0};
 	u8 key[16];
+	u32 key32[16];
 
 	AT_DBG_MSG(AT_FLAG_RDP, AT_DBG_ALWAYS, "[ATSK]: _AT_SYSTEM_RDP/RSIP_CONFIGURE_");
 	if(!arg){
@@ -167,10 +174,14 @@ void fATSK(void *arg)
 			AT_DBG_MSG(AT_FLAG_RDP, AT_DBG_ALWAYS, "[ATSK] Err: RDP key length should be 16 bytes");
 			return;
 		}
-		
-		sscanf(argv[2], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x", 
-			&key[0], &key[1], &key[2], &key[3], &key[4], &key[5], &key[6], &key[7], 
-			&key[8], &key[9], &key[10], &key[11], &key[12], &key[13], &key[14], &key[15]);
+
+		memset(key32, 0, sizeof(key32));
+		sscanf(argv[2], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+			&key32[0], &key32[1], &key32[2], &key32[3], &key32[4], &key32[5], &key32[6], &key32[7],
+			&key32[8], &key32[9], &key32[10], &key32[11], &key32[12], &key32[13], &key32[14], &key32[15]);
+		for(i=0; i<16; i++){
+			key[i] = key32[i] & 0xFF;
+		}
 
 		EFUSE_RDP_KEY(key);
 		AT_DBG_MSG(AT_FLAG_RDP, AT_DBG_ALWAYS, "[ATSK] Set RDP key done");
@@ -190,17 +201,21 @@ void fATSK(void *arg)
 			AT_DBG_MSG(AT_FLAG_RDP, AT_DBG_ALWAYS, "[ATSK] Err: RSIP key length should be 16 bytes");
 			return;
 		}
-		
-		sscanf(argv[2], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x", 
-			&key[0], &key[1], &key[2], &key[3], &key[4], &key[5], &key[6], &key[7], 
-			&key[8], &key[9], &key[10], &key[11], &key[12], &key[13], &key[14], &key[15]);
+
+		memset(key32, 0, sizeof(key32));
+		sscanf(argv[2], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+			&key32[0], &key32[1], &key32[2], &key32[3], &key32[4], &key32[5], &key32[6], &key32[7],
+			&key32[8], &key32[9], &key32[10], &key32[11], &key32[12], &key32[13], &key32[14], &key32[15]);
+		for(i=0; i<16; i++){
+			key[i] = key32[i] & 0xFF;
+		}
 
 		EFUSE_OTF_KEY(key);
 		AT_DBG_MSG(AT_FLAG_RDP, AT_DBG_ALWAYS, "[ATSK] Set RSIP key done");
 	}else if(strcmp(argv[1], "SB_EN") == 0){
 		u8 data = 0;
 		u32 efuse_ctrl = HAL_READ32(SYSTEM_CTRL_BASE, REG_SYS_EFUSE_CTRL);
-	
+
 		EFUSERead8(efuse_ctrl, 0xD3, &data, L25EOUTVOLTAGE);
 		if ((data & EFUSE_PHYSICAL_SBOOT_ON) != 0) {
 			EFUSEWrite8(efuse_ctrl, 0xD3, data & (~EFUSE_PHYSICAL_SBOOT_ON), L25EOUTVOLTAGE);
@@ -210,7 +225,7 @@ void fATSK(void *arg)
 		}
 	}else if(strcmp(argv[1], "SB_PK_MD5") == 0){
 		u8 i = 0;
-		
+
 		if(argc != 3){
 			AT_DBG_MSG(AT_FLAG_RDP, AT_DBG_ALWAYS, "[ATSK] Usage: ATSK=SB_PK_MD5[value(hex)]");
 			return;
@@ -220,10 +235,14 @@ void fATSK(void *arg)
 			AT_DBG_MSG(AT_FLAG_RDP, AT_DBG_ALWAYS, "[ATSK] Err: MD5 value of public key should be 16 bytes");
 			return;
 		}
-		
-		sscanf(argv[2], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x", 
-			&key[0], &key[1], &key[2], &key[3], &key[4], &key[5], &key[6], &key[7], 
-			&key[8], &key[9], &key[10], &key[11], &key[12], &key[13], &key[14], &key[15]);
+
+		memset(key32, 0, sizeof(key32));
+		sscanf(argv[2], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+			&key32[0], &key32[1], &key32[2], &key32[3], &key32[4], &key32[5], &key32[6], &key32[7],
+			&key32[8], &key32[9], &key32[10], &key32[11], &key32[12], &key32[13], &key32[14], &key32[15]);
+		for(i=0; i<16; i++){
+			key[i] = key32[i] & 0xFF;
+		}
 
 		for(i = 0; i < 16; i++) {
 			EFUSEWrite8(HAL_READ32(SYSTEM_CTRL_BASE, REG_SYS_EFUSE_CTRL), 0xC1 + i, key[i], L25EOUTVOLTAGE);
@@ -233,15 +252,15 @@ void fATSK(void *arg)
 	}else{
 		AT_DBG_MSG(AT_FLAG_RDP, AT_DBG_ALWAYS, "[ATSK] Usage: ATSK=RDP_EN");
 		AT_DBG_MSG(AT_FLAG_RDP, AT_DBG_ALWAYS, "[ATSK] Usage: ATSK=RDP_KEY[value(hex)]");
-		AT_DBG_MSG(AT_FLAG_RDP, AT_DBG_ALWAYS, "[ATSK] 	Example: ATSK=RDP_KEY[345487bbaa435bfe382233445ba359aa]");		
+		AT_DBG_MSG(AT_FLAG_RDP, AT_DBG_ALWAYS, "[ATSK] 	Example: ATSK=RDP_KEY[345487bbaa435bfe382233445ba359aa]");
 		AT_DBG_MSG(AT_FLAG_RDP, AT_DBG_ALWAYS, "[ATSK] Usage: ATSK=RSIP_EN");
 		AT_DBG_MSG(AT_FLAG_RDP, AT_DBG_ALWAYS, "[ATSK] Usage: ATSK=RSIP_DIS");
 		AT_DBG_MSG(AT_FLAG_RDP, AT_DBG_ALWAYS, "[ATSK] Usage: ATSK=RSIP_KEY[value(hex)]");
 		AT_DBG_MSG(AT_FLAG_RDP, AT_DBG_ALWAYS, "[ATSK] Usage: ATSK=SB_EN");
 		AT_DBG_MSG(AT_FLAG_RDP, AT_DBG_ALWAYS, "[ATSK] Usage: ATSK=SB_PK_MD5[value(hex)]");
-		
+
 	}
-	
+
 }
 #endif
 
@@ -279,7 +298,9 @@ void fATSK(void *arg)
 	int argc = 0;
 	int ret;
 	char *argv[MAX_ARGC] = {0};
-	u8 key[PRIV_KEY_LEN],read_buffer[PRIV_KEY_LEN],read_buf_mac[MAC_LEN],hash_result[PRIV_KEY_LEN];
+	u8 key[PRIV_KEY_LEN] = {0}, read_buffer[PRIV_KEY_LEN] = {0}, read_buf_mac[MAC_LEN] = {0}, hash_result[PRIV_KEY_LEN] = {0};
+	u32 key32[PRIV_KEY_LEN];
+	u32 sscanf_ret = 0;
 	flash_t flash;
 	char *ptmp;
 	u32 offset_1, offset_2, len;
@@ -287,6 +308,7 @@ void fATSK(void *arg)
 	u32 test_mode_bit;
 	int i;
 	unsigned char *enc_img;
+	unsigned char *enc_img_tmp;
 	u8 mac_empty[MAC_LEN] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
 
 	at_printf("[ATSK]: _AT_SYSTEM_ENABLE_SECURE_BOOT_\r\n");
@@ -295,11 +317,12 @@ void fATSK(void *arg)
 	test_mode = HAL_READ32(0x40000000, 0x000001F4);
 	test_mode_bit = (test_mode & BIT26)>>26;
 	if(test_mode_bit & 0x1){
-		at_printf("[ATSK] Err: the chip is still in test mode, please reset it first. \r\n");
+		at_printf("[ATSK] Err: the chip is still in test mode, please reset it first.\r\n");
 		return;
 	}
 
 	if(!arg){
+		at_printf("[ATSK] Err: argument error.\r\n");
 		at_printf("[ATSK] Usage: ATSK=ENC_KEY[value(string)]\r\n");
 		at_printf("[ATSK] Example: ATSK=ENC_KEY[000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E5F]\r\n");
 		at_printf("[ATSK] Usage: ATSK=HASH_KEY[value(string)]\r\n");
@@ -316,33 +339,39 @@ void fATSK(void *arg)
 	}
 
 	argc = parse_param(arg, argv);
-	
+
 	//verify secure boot is enabled or not, if it has been enabled, return.
 	device_mutex_lock(RT_DEV_LOCK_EFUSE);
 	ret = efuse_fw_verify_check();
 	device_mutex_unlock(RT_DEV_LOCK_EFUSE);
 	if(ret){
-		at_printf("[ATSK] Err: secure boot has been already enabled!\r\n");
+		at_printf("[ATSK] Err: secure boot has been already enabled.\r\n");
 		return;
 	}
-	
-	
+
+
 	if(strcmp(argv[1], "ENC_KEY") == 0){
 		if(argc != 3){
-			at_printf("[ATSK] Usage: ATSK=ENC_KEY[value(string)]\r\n");
+			at_printf("[ATSK] Err: ATSK=ENC_KEY[value(string)].\r\n");
 			return;
 		}
 
 		if(strlen(argv[2]) != 64){
-			at_printf("[ATSK] Err: ENC key length should be 32 bytes\r\n");
+			at_printf("[ATSK] Err: ENC key length should be 32 bytes.\r\n");
 			return;
 		}
-		
-		if(sscanf(argv[2], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x", 
-			&key[0], &key[1], &key[2], &key[3], &key[4], &key[5], &key[6], &key[7], 
-			&key[8], &key[9], &key[10], &key[11], &key[12], &key[13], &key[14], &key[15],
-			&key[16], &key[17], &key[18], &key[19], &key[20], &key[21], &key[22], &key[23],
-			&key[24], &key[25], &key[26], &key[27], &key[28], &key[29], &key[30], &key[31])!=PRIV_KEY_LEN)
+
+		memset(key32, 0, sizeof(key32));
+		sscanf_ret = sscanf(argv[2], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+				&key32[0], &key32[1], &key32[2], &key32[3], &key32[4], &key32[5], &key32[6], &key32[7],
+				&key32[8], &key32[9], &key32[10], &key32[11], &key32[12], &key32[13], &key32[14], &key32[15],
+				&key32[16], &key32[17], &key32[18], &key32[19], &key32[20], &key32[21], &key32[22], &key32[23],
+				&key32[24], &key32[25], &key32[26], &key32[27], &key32[28], &key32[29], &key32[30], &key32[31]);
+		for(i=0; i<PRIV_KEY_LEN; i++){
+			key[i] = key32[i] & 0xFF;
+		}
+
+		if(sscanf_ret != PRIV_KEY_LEN)
 		{
 			at_printf("[ATSK] Err: Parse ENC key to hex failed.\r\n");
 			return;
@@ -356,26 +385,35 @@ void fATSK(void *arg)
 		device_mutex_lock(RT_DEV_LOCK_EFUSE);
 		ret = hal_susec_key_get(read_buffer);
 		device_mutex_unlock(RT_DEV_LOCK_EFUSE);
-		if(ret < 0){
-			at_printf("[ATSK] Err: efuse ss key: read address and length error\r\n");
+		if(!ret){
+			at_printf("[ATSK] Err: read efuse ss key failed.\r\n");
 			return;
 		}
 #if defined(BYPASS_CHECK_KEY_WRITTEN)
 		if(memcmp(key,read_buffer,32)!=0){
+			for(i = 0; i < PRIV_KEY_LEN; i++){
+				for(int t = 0; t < 8; t++){
+					if(((key[i] & BIT(t)) >> t) && (!((read_buffer[i] & BIT(t)) >> t))){
+						at_printf("[ATSK] Err: efuse cannot rewrite because it will be messy up.\r\n");
+						return;
+					}
+				}
+				key[i] |= (~read_buffer[i]);
+			}
 			//write SS key
 			device_mutex_lock(RT_DEV_LOCK_EFUSE);
 			ret = efuse_susec_key_write(key);
 			device_mutex_unlock(RT_DEV_LOCK_EFUSE);
 			if(ret<0){
-				at_printf("[ATSK] Err: ENC key write address and length error\r\n");
+				at_printf("[ATSK] Err: ENC key write address and length error.\r\n");
 				return;
 			}
 			else{
-				at_printf("[ATSK] Write ENC key done\r\n");
+				at_printf("[ATSK] Write ENC key done.\r\n");
 			}
-			
+
 			//read SS key
-			//read efuse for 3 times 
+			//read efuse for 3 times
 			for(int j=0;j<3;j++){
 				//init read_buffer as 0xFF before read
 				for(int i=0;i<PRIV_KEY_LEN;i++){
@@ -406,14 +444,14 @@ void fATSK(void *arg)
 		ret = efuse_susec_key_write(key);
 		device_mutex_unlock(RT_DEV_LOCK_EFUSE);
 		if(ret<0){
-			at_printf("[ATSK] Err: ENC key write address and length error\r\n");
+			at_printf("[ATSK] Err: ENC key write address and length error.\r\n");
 			return;
 		}
 		else{
-			at_printf("[ATSK] Write ENC key done\r\n");
+			at_printf("[ATSK] Write ENC key done.\r\n");
 		}
 		//read SS key
-		//read efuse for 3 times 
+		//read efuse for 3 times
 		for(int j=0;j<3;j++){
 			//init read_buffer as 0xFF before read
 			for(int i=0;i<PRIV_KEY_LEN;i++){
@@ -432,12 +470,12 @@ void fATSK(void *arg)
 		//hash read result
 		ret = crypto_init();
 		if (SUCCESS != ret) {
-			at_printf("[ATSK] Err: crypto engine init failed \r\n");
+			at_printf("[ATSK] Err: crypto engine init failed.\r\n");
 			return;
 		}
 		ret = crypto_sha2_256(read_buffer, 32, hash_result);
 		if (SUCCESS != ret) {
-			at_printf("[ATSK] Err: crypto enc key failed \r\n");
+			at_printf("[ATSK] Err: crypto enc key failed.\r\n");
 			return;
 		}
 		at_printf("hash result is $");
@@ -448,22 +486,28 @@ void fATSK(void *arg)
 		at_printf("$\r\n");
 	}else if(strcmp(argv[1], "HASH_KEY") == 0){
 		if(argc != 3){
-			at_printf("[ATSK] Usage: ATSK=HASH_KEY[value(string)]\r\n");
+			at_printf("[ATSK] Err: ATSK=HASH_KEY[value(string)].\r\n");
 			return;
 		}
 
 		if(strlen(argv[2]) != 64){
-			at_printf("[ATSK] Err: HASH key length should be 32 bytes\r\n");
+			at_printf("[ATSK] Err: HASH key length should be 32 bytes.\r\n");
 			return;
 		}
-		
-		if(sscanf(argv[2], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x", 
-			&key[0], &key[1], &key[2], &key[3], &key[4], &key[5], &key[6], &key[7], 
-			&key[8], &key[9], &key[10], &key[11], &key[12], &key[13], &key[14], &key[15],
-			&key[16], &key[17], &key[18], &key[19], &key[20], &key[21], &key[22], &key[23],
-			&key[24], &key[25], &key[26], &key[27], &key[28], &key[29], &key[30], &key[31])!=PRIV_KEY_LEN)
+
+		memset(key32, 0, sizeof(key32));
+		sscanf_ret = sscanf(argv[2], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+				&key32[0], &key32[1], &key32[2], &key32[3], &key32[4], &key32[5], &key32[6], &key32[7],
+				&key32[8], &key32[9], &key32[10], &key32[11], &key32[12], &key32[13], &key32[14], &key32[15],
+				&key32[16], &key32[17], &key32[18], &key32[19], &key32[20], &key32[21], &key32[22], &key32[23],
+				&key32[24], &key32[25], &key32[26], &key32[27], &key32[28], &key32[29], &key32[30], &key32[31]);
+		for(i=0; i<PRIV_KEY_LEN; i++){
+			key[i] = key32[i] & 0xFF;
+		}
+
+		if(sscanf_ret != PRIV_KEY_LEN)
 		{
-			at_printf("[ATSK] Err: Parse HASH key to hex failed. \r\n");
+			at_printf("[ATSK] Err: Parse HASH key to hex failed.\r\n");
 			return;
 		}
 
@@ -475,22 +519,32 @@ void fATSK(void *arg)
 		device_mutex_lock(RT_DEV_LOCK_EFUSE);
 		ret = hal_sec_key_get(read_buffer, 0, PRIV_KEY_LEN);
 		device_mutex_unlock(RT_DEV_LOCK_EFUSE);
-		if(ret < 0){
-			at_printf("[ATSK] Err: efuse HASH key: read address and length error. \r\n");
+		if(!ret){
+			at_printf("[ATSK] Err: read efuse HASH key failed.\r\n");
 			return;
 		}
 #if defined(BYPASS_CHECK_KEY_WRITTEN)
 		if(memcmp(key,read_buffer,32)!=0){
+			for(i = 0; i < PRIV_KEY_LEN; i++){
+				for(int t = 0; t < 8; t++){
+					if(((key[i] & BIT(t)) >> t) && (!((read_buffer[i] & BIT(t)) >> t))){
+						at_printf("[ATSK] Err: efuse cannot rewrite because it will be messy up.\r\n");
+						return;
+					}
+				}
+				key[i] |= (~read_buffer[i]);
+			}
+
 			//write S key
 			device_mutex_lock(RT_DEV_LOCK_EFUSE);
 			ret = hal_sec_key_write_ext(key,0);
 			device_mutex_unlock(RT_DEV_LOCK_EFUSE);
 			if(ret<0){
-				at_printf("[ATSK] Err: HASH key write address and length error\r\n");
+				at_printf("[ATSK] Err: HASH key write address and length error.\r\n");
 				return;
 			}
 			else{
-				at_printf("[ATSK] Write HASH key done\r\n");
+				at_printf("[ATSK] Write HASH key done.\r\n");
 			}
 
 			//read S key
@@ -525,11 +579,11 @@ void fATSK(void *arg)
 		ret = efuse_sec_key_write(key,0);
 		device_mutex_unlock(RT_DEV_LOCK_EFUSE);
 		if(ret<0){
-			at_printf("[ATSK] Err: HASH key write address and length error\r\n");
+			at_printf("[ATSK] Err: HASH key write address and length error.\r\n");
 			return;
 		}
 		else{
-			at_printf("[ATSK] Write HASH key done\r\n");
+			at_printf("[ATSK] Write HASH key done.\r\n");
 		}
 		//read S key
 		//read efuse for 3 times
@@ -552,12 +606,12 @@ void fATSK(void *arg)
 		//hash read result
 		ret = crypto_init();
 		if (SUCCESS != ret) {
-			at_printf("[ATSK] Err: crypto engine init failed \r\n");
+			at_printf("[ATSK] Err: crypto engine init failed.\r\n");
 			return;
 		}
 		ret = crypto_sha2_256(read_buffer, 32, hash_result);
 		if (SUCCESS != ret) {
-			at_printf("[ATSK] Err: crypto hash key failed \r\n");
+			at_printf("[ATSK] Err: crypto hash key failed.\r\n");
 			return;
 		}
 		at_printf("hash result is $");
@@ -573,16 +627,22 @@ void fATSK(void *arg)
 		char hash_default_key[65] = "64A7433FCF027D19DDA4D446EEF8E78A22A8C33CB2C337C07366C040612EE0F2\0";
 
 		if(argc != 2){
-			at_printf("[ATSK] Usage: ATSK=SB_KEY\r\n");
+			at_printf("[ATSK] Err: ATSK=SB_KEY.\r\n");
 			return;
 		}
 		at_printf("\r\n1. Super Sec Key write...\r\n" );
 
-		if((ret = sscanf(ss_default_key, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x", 
-			&key[0], &key[1], &key[2], &key[3], &key[4], &key[5], &key[6], &key[7], 
-			&key[8], &key[9], &key[10], &key[11], &key[12], &key[13], &key[14], &key[15],
-			&key[16], &key[17], &key[18], &key[19], &key[20], &key[21], &key[22], &key[23],
-			&key[24], &key[25], &key[26], &key[27], &key[28], &key[29], &key[30], &key[31]))!=PRIV_KEY_LEN)
+		memset(key32, 0, sizeof(key32));
+		ret = sscanf(ss_default_key, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+				&key32[0], &key32[1], &key32[2], &key32[3], &key32[4], &key32[5], &key32[6], &key32[7],
+				&key32[8], &key32[9], &key32[10], &key32[11], &key32[12], &key32[13], &key32[14], &key32[15],
+				&key32[16], &key32[17], &key32[18], &key32[19], &key32[20], &key32[21], &key32[22], &key32[23],
+				&key32[24], &key32[25], &key32[26], &key32[27], &key32[28], &key32[29], &key32[30], &key32[31]);
+		for(i=0; i<PRIV_KEY_LEN; i++){
+			key[i] = key32[i] & 0xFF;
+		}
+
+		if(ret != PRIV_KEY_LEN)
 		{
 			at_printf("[ATSK] Err: Parse SS key to hex failed, ret(%d).\r\n", ret);
 			return;
@@ -604,26 +664,35 @@ void fATSK(void *arg)
 		device_mutex_lock(RT_DEV_LOCK_EFUSE);
 		ret = hal_susec_key_get(read_buffer);
 		device_mutex_unlock(RT_DEV_LOCK_EFUSE);
-		if(ret < 0){
-			at_printf("[ATSK] Err: efuse ss key: read address and length error\r\n");
+		if(!ret){
+			at_printf("[ATSK] Err: read efuse ss key failed.\r\n");
 			goto ss_key_hash;
 		}
 #if defined(BYPASS_CHECK_KEY_WRITTEN)
 		if(memcmp(key,read_buffer,32)!=0){
+			for(i = 0; i < PRIV_KEY_LEN; i++){
+				for(int t = 0; t < 8; t++){
+					if(((key[i] & BIT(t)) >> t) && (!((read_buffer[i] & BIT(t)) >> t))){
+						at_printf("[ATSK] Err: efuse cannot rewrite because it will be messy up.\r\n");
+						return;
+					}
+				}
+				key[i] |= (~read_buffer[i]);
+			}
 			//write SS key
 			device_mutex_lock(RT_DEV_LOCK_EFUSE);
 			ret = efuse_susec_key_write(key);
 			device_mutex_unlock(RT_DEV_LOCK_EFUSE);
 			if(ret<0){
-				at_printf("[ATSK] Err: ENC key write address and length error\r\n");
+				at_printf("[ATSK] Err: ENC key write address and length error.\r\n");
 				goto ss_key_hash;
 			}
 			else{
-				at_printf("[ATSK] Write ENC key done\r\n");
+				at_printf("[ATSK] Write ENC key done.\r\n");
 			}
 
 			//read SS key
-			//read efuse for 3 times 
+			//read efuse for 3 times
 			for(int j=0;j<3;j++){
 				//init read_buffer as 0xFF before read
 				for(int i=0;i<PRIV_KEY_LEN;i++){
@@ -654,11 +723,11 @@ void fATSK(void *arg)
 		ret = efuse_susec_key_write(key);
 		device_mutex_unlock(RT_DEV_LOCK_EFUSE);
 		if(ret<0){
-			at_printf("[ATSK] Err: ENC key write address and length error\r\n");
+			at_printf("[ATSK] Err: ENC key write address and length error.\r\n");
 			goto ss_key_hash;
 		}
 		else{
-			at_printf("[ATSK] Write ENC key done\r\n");
+			at_printf("[ATSK] Write ENC key done.\r\n");
 		}
 		//read SS key
 		//read efuse for 3 times 
@@ -680,12 +749,12 @@ void fATSK(void *arg)
 		//hash read result
 		ret = crypto_init();
 		if (SUCCESS != ret) {
-			at_printf("[ATSK] Err: crypto engine init failed \r\n");
+			at_printf("[ATSK] Err: crypto engine init failed.\r\n");
 			goto ss_key_hash;
 		}
 		ret = crypto_sha2_256(read_buffer, 32, hash_result);
 		if (SUCCESS != ret) {
-			at_printf("[ATSK] Err: crypto enc key failed \r\n");
+			at_printf("[ATSK] Err: crypto enc key failed.\r\n");
 			goto ss_key_hash;
 		}
 		at_printf("hash result is $");
@@ -699,13 +768,19 @@ ss_key_hash:
 		// Hash Key write
 		at_printf("\r\n2. Hash Key write ...\r\n" );
 
-		if(sscanf(hash_default_key, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x", 
-			&key[0], &key[1], &key[2], &key[3], &key[4], &key[5], &key[6], &key[7], 
-			&key[8], &key[9], &key[10], &key[11], &key[12], &key[13], &key[14], &key[15],
-			&key[16], &key[17], &key[18], &key[19], &key[20], &key[21], &key[22], &key[23],
-			&key[24], &key[25], &key[26], &key[27], &key[28], &key[29], &key[30], &key[31])!=PRIV_KEY_LEN)
+		memset(key32, 0, sizeof(key32));
+		sscanf_ret = sscanf(hash_default_key, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+				&key32[0], &key32[1], &key32[2], &key32[3], &key32[4], &key32[5], &key32[6], &key32[7],
+				&key32[8], &key32[9], &key32[10], &key32[11], &key32[12], &key32[13], &key32[14], &key32[15],
+				&key32[16], &key32[17], &key32[18], &key32[19], &key32[20], &key32[21], &key32[22], &key32[23],
+				&key32[24], &key32[25], &key32[26], &key32[27], &key32[28], &key32[29], &key32[30], &key32[31]);
+		for(i=0; i<PRIV_KEY_LEN; i++){
+			key[i] = key32[i] & 0xFF;
+		}
+
+		if(sscanf_ret != PRIV_KEY_LEN)
 		{
-			at_printf("[ATSK] Err: Parse HASH key to hex failed. \r\n");
+			at_printf("[ATSK] Err: Parse HASH key to hex failed.\r\n");
 			return;
 		}
 
@@ -725,22 +800,31 @@ ss_key_hash:
 		device_mutex_lock(RT_DEV_LOCK_EFUSE);
 		ret = hal_sec_key_get(read_buffer, 0, PRIV_KEY_LEN);
 		device_mutex_unlock(RT_DEV_LOCK_EFUSE);
-		if(ret < 0){
-			at_printf("[ATSK] Err: efuse HASH key: read address and length error. \r\n");
+		if(!ret){
+			at_printf("[ATSK] Err: read efuse HASH key failed.\r\n");
 			return;
 		}
 #if defined(BYPASS_CHECK_KEY_WRITTEN)
 		if(memcmp(key,read_buffer,32)!=0){
+			for(i = 0; i < PRIV_KEY_LEN; i++){
+				for(int t = 0; t < 8; t++){
+					if(((key[i] & BIT(t)) >> t) && (!((read_buffer[i] & BIT(t)) >> t))){
+						at_printf("[ATSK] Err: efuse cannot rewrite because it will be messy up.\r\n");
+						return;
+					}
+				}
+				key[i] |= (~read_buffer[i]);
+			}
 			//write S key
 			device_mutex_lock(RT_DEV_LOCK_EFUSE);
 			ret = hal_sec_key_write_ext(key,0);
 			device_mutex_unlock(RT_DEV_LOCK_EFUSE);
 			if(ret<0){
-				at_printf("[ATSK] Err: HASH key write address and length error\r\n");
+				at_printf("[ATSK] Err: HASH key write address and length error.\r\n");
 				return;
 			}
 			else{
-				at_printf("[ATSK] Write HASH key done\r\n");
+				at_printf("[ATSK] Write HASH key done.\r\n");
 			}
 
 			//read S key
@@ -775,11 +859,11 @@ ss_key_hash:
 		ret = efuse_sec_key_write(key,0);
 		device_mutex_unlock(RT_DEV_LOCK_EFUSE);
 		if(ret<0){
-			at_printf("[ATSK] Err: HASH key write address and length error\r\n");
+			at_printf("[ATSK] Err: HASH key write address and length error.\r\n");
 			return;
 		}
 		else{
-			at_printf("[ATSK] Write HASH key done\r\n");
+			at_printf("[ATSK] Write HASH key done.\r\n");
 		}
 		//read S key
 		//read efuse for 3 times
@@ -802,12 +886,12 @@ ss_key_hash:
 		//hash read result
 		ret = crypto_init();
 		if (SUCCESS != ret) {
-			at_printf("[ATSK] Err: crypto engine init failed \r\n");
+			at_printf("[ATSK] Err: crypto engine init failed.\r\n");
 			return;
 		}
 		ret = crypto_sha2_256(read_buffer, 32, hash_result);
 		if (SUCCESS != ret) {
-			at_printf("[ATSK] Err: crypto hash key failed \r\n");
+			at_printf("[ATSK] Err: crypto hash key failed.\r\n");
 			return;
 		}
 		at_printf("hash result is $");
@@ -818,20 +902,26 @@ ss_key_hash:
 		at_printf("$\r\n");
 	}else if(strcmp(argv[1], "ROOT_KEY") == 0){
 		if(argc != 3){
-			at_printf("[ATSK] Usage: ATSK=ROOT_KEY[value(string)]\r\n");
+			at_printf("[ATSK] Err: ATSK=ROOT_KEY[value(string)].\r\n");
 			return;
 		}
 
 		if(strlen(argv[2]) != 64){
-			at_printf("[ATSK] Err: ROOT key length should be 32 bytes\r\n");
+			at_printf("[ATSK] Err: ROOT key length should be 32 bytes.\r\n");
 			return;
 		}
-		
-		if(sscanf(argv[2], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x", 
-			&key[0], &key[1], &key[2], &key[3], &key[4], &key[5], &key[6], &key[7], 
-			&key[8], &key[9], &key[10], &key[11], &key[12], &key[13], &key[14], &key[15],
-			&key[16], &key[17], &key[18], &key[19], &key[20], &key[21], &key[22], &key[23],
-			&key[24], &key[25], &key[26], &key[27], &key[28], &key[29], &key[30], &key[31])!=PRIV_KEY_LEN)
+
+		memset(key32, 0, sizeof(key32));
+		sscanf_ret = sscanf(argv[2], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+				&key32[0], &key32[1], &key32[2], &key32[3], &key32[4], &key32[5], &key32[6], &key32[7],
+				&key32[8], &key32[9], &key32[10], &key32[11], &key32[12], &key32[13], &key32[14], &key32[15],
+				&key32[16], &key32[17], &key32[18], &key32[19], &key32[20], &key32[21], &key32[22], &key32[23],
+				&key32[24], &key32[25], &key32[26], &key32[27], &key32[28], &key32[29], &key32[30], &key32[31]);
+		for(i=0; i<PRIV_KEY_LEN; i++){
+			key[i] = key32[i] & 0xFF;
+		}
+
+		if(sscanf_ret != PRIV_KEY_LEN)
 		{
 			at_printf("[ATSK] Err: Parse ROOT key to hex failed.\r\n");
 			return;
@@ -845,22 +935,25 @@ ss_key_hash:
 		device_mutex_lock(RT_DEV_LOCK_EFUSE);
 		ret = hal_sec_key_get(read_buffer, 1, PRIV_KEY_LEN);
 		device_mutex_unlock(RT_DEV_LOCK_EFUSE);
-		if(ret < 0){
-			at_printf("[ATSK] Err: efuse ROOT key: read address and length error\r\n");
+		if(!ret){
+			at_printf("[ATSK] Err: read efuse ROOT key failed.\r\n");
 			return;
 		}
 #if defined(BYPASS_CHECK_KEY_WRITTEN)
 		if(memcmp(key,read_buffer,32)!=0){
+			for(i = 0; i < PRIV_KEY_LEN; i++){
+				key[i] |= (~read_buffer[i]);
+			}
 			//write root key
 			device_mutex_lock(RT_DEV_LOCK_EFUSE);
 			ret = hal_sec_key_write_ext(key,1);
 			device_mutex_unlock(RT_DEV_LOCK_EFUSE);
 			if(ret<0){
-				at_printf("[ATSK] Err: ROOT key write address and length error\r\n");
+				at_printf("[ATSK] Err: ROOT key write address and length error.\r\n");
 				return;
 			}
 			else{
-				at_printf("[ATSK] Write ROOT key done\r\n");
+				at_printf("[ATSK] Write ROOT key done.\r\n");
 			}
 		}else{
 			at_printf("[ATSK] bypass writing done.\r\n");
@@ -878,11 +971,11 @@ ss_key_hash:
 		ret = efuse_sec_key_write(key,1);
 		device_mutex_unlock(RT_DEV_LOCK_EFUSE);
 		if(ret<0){
-			at_printf("[ATSK] Err: ROOT key write address and length error\r\n");
+			at_printf("[ATSK] Err: ROOT key write address and length error.\r\n");
 			return;
 		}
 		else{
-			at_printf("[ATSK] Write ROOT key done\r\n");
+			at_printf("[ATSK] Write ROOT key done.\r\n");
 		}
 		//read root key
 		//read efuse for 3 times
@@ -903,12 +996,12 @@ ss_key_hash:
 #endif
 	}else if(strcmp(argv[1], "ROOT_SEED") == 0){
 		if(argc != 3){
-			at_printf("[ATSK] Usage: ATSK=ROOT_SEED[value(string)]\r\n");
+			at_printf("[ATSK] Err: ATSK=ROOT_SEED[value(string)].\r\n");
 			return;
 		}
 
 		if(strlen(argv[2]) != 64){
-			at_printf("[ATSK] Err: root seed length should be 32 bytes\r\n");
+			at_printf("[ATSK] Err: root seed length should be 32 bytes.\r\n");
 			return;
 		}
 
@@ -916,11 +1009,17 @@ ss_key_hash:
 		u32 seed_in = 0;
 		u32 key_tmp[8];
 
-		if(sscanf(argv[2], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x", 
-			&seed[0], &seed[1], &seed[2], &seed[3], &seed[4], &seed[5], &seed[6], &seed[7], 
-			&seed[8], &seed[9], &seed[10], &seed[11], &seed[12], &seed[13], &seed[14], &seed[15],
-			&seed[16], &seed[17], &seed[18], &seed[19], &seed[20], &seed[21], &seed[22], &seed[23],
-			&seed[24], &seed[25], &seed[26], &seed[27], &seed[28], &seed[29], &seed[30], &seed[31])!=PRIV_KEY_LEN)
+		memset(key32, 0, sizeof(key32));
+		sscanf_ret = sscanf(argv[2], "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+				&key32[0], &key32[1], &key32[2], &key32[3], &key32[4], &key32[5], &key32[6], &key32[7],
+				&key32[8], &key32[9], &key32[10], &key32[11], &key32[12], &key32[13], &key32[14], &key32[15],
+				&key32[16], &key32[17], &key32[18], &key32[19], &key32[20], &key32[21], &key32[22], &key32[23],
+				&key32[24], &key32[25], &key32[26], &key32[27], &key32[28], &key32[29], &key32[30], &key32[31]);
+		for(i=0; i<PRIV_KEY_LEN; i++){
+			seed[i] = key32[i] & 0xFF;
+		}
+
+		if(sscanf_ret != PRIV_KEY_LEN)
 		{
 			at_printf("[ATSK] Err: Parse SS seed to hex failed.\r\n");
 			return;
@@ -955,22 +1054,25 @@ ss_key_hash:
 		device_mutex_lock(RT_DEV_LOCK_EFUSE);
 		ret = hal_sec_key_get(read_buffer, 1, PRIV_KEY_LEN);
 		device_mutex_unlock(RT_DEV_LOCK_EFUSE);
-		if(ret < 0){
-			at_printf("[ATSK] Err: efuse ROOT key: read address and length error\r\n");
+		if(!ret){
+			at_printf("[ATSK] Err: read efuse ROOT key failed.\r\n");
 			return;
 		}
 #if defined(BYPASS_CHECK_KEY_WRITTEN)
 		if(memcmp(key,read_buffer,32)!=0){
+			for(i = 0; i < PRIV_KEY_LEN; i++){
+				key[i] |= (~read_buffer[i]);
+			}
 			//write root key
 			device_mutex_lock(RT_DEV_LOCK_EFUSE);
 			ret = hal_sec_key_write_ext(key,1);
 			device_mutex_unlock(RT_DEV_LOCK_EFUSE);
 			if(ret<0){
-				at_printf("[ATSK] Err: ROOT key write address and length error\r\n");
+				at_printf("[ATSK] Err: ROOT key write address and length error.\r\n");
 				return;
 			}
 			else{
-				at_printf("[ATSK] Write ROOT key done\r\n");
+				at_printf("[ATSK] Write ROOT key done.\r\n");
 			}
 		}else{
 			at_printf("[ATSK] bypass writing done.\r\n");
@@ -988,11 +1090,11 @@ ss_key_hash:
 		ret = efuse_sec_key_write(key,1);
 		device_mutex_unlock(RT_DEV_LOCK_EFUSE);
 		if(ret<0){
-			at_printf("[ATSK] Err: ROOT key write address and length error\r\n");
+			at_printf("[ATSK] Err: ROOT key write address and length error.\r\n");
 			return;
 		}
 		else{
-			at_printf("[ATSK] Write ROOT key done\r\n");
+			at_printf("[ATSK] Write ROOT key done.\r\n");
 		}
 		//read root key
 		//read efuse for 3 times
@@ -1012,55 +1114,191 @@ ss_key_hash:
 		}
 #endif
 	}else if(strcmp(argv[1], "SEC_BOOT_EN") == 0){
+		len = strtoul(argv[4], &ptmp, 16);
+		if(len % FLASH_SECTOR_SIZE != 0)
+		{
+			at_printf("[ATSK] Err: length parameter must be 4K alignment.\r\n");
+			return;
+		}
+
+		//check if encrypted partition.bin is empty
+		offset_1 = strtoul(argv[2], &ptmp, 16);
+		enc_img_tmp = malloc(FLASH_SECTOR_SIZE);
+		if(!enc_img_tmp){
+			at_printf("[ATSK] Err: malloc failed for enc_img_tmp.\r\n");
+			return;	
+		}
 		enc_img = malloc(FLASH_SECTOR_SIZE);
 		if(!enc_img){
-			at_printf("[ATSK] malloc failed for enc_img\r\n");
-			return;		
+			at_printf("[ATSK] Err: malloc failed for enc_img.\r\n");
+			if(enc_img_tmp){
+				free(enc_img_tmp);
+			}
+			return;
 		}
-		
-		//erase partitiontable.bin
-		device_mutex_lock(RT_DEV_LOCK_FLASH);
-		flash_erase_sector(&flash, FLASH_OFFSET_PARTITION_TABLE);
-		device_mutex_unlock(RT_DEV_LOCK_FLASH);
-		
-		//erase bootloader.bin
-		device_mutex_lock(RT_DEV_LOCK_FLASH);
-		len = strtoul(argv[4], &ptmp, 16);
-		for(i = 0; i < (len/FLASH_SECTOR_SIZE); i++)
-		{
-			flash_erase_sector(&flash, FLASH_OFFSET_BOOTLOADER + i * FLASH_SECTOR_SIZE);
+
+		//init enc_img_tmp as 0xFF
+		for(i = 0; i < FLASH_SECTOR_SIZE; i++){
+			enc_img_tmp[i] = 0xFF;
 		}
-		device_mutex_unlock(RT_DEV_LOCK_FLASH);
-	
-		//rewrite encrypted partitiontable.bin
-		offset_1 = strtoul(argv[2], &ptmp, 16);
 		device_mutex_lock(RT_DEV_LOCK_FLASH);
-		flash_stream_read(&flash,offset_1, FLASH_SECTOR_SIZE, enc_img);
-		if(flash_burst_write(&flash,  FLASH_OFFSET_PARTITION_TABLE , FLASH_SECTOR_SIZE, enc_img) < 0){
-			at_printf("[ATSK] Err: Write encrypted partitiontable.bin failed\r\n");
-		}
+		flash_stream_read(&flash, offset_1, FLASH_SECTOR_SIZE, enc_img);
 		device_mutex_unlock(RT_DEV_LOCK_FLASH);
 
-		//rewrite encrypted bootloader.bin
+		//check if encrypted partition.bin is empty
+		if(memcmp(enc_img, enc_img_tmp, FLASH_SECTOR_SIZE) == 0){
+			at_printf("[ATSK] Err: encrypted partition.bin is empty.\r\n");
+			if(enc_img_tmp){
+				free(enc_img_tmp);
+			}
+			if(enc_img){
+				free(enc_img);
+			}
+			return;
+		}
+		if(enc_img_tmp){
+			free(enc_img_tmp);
+		}
+		if(enc_img){
+			free(enc_img);
+		}
+
+		//check if encrypted bootloader is empty
+		u8 sector_len = 0;//how many sectors to read and write
+		sector_len = len/FLASH_SECTOR_SIZE;
+
 		offset_2 = strtoul(argv[3], &ptmp, 16);
+		enc_img_tmp = malloc(len);
+		if(!enc_img_tmp){
+			at_printf("[ATSK] Err: malloc failed for enc_img_tmp.\r\n");
+			return;
+		}
+		enc_img = malloc(len);
+		if(!enc_img){
+			at_printf("[ATSK] Err: malloc failed for enc_img.\r\n");
+			if(enc_img_tmp){
+				free(enc_img_tmp);
+			}
+			return;
+		}
+		//init enc_img_tmp as 0xFF
+		for(i = 0; i < len; i++){
+			enc_img_tmp[i] = 0xFF;
+		}
 		device_mutex_lock(RT_DEV_LOCK_FLASH);
-		for(i=0;i<(len/FLASH_SECTOR_SIZE+1);i++){
-			flash_stream_read(&flash, offset_2+i*FLASH_SECTOR_SIZE, FLASH_SECTOR_SIZE, enc_img);
-			if(flash_burst_write(&flash,  FLASH_OFFSET_BOOTLOADER + i*FLASH_SECTOR_SIZE , FLASH_SECTOR_SIZE, enc_img) < 0){
-				at_printf("[ATSK] Err: Write encrypted bootloader.bin failed\r\n");
+		flash_stream_read(&flash, offset_2, len, enc_img);
+		device_mutex_unlock(RT_DEV_LOCK_FLASH);
+		if(memcmp(enc_img, enc_img_tmp, len) == 0){
+			at_printf("[ATSK] Err: encrypted bootloader.bin is empty.\r\n");
+			if(enc_img_tmp){
+				free(enc_img_tmp);
+			}
+			if(enc_img){
+				free(enc_img);
+			}
+			return;
+		}
+		if(enc_img_tmp){
+			free(enc_img_tmp);
+		}
+		if(enc_img){
+			free(enc_img);
+		}
+
+		//rewrite encrypted partition.bin
+		//malloc
+		enc_img_tmp = malloc(FLASH_SECTOR_SIZE);
+		if(!enc_img_tmp){
+			at_printf("[ATSK] Err: malloc failed for enc_img_tmp.\r\n");
+			return;	
+		}
+		enc_img = malloc(FLASH_SECTOR_SIZE);
+		if(!enc_img){
+			at_printf("[ATSK] Err: malloc failed for enc_img.\r\n");
+			if(enc_img_tmp){
+				free(enc_img_tmp);
+			}
+			return;
+		}
+
+		device_mutex_lock(RT_DEV_LOCK_FLASH);
+		//read encrypted partition.bin
+		flash_stream_read(&flash, offset_1, FLASH_SECTOR_SIZE, enc_img);
+		//erase partition.bin
+		flash_erase_sector(&flash, FLASH_OFFSET_PARTITION_TABLE);
+		//write partition.bin
+		flash_burst_write(&flash,  FLASH_OFFSET_PARTITION_TABLE , FLASH_SECTOR_SIZE, enc_img);
+		//read and check if write correctly
+		flash_stream_read(&flash, FLASH_OFFSET_PARTITION_TABLE, FLASH_SECTOR_SIZE, enc_img_tmp);
+		device_mutex_unlock(RT_DEV_LOCK_FLASH);
+		if(memcmp(enc_img, enc_img_tmp, FLASH_SECTOR_SIZE) != 0){
+			at_printf("[ATSK] Err: encrypted partition.bin is not written correctly.\r\n");
+			if(enc_img_tmp){
+				free(enc_img_tmp);
+			}
+			if(enc_img){
+				free(enc_img);
+			}
+			return;
+		}
+		if(enc_img_tmp){
+			free(enc_img_tmp);
+		}
+		if(enc_img){
+			free(enc_img);
+		}
+
+		//rewrite encrypted bootloader.bin
+		//malloc
+		enc_img_tmp = malloc(FLASH_SECTOR_SIZE);
+		if(!enc_img_tmp){
+			at_printf("[ATSK] Err: malloc failed for enc_img_tmp.\r\n");
+			return;
+		}
+		enc_img = malloc(FLASH_SECTOR_SIZE);
+		if(!enc_img){
+			at_printf("[ATSK] Err: malloc failed for enc_img.\r\n");
+			if(enc_img_tmp){
+				free(enc_img_tmp);
+			}
+			return;
+		}
+
+		for(i = 0; i < sector_len; i++){
+			device_mutex_lock(RT_DEV_LOCK_FLASH);
+			//read sector
+			flash_stream_read(&flash, offset_2 + i * FLASH_SECTOR_SIZE, FLASH_SECTOR_SIZE, enc_img);
+			//erase sector
+			flash_erase_sector(&flash, FLASH_OFFSET_BOOTLOADER + i * FLASH_SECTOR_SIZE);
+			//write sector
+			flash_burst_write(&flash,  FLASH_OFFSET_BOOTLOADER + i * FLASH_SECTOR_SIZE , FLASH_SECTOR_SIZE, enc_img);
+			//read and compare the write is correctly or not
+			flash_stream_read(&flash, FLASH_OFFSET_BOOTLOADER + i * FLASH_SECTOR_SIZE, FLASH_SECTOR_SIZE, enc_img_tmp);
+			device_mutex_unlock(RT_DEV_LOCK_FLASH);
+			if(memcmp(enc_img, enc_img_tmp, FLASH_SECTOR_SIZE) != 0){
+				at_printf("[ATSK] Err: encrypted bootloader.bin is not written correctly.\r\n");
+				if(enc_img_tmp){
+					free(enc_img_tmp);
+				}
+				if(enc_img){
+					free(enc_img);
+				}
+				return;
 			}
 		}
-		device_mutex_unlock(RT_DEV_LOCK_FLASH);
+		if(enc_img_tmp){
+			free(enc_img_tmp);
+		}
+		if(enc_img){
+			free(enc_img);
+		}
 
 		//lock SS key
 		device_mutex_lock(RT_DEV_LOCK_EFUSE);
 		ret = efuse_lock_susec_key();
 		device_mutex_unlock(RT_DEV_LOCK_EFUSE);
 		if(ret < 0){
-			at_printf("[ATSK] Err: efuse SS key lock error!\r\n");
-			if(enc_img){
-				free(enc_img);		
-			}
+			at_printf("[ATSK] Err: efuse SS key lock error.\r\n");
 			return;
 		}
 		else{
@@ -1072,10 +1310,7 @@ ss_key_hash:
 		ret = efuse_fw_verify_enable();
 		device_mutex_unlock(RT_DEV_LOCK_EFUSE);
 		if(ret < 0){
-			at_printf("[ATSK] Err: secure boot enable error!\r\n");
-			if(enc_img){
-				free(enc_img);		
-			}
+			at_printf("[ATSK] Err: secure boot enable error.\r\n");
 			return;
 		}
 		else{
@@ -1083,36 +1318,42 @@ ss_key_hash:
 			ret = efuse_fw_verify_check();
 			device_mutex_unlock(RT_DEV_LOCK_EFUSE);
 			if(!ret){
-				at_printf("[ATSK] Err: secure boot enable error!\r\n");
-				if(enc_img){
-					free(enc_img);		
-				}
+				at_printf("[ATSK] Err: secure boot enable error.\r\n");
 				return;
 			}
 			else{
 				at_printf("[ATSK] secure boot is enabled!\r\n");
+#if 0
 				device_mutex_lock(RT_DEV_LOCK_FLASH);
 				//erase encrypted partitiontable.bin
 				flash_erase_sector(&flash, offset_1);
 				//erase encrypted bootloader.bin
-				for(i = 0; i < (len/FLASH_SECTOR_SIZE); i++)
+				for(i = 0; i < sector_len; i++)
 				{
 					flash_erase_sector(&flash, offset_2 + i * FLASH_SECTOR_SIZE);
 				}
 				device_mutex_unlock(RT_DEV_LOCK_FLASH);
+#endif
 				//reset
-				hal_efuse_autoload_en(1);
+				ret = hal_efuse_autoload_en(1);
+				if(!ret)
+				{
+					at_printf("[ATSK] Err: secure boot has been already enabled but reset failed, please reset the chip.\r\n");
+					return;
+				}
 				hal_delay_ms(10);
 #if defined(CONFIG_BUILD_NONSECURE) && (CONFIG_BUILD_NONSECURE==1)
 				sys_disable_fast_boot();
 #else
-				hal_sys_set_fast_boot(NULL, 0);
+				ret = hal_sys_set_fast_boot(NULL, 0);
+				if(ret)
+				{
+					at_printf("[ATSK] Err: secure boot has been already enabled but reset failed, please reset the chip.\r\n");
+					return;
+				}
 #endif
 				hal_misc_rst_by_wdt();
 			}
-		}
-		if(enc_img){
-			free(enc_img);		
 		}
 	}else if(strcmp(argv[1], "CHECK_MAC") == 0){
 		//verify if the chip has already been MP
@@ -1610,6 +1851,7 @@ void fATSP(void *arg)
 int write_otu_to_system_data(flash_t *flash, uint32_t otu_addr)
 {
 	uint32_t data, i = 0;
+	device_mutex_lock(RT_DEV_LOCK_FLASH);
 	flash_read_word(flash, FLASH_SYSTEM_DATA_ADDR+0xc, &data);
 	//printf("\n\r[%s] data 0x%x otu_addr 0x%x", __FUNCTION__, data, otu_addr);
 	AT_DBG_MSG(AT_FLAG_DUMP, AT_DBG_ALWAYS, "[ATSB]: data 0x%x otu_addr 0x%x", data, otu_addr);	
@@ -1635,6 +1877,7 @@ int write_otu_to_system_data(flash_t *flash, uint32_t otu_addr)
 		//erase backup sector
 		flash_erase_sector(flash, FLASH_RESERVED_DATA_BASE);
 	}
+	device_mutex_unlock(RT_DEV_LOCK_FLASH);
 	return 0;
 }
 #endif
@@ -1699,7 +1942,9 @@ void fATSB(void *arg)
 			AT_DBG_MSG(AT_FLAG_DUMP, AT_DBG_ALWAYS, "[ATSB]:uart_port_bar 0x%x", uart_port_bar);
 			AT_DBG_MSG(AT_FLAG_DUMP, AT_DBG_ALWAYS, "[ATSB]:boot_gpio 0x%x", boot_gpio);
 			write_otu_to_system_data(&flash, boot_gpio);
+			device_mutex_lock(RT_DEV_LOCK_FLASH);
 			flash_read_word(&flash, FLASH_SYSTEM_DATA_ADDR+0x0c, &rb_boot_gpio);			
+			device_mutex_unlock(RT_DEV_LOCK_FLASH);
 			AT_DBG_MSG(AT_FLAG_DUMP, AT_DBG_ALWAYS, "[ATSB]:Read 0x900c 0x%x", rb_boot_gpio);
 		}else{
 			AT_DBG_MSG(AT_FLAG_DUMP, AT_DBG_ALWAYS, "[ATSB]: Usage: ATSB=[GPIO_PIN,TRIGER_MODE,UART]");
@@ -2031,13 +2276,13 @@ void fATSt(void *arg)
 {
 	/* To avoid gcc warnings */
 	( void ) arg;
-	
+
 	AT_PRINTK("[ATS#]: _AT_SYSTEM_TEST_");
 }
 
 #if defined(CONFIG_PLATFORM_8711B)
-/*Function: Check if the input jtag key is matched with the jtag password derived from the SB key stored in EFUSE. 
-		    If the input jtag key is correct, it will be stored in system data area of the flash. 
+/*Function: Check if the input jtag key is matched with the jtag password derived from the SB key stored in EFUSE.
+		    If the input jtag key is correct, it will be stored in system data area of the flash.
 		    Otherwise, the last 1 of the error map will be written to 0, which is also stored in system data of the flash. */
 static void sys_enable_jtag_by_password(char *keystring)
 {
@@ -2045,13 +2290,13 @@ static void sys_enable_jtag_by_password(char *keystring)
 	u8 key[8];
 	u32 data, key32[8], i = 0, errmap = 0;
 	int is_match = 0;
-	
+
 	if(strlen(keystring) < 16){
 		AT_PRINTK("%s(): Key length should be 16 characters.", __func__);
 		return;
 	}
 	AT_PRINTK("Enter JTAG Key: %s\n", keystring);
-	sscanf((const char*)keystring, "%02x%02x%02x%02x%02x%02x%02x%02x", 
+	sscanf((const char*)keystring, "%02x%02x%02x%02x%02x%02x%02x%02x",
 		&key32[0], &key32[1], &key32[2], &key32[3], &key32[4], &key32[5], &key32[6], &key32[7]);
 	for(i=0; i<8; i++){
 		key[i] = key32[i] & 0xFF;
@@ -2068,7 +2313,7 @@ static void sys_enable_jtag_by_password(char *keystring)
 
 	// check if jtag key is correct
 	is_match = boot_export_symbol.is_jtag_key_match(key);
-	
+
 	device_mutex_lock(RT_DEV_LOCK_FLASH);
 	flash_read_word(&flash, FLASH_SYSTEM_DATA_ADDR + 0x44, &data);
 	if(data != ~0x0){
@@ -2198,7 +2443,7 @@ void fATSx(void *arg)
 	AT_PRINTK("[ATS?]: _AT_SYSTEM_HELP_");
 	AT_PRINTK("[ATS?]: COMPILE TIME: %s", RTL_FW_COMPILE_TIME);
 //	wifi_get_drv_ability(&ability);
-	strcpy(buf, "v");
+	strncpy(buf, "v", sizeof(buf));
 //	if(ability & 0x1)
 //		strcat(buf, "m");
 #if defined(CONFIG_PLATFORM_8710C)
@@ -2275,10 +2520,10 @@ void fATSV(void *arg){
 	char fw_buf[32];
 
 	// get at version
-	strcpy(at_buf, ATCMD_VERSION"."ATCMD_SUBVERSION"."ATCMD_REVISION);
+	strncpy(at_buf, ATCMD_VERSION"."ATCMD_SUBVERSION"."ATCMD_REVISION, sizeof(at_buf));
 
 	// get fw version
-	strcpy(fw_buf, SDK_VERSION);
+	strncpy(fw_buf, SDK_VERSION, sizeof(fw_buf));
 #if defined CONFIG_PLATFORM_8195A
 	at_printf("\r\n[ATSV] OK:%s,%s(%s)",at_buf,fw_buf,RTL8195AFW_COMPILE_TIME);
 #elif defined CONFIG_PLATFORM_8710C
@@ -2286,31 +2531,52 @@ void fATSV(void *arg){
 #endif
 }
 
-#if defined(configUSE_WAKELOCK_PMU) && (configUSE_WAKELOCK_PMU == 1)
+#if defined(CONFIG_PLATFORM_8710C)
+#include "power_mode_api.h"
+#include "gpio_irq_api.h"
+#include "gpio_irq_ex_api.h"
+
+static gpio_irq_t my_GPIO_IRQ;
+
+int valid_wake_pin(int i) {
+	if (i >= 0 && i <= 23) {
+		if (i==5||i==6||i==21||i==22) return 0;
+		else return 1;
+	} else return 0;
+}
+#endif
+
 void fATSP(void *arg){
+
 	int argc = 0;
 	char *argv[MAX_ARGC] = {0};
 
 	uint32_t lock_id;
 	uint32_t bitmap;
-	
+#if defined(CONFIG_PLATFORM_8710C)
+	int sleep_duration = 0;
+	int wake_pin = 0;
+	u8 sleep_option = 0;
+#endif
+
 	if (!arg) {
-		AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ERROR, "\r\n[ATSP] Usage: ATSP=<a/r/?>");
+		AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ERROR, "\r\n[ATSP] Usage: ATSP=<a/r/d/?>");
 		at_printf("\r\n[ATSP] ERROR:1");
 		return;
 	} else {
-		if((argc = parse_param(arg, argv)) != 2){
-			AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ERROR, "\r\n[ATSP] Usage: ATSP=<a/r/?>");
+		if((argc = parse_param(arg, argv)) < 2){
+			AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ERROR, "\r\n[ATSP] Usage: ATSP=<a/r/d/?>");
 			at_printf("\r\n[ATSP] ERROR:1");
 			return;
 		}
 	}
 
 	switch(argv[1][0]) {
+#if defined(configUSE_WAKELOCK_PMU) && (configUSE_WAKELOCK_PMU == 1)
 		case 'a': // acquire
 		{
 			pmu_acquire_wakelock(PMU_OS);
-			//at_printf("\r\n[ATSP] wakelock:0x%08x", pmu_get_wakelock_status());			
+			//at_printf("\r\n[ATSP] wakelock:0x%08x", pmu_get_wakelock_status());
 			break;
 		}
 
@@ -2320,18 +2586,59 @@ void fATSP(void *arg){
 			//at_printf("\r\n[ATSP] wakelock:0x%08x", pmu_get_wakelock_status());
 			break;
 		}
-
 		case '?': // get status
 			break;
+#else /* define configUSE_WAKELOCK_PMU */
+		case 'a':
+		case 'r':
+		case '?':
+		{
+			AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ERROR, "\r\n[ATSP] need to set configUSE_WAKELOCK_PMU to be 1 to use tickless feature");
+			break;
+		}
+#endif /* define configUSE_WAKELOCK_PMU */
+#if defined(CONFIG_PLATFORM_8710C)
+		case 'd':
+		{
+			if (argc < 3) {
+				AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ERROR, "\r\n[ATSP] Usage: ATSP=<d,sleep_duration,wake_pin>");
+				break;
+			}
+			sleep_duration = atoi(argv[2]);
+			if (sleep_duration) sleep_option |= DS_STIMER;
+			if (argc > 3) {
+				wake_pin = atoi(argv[3]);
+				if (valid_wake_pin(wake_pin)) {
+					gpio_irq_init(&my_GPIO_IRQ, PIN_NAME(PORT_A, wake_pin), NULL, (uint32_t)&my_GPIO_IRQ);
+					gpio_irq_pull_ctrl(&my_GPIO_IRQ, PullNone);
+					gpio_irq_set(&my_GPIO_IRQ, IRQ_FALL, 1);
+					sleep_option |= DS_GPIO;
+				} else {
+					AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ERROR, "\r\n[ATSP] Usage: Valid pin are A0-4,A7-20,A23");
+				}
+			}
+
+			if (sleep_option) DeepSleep(sleep_option, sleep_duration, 0);
+			break;
+		}
+
+		default:
+			AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ERROR, "\r\n[ATSP] Usage: ATSP=<a/r/d/?>");
+			at_printf("\r\n[ATSP] ERROR:2");
+			return;
+#else /* defined CONFIG_PLATFORM_8710C */
 		default:
 			AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ERROR, "\r\n[ATSP] Usage: ATSP=<a/r/?>");
 			at_printf("\r\n[ATSP] ERROR:2");
 			return;
+#endif /* defined CONFIG_PLATFORM_8710C */
 	}
+#if defined(configUSE_WAKELOCK_PMU) && (configUSE_WAKELOCK_PMU == 1)
 	bitmap = pmu_get_wakelock_status();
 	at_printf("\r\n[ATSP] OK:%s", (bitmap&BIT(PMU_OS))?"1":"0");
-}
 #endif
+
+}
 
 void fATSE(void *arg){
 	int argc = 0;
@@ -2339,7 +2646,7 @@ void fATSE(void *arg){
 	char *argv[MAX_ARGC] = {0};
 	int err_no = 0;
 
-	AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ALWAYS, "[ATSE]: _AT_SYSTEM_ECHO_DBG_SETTING");	
+	AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ALWAYS, "[ATSE]: _AT_SYSTEM_ECHO_DBG_SETTING");
 	if(!arg){
 		AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ERROR, "[ATSE] Usage: ATSE=<echo>,<dbg_msk>,<dbg_lv>");
 		err_no = 1;
@@ -2847,9 +3154,7 @@ log_item_t at_sys_items[] = {
 	{"ATS?", fATSh,},	// list all AT command
 	{"ATSR", fATSR,},	// system restart
 	{"ATSV", fATSV,},	// show version info
-#if defined(CONFIG_PLATFORM_8195A)
 	{"ATSP", fATSP,},	// power saving mod
-#endif
 	{"ATSE", fATSE,},	// enable and disable echo
 #if CONFIG_WLAN
 	{"ATSY", fATSY,},	// factory reset

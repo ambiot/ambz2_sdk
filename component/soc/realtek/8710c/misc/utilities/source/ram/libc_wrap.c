@@ -104,7 +104,9 @@ int check_format(const char * fmt,...){
         if(*fmt1 == '"') {
             do {
                 fmt1 ++;
-            } while(*fmt1 != '"');
+            } while(*fmt1 != '"' && *fmt1 !='\0');
+			if(*fmt1 == '\0')
+				return 1;
             fmt1 ++;
         }
         
@@ -848,7 +850,8 @@ validate_structure (struct tm *tim_p)
 		((_DAYS_IN_YEAR (tim_p->tm_year) == 366) ?
 		 29 : 28);
 	    }
-	  tim_p->tm_mday += _DAYS_IN_MONTH (tim_p->tm_mon);
+    if (tim_p->tm_mon != -1) // to pass coverity test
+	    tim_p->tm_mday += _DAYS_IN_MONTH (tim_p->tm_mon);
 	}
     }
   else

@@ -107,8 +107,8 @@ void pwmout_init(pwmout_t *obj, PinName pin)
         return;
     }
     obj->is_init = 1; // Initialize Success
-    pwmout_period_us(obj, 20000); // 20 ms per default
-    hal_pwm_enable ((&obj->pwm_hal_adp));
+    //pwmout_period_us(obj, 20000); // 20 ms per default
+    //hal_pwm_enable ((&obj->pwm_hal_adp));
 }
 
 void pwmout_free(pwmout_t *obj)

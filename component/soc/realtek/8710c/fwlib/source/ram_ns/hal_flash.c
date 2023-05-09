@@ -586,7 +586,7 @@ void hal_flash_return_spi (phal_spic_adaptor_t phal_spic_adaptor)
 {
     pflash_cmd_t cmd = phal_spic_adaptor->cmd;
     spic_valid_cmd_t valid_cmd;
-    spic_init_para_t spic_init_data;
+    spic_init_para_t spic_init_data = {0};
     pspic_init_para_t pspic_init_data = &spic_init_data;
     SPIC_Type *spic_dev  = phal_spic_adaptor->spic_dev;
     u8 spic_send_cmd_mode = phal_spic_adaptor->spic_send_cmd_mode;
@@ -743,6 +743,9 @@ void hal_flash_burst_write (phal_spic_adaptor_t phal_spic_adaptor, u32 length, u
     }
 
     if (((u32)data >> 24) == 0x98) {       
+        DBG_SPIF_ERR("Source data should be stored in ram!\r\n");
+        return;
+#if 0
         data = (u8*)((u32)data & 0xFFFFFF);
         page_size = 256;
         existed_data_size = addr & 0xFF;
@@ -775,6 +778,7 @@ void hal_flash_burst_write (phal_spic_adaptor_t phal_spic_adaptor, u32 length, u
                 }
             }
         }
+#endif
     } else {       
         hal_flash_stubs.hal_flash_burst_write(phal_spic_adaptor, length, addr, data);
     }
@@ -799,6 +803,7 @@ void hal_flash_page_program (phal_spic_adaptor_t phal_spic_adaptor, u32 length, 
     hal_flash_stubs.hal_flash_page_program(phal_spic_adaptor, length, addr, data);
 }
 
+#if 0
 /** \brief Description of hal_flash_read_write_flash
  *
  *    hal_flash_read_write_flash is used to program sequential data with user mode.
@@ -824,7 +829,7 @@ void hal_flash_read_write_flash (phal_spic_adaptor_t phal_spic_adaptor, u32 leng
     u8 index;
     u8 spic_send_cmd_mode;
     u8 addr_byte_num;
-    u8 buffer[256];
+    u8 buffer[256] = {0};
     u8* ptr = &buffer[0];
 
     hal_flash_stream_read(phal_spic_adaptor, length, (u32)data, buffer);
@@ -946,7 +951,7 @@ void hal_flash_read_write_flash (phal_spic_adaptor_t phal_spic_adaptor, u32 leng
 
     spic_dev->valid_cmd_b.prm_en = ENABLE;
 }
-
+#endif
 
 /** \brief Description of hal_flash_reset_to_spi
  *
@@ -1037,7 +1042,7 @@ void hal_flash_support_new_type (phal_spic_adaptor_t phal_spic_adaptor)
  */
 u8 hal_flash_get_size (phal_spic_adaptor_t phal_spic_adaptor)
 {
-    u8 efuse_value;
+    u8 efuse_value = 0;
     u8 size_id = phal_spic_adaptor->flash_id[2];
     u32 size = 0;
 

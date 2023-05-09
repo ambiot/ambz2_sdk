@@ -82,7 +82,7 @@ int update_ota_erase_upg_region(uint32_t img_len, uint32_t NewFWLen, uint32_t Ne
 
 int update_ota_signature(unsigned char* sig_backup, uint32_t NewFWAddr){
 	int ret = 0;
-	unsigned char sig_readback[32];
+	unsigned char sig_readback[32] = {0};
 	printf("\n\r[%s] Append OTA signature", __FUNCTION__);
 	device_mutex_lock(RT_DEV_LOCK_FLASH);
 	if(flash_burst_write(&flash_ota, NewFWAddr + 16, 16, sig_backup + 16) < 0){
@@ -108,7 +108,7 @@ int update_ota_signature(unsigned char* sig_backup, uint32_t NewFWAddr){
 
 static void update_ota_local_task(void *param)
 {
-	int server_socket;
+	int server_socket = 0;
 	unsigned char *buf;
 	unsigned char sig_backup[32];
 	int read_bytes = 0, idx = 0;
@@ -536,7 +536,8 @@ int parse_http_response(uint8_t *response, uint32_t response_len, http_response_
 					while ( j1 < q && (*(response+j1) == ':' || *(response+j1) == ' ') ) ++j1;
 					while ( j2 > j1 && *(response+j2) == ' ') --j2;
 					uint8_t len_buf[12] = {0};
-					memcpy(len_buf, response+j1, j2-j1+1);
+					if ((j2-j1+1)<=sizeof(len_buf))
+						memcpy(len_buf, response+j1, j2-j1+1);
 					result->body_len = atoi((char const *)len_buf);
 					result->parse_status = 2;
 				}

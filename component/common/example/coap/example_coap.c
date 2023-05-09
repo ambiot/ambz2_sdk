@@ -10,10 +10,10 @@
 #include "sn_coap_protocol.h"
 #include "sn_coap_ameba_port.h"
 
-//#define SERVER_HOST     "coap.me"
-//#define URI_PATH        "/hello" 
-#define SERVER_HOST		"californium.eclipse.org"
-#define URI_PATH		"obs" 
+#define SERVER_HOST     "coap.me"
+#define URI_PATH        "/separate" 
+//#define SERVER_HOST		"californium.eclipseprojects.io"
+//#define URI_PATH		"obs" 
 #define SERVER_PORT     5683
 #define BUF_LEN         1280 // Suggested is to keep packet size under 1280 bytes
 #define MAX_AGE                 60
@@ -109,6 +109,7 @@ coap_res_ptr->msg_id = randLIB_get_16bit();
   
   //receive CoAP message
   struct sockaddr_in from_address;
+  memset(&from_address, 0, sizeof(struct sockaddr_in));
   uint8_t* recv_buffer = (uint8_t*)coap_calloc(BUF_LEN); 
   int ret;
   

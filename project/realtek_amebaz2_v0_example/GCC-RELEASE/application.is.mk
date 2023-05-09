@@ -66,6 +66,8 @@ INCLUDES += -I../../../component/common/api/wifi/rtw_wpa_supplicant/src/crypto
 INCLUDES += -I../../../component/common/api/network/include
 INCLUDES += -I../../../component/common/application
 INCLUDES += -I../../../component/common/application/mqtt/MQTTClient
+INCLUDES += -I../../../component/common/application/mqtt/MQTTPacket/V5
+INCLUDES += -I../../../component/common/application/mqtt/MQTTPacket
 INCLUDES += -I../../../component/common/example
 INCLUDES += -I../../../component/common/file_system
 INCLUDES += -I../../../component/common/file_system/dct
@@ -271,6 +273,8 @@ SRC_C += ../../../component/common/application/mqtt/MQTTPacket/MQTTSubscribeClie
 SRC_C += ../../../component/common/application/mqtt/MQTTPacket/MQTTSubscribeServer.c
 SRC_C += ../../../component/common/application/mqtt/MQTTPacket/MQTTUnsubscribeClient.c
 SRC_C += ../../../component/common/application/mqtt/MQTTPacket/MQTTUnsubscribeServer.c
+SRC_C += ../../../component/common/application/mqtt/MQTTPacket/V5/MQTTProperties.c
+SRC_C += ../../../component/common/application/mqtt/MQTTPacket/V5/MQTTV5Packet.c
 
 #network - coap
 SRC_C += ../../../component/common/network/coap/sn_coap_ameba_port.c
@@ -546,7 +550,7 @@ CFLAGS =
 CFLAGS += -march=armv8-m.main+dsp -mthumb -mcmse -mfloat-abi=soft -D__thumb2__ -g -gdwarf-3 -Os
 CFLAGS += -D__ARM_ARCH_8M_MAIN__=1 -gdwarf-3 -fstack-usage -fdata-sections -ffunction-sections 
 CFLAGS += -fdiagnostics-color=always -Wall -Wpointer-arith -Wundef -Wno-write-strings --save-temps
-CFLAGS += -Wno-maybe-uninitialized -c -MMD
+CFLAGS += -Wno-maybe-uninitialized -c -MMD -fsigned-char
 CFLAGS += -DCONFIG_PLATFORM_8710C -DCONFIG_BUILD_RAM=1
 CFLAGS += -DV8M_STKOVF
 

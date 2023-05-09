@@ -214,7 +214,9 @@ void app_le_gap_init(void)
 #endif
 #elif (F_BT_LE_USE_RANDOM_ADDR==2) && F_BT_LE_LOCAL_IRK_SETTING_SUPPORT
     uint8_t irk_auto = true;
+    uint8_t local_bd_type = GAP_LOCAL_ADDR_LE_RANDOM;
     le_bond_set_param(GAP_PARAM_BOND_GEN_LOCAL_IRK_AUTO, sizeof(uint8_t), &irk_auto);
+    le_adv_set_param(GAP_PARAM_ADV_LOCAL_ADDR_TYPE, sizeof(local_bd_type), &local_bd_type);
 #endif
 #if F_BT_LE_5_0_SET_PHY_SUPPORT
 	uint8_t phys_prefer = GAP_PHYS_PREFER_ALL;
@@ -315,7 +317,7 @@ int ble_app_init(void)
 	le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state);
 	if (new_state.gap_init_state == GAP_INIT_STATE_STACK_READY) {
 		//bt_stack_already_on = 1;
-		printf("[BLE Peripheral]BT Stack already on\n\r");
+		printf("[BLE Peripheral]BT Stack already on\r\n");
 		return 0;
 	}
 	else
@@ -343,14 +345,14 @@ void ble_app_deinit(void)
 	T_GAP_DEV_STATE state;
 	le_get_gap_param(GAP_PARAM_DEV_STATE , &state);
 	if (state.gap_init_state != GAP_INIT_STATE_STACK_READY) {
-		printf("[BLE Peripheral]BT Stack is not running\n\r");
+		printf("[BLE Peripheral]BT Stack is not running\r\n");
 	}
 #if F_BT_DEINIT
 	else {
 		bte_deinit();
 		bt_trace_uninit();
 		memset(&gap_dev_state, 0, sizeof(T_GAP_DEV_STATE));
-		printf("[BLE Peripheral]BT Stack deinitalized\n\r");
+		printf("[BLE Peripheral]BT Stack deinitalized\r\n");
 	}
 #endif
 }

@@ -806,7 +806,7 @@ int wifi_connect(
 	int 				key_id,
 	void 				*semaphore)
 {
-	_sema join_semaphore;
+	_sema join_semaphore = {0};
 	rtw_result_t result = RTW_SUCCESS;
 	u8 wep_hex = 0;
 	u8 wep_pwd[14] = {0};
@@ -1023,7 +1023,7 @@ int wifi_connect_bssid(
 	int 				key_id,
 	void 				*semaphore)
 {
-	_sema join_semaphore;
+	_sema join_semaphore = {0};
 	rtw_result_t result = RTW_SUCCESS;
 	u8 wep_hex = 0;
 	u8 wep_pwd[14] = {0};
@@ -1277,7 +1277,7 @@ int wifi_set_mac_address(char * mac)
 int wifi_get_mac_address(char * mac)
 {
 	int ret = 0;
-	char buf[32];
+	char buf[32] = {0};
 	rtw_memset(buf, 0, sizeof(buf));
 	rtw_memcpy(buf, "read_mac", 8);
 	ret = wext_private_command_with_retval(WLAN0_NAME, buf, buf, 32);
@@ -1443,7 +1443,7 @@ int wifi_set_channel_plan(uint8_t channel_plan)
 int wifi_get_channel_plan(uint8_t *channel_plan)
 {
 	int ret = 0;
-	char buf[24];
+	char buf[24] = {0};
 	char *ptmp;
 
 	rtw_memset(buf, 0, sizeof(buf));
@@ -1715,7 +1715,7 @@ int wifi_set_mode(rtw_mode_t mode)
 #ifdef CONFIG_WLAN_SWITCH_MODE
 	rtw_mode_t curr_mode, next_mode;
 #if defined(CONFIG_AUTO_RECONNECT) && CONFIG_AUTO_RECONNECT
-	u8 autoreconnect_mode;
+	u8 autoreconnect_mode = 0;
 #endif
 #endif
 	device_mutex_lock(RT_DEV_LOCK_WLAN);
@@ -2279,6 +2279,16 @@ void wifi_scan_done_hdl( char* buf, int buf_len, int flags, void* userdata)
 	return;
 }
 
+void wifi_scan_done_hdl_mcc( char* buf, int buf_len, int flags, void* userdata)
+{
+#if SCAN_USE_SEMAPHORE
+	rtw_up_sema(&scan_result_handler_ptr.scan_semaphore);
+#else
+	scan_result_handler_ptr.scan_running = 0;
+#endif
+	return;
+}
+
 //int rtk_wifi_scan(char *buf, int buf_len, xSemaphoreHandle * semaphore)
 int wifi_scan(rtw_scan_type_t                    scan_type,
 				  rtw_bss_type_t                     bss_type,
@@ -2692,6 +2702,133 @@ err_exit:
 	rtw_memset((void *)&scan_result_handler_ptr, 0, sizeof(scan_result_handler_ptr));
 	return RTW_ERROR;
 }
+
+/*
+ * SCAN_DONE_INTERVAL is the interval between each channel scan done,
+ * to make AP mode can send beacon during this interval.
+ * It is to fix client disconnection when doing wifi scan in AP/concurrent mode.
+ * User can fine tune SCAN_DONE_INTERVAL value.
+ */
+#define SCAN_DONE_INTERVAL 100 //100ms
+
+/*
+ * Noted : the scan channel list needs to be modified depending on user's channel plan.
+ */
+#define SCAN_CHANNEL_NUM 13 //2.4GHz
+u8 scan_channel_list[SCAN_CHANNEL_NUM] = {1,2,3,4,5,6,7,8,9,10,11,12,13};
+
+int wifi_scan_networks_mcc(rtw_scan_result_handler_t results_handler, void* user_data)
+{
+	unsigned int max_ap_size = 64;
+	u8 channel_index;
+	u8 pscan_config;
+	int ret;
+
+	/* lock 2s to forbid suspend under scan */
+	rtw_wakelock_timeout(2*1000);
+
+	for(channel_index=0;channel_index<SCAN_CHANNEL_NUM;channel_index++){
+#if SCAN_USE_SEMAPHORE
+		rtw_bool_t result;
+		if(NULL == scan_result_handler_ptr.scan_semaphore)
+			rtw_init_sema(&scan_result_handler_ptr.scan_semaphore, 1);
+
+		scan_result_handler_ptr.scan_start_time = rtw_get_current_time();
+		/* Initialise the semaphore that will prevent simultaneous access - cannot be a mutex, since
+		* we don't want to allow the same thread to start a new scan */
+		result = (rtw_bool_t)rtw_down_timeout_sema(&scan_result_handler_ptr.scan_semaphore, SCAN_LONGEST_WAIT_TIME);
+		if ( result != RTW_TRUE )
+		{
+			/* Return error result, but set the semaphore to work the next time */
+			rtw_up_sema(&scan_result_handler_ptr.scan_semaphore);
+			return RTW_TIMEOUT;
+		}
+#else
+		if(scan_result_handler_ptr.scan_running){
+			int count = 200;
+			while(scan_result_handler_ptr.scan_running && count > 0)
+			{
+				rtw_msleep_os(5);
+				count --;
+			}
+			if(count == 0){
+				printf("\n\r[%d]WiFi: Scan is running. Wait 1s timeout.", rtw_get_current_time());
+				return RTW_TIMEOUT;
+			}
+		}
+
+		if(channel_index != 0)
+			vTaskDelay(SCAN_DONE_INTERVAL);
+
+		scan_result_handler_ptr.scan_running = 1;
+		scan_result_handler_ptr.scan_start_time = rtw_get_current_time();
+#endif
+		if(channel_index == 0){
+			scan_result_handler_ptr.gscan_result_handler = results_handler;
+
+			scan_result_handler_ptr.max_ap_size = max_ap_size;
+			scan_result_handler_ptr.ap_details = (rtw_scan_result_t*)rtw_zmalloc(max_ap_size*sizeof(rtw_scan_result_t));
+			if(scan_result_handler_ptr.ap_details == NULL){
+				goto err_exit;
+			}
+			rtw_memset(scan_result_handler_ptr.ap_details, 0, max_ap_size*sizeof(rtw_scan_result_t));
+
+			scan_result_handler_ptr.pap_details = (rtw_scan_result_t**)rtw_zmalloc(max_ap_size*sizeof(rtw_scan_result_t*));
+			if(scan_result_handler_ptr.pap_details == NULL)
+				goto error2_with_result_ptr;
+			rtw_memset(scan_result_handler_ptr.pap_details, 0, max_ap_size*sizeof(rtw_scan_result_t*));
+
+			scan_result_handler_ptr.scan_cnt = 0;
+
+			scan_result_handler_ptr.scan_complete = RTW_FALSE;
+			scan_result_handler_ptr.user_data = user_data;
+			wifi_reg_event_handler(WIFI_EVENT_SCAN_RESULT_REPORT, wifi_scan_each_report_hdl, NULL);
+			wifi_reg_event_handler(WIFI_EVENT_SCAN_DONE, wifi_scan_done_hdl_mcc, NULL);
+		}
+		if(channel_index == SCAN_CHANNEL_NUM-1){
+			wifi_unreg_event_handler(WIFI_EVENT_SCAN_DONE, wifi_scan_done_hdl_mcc);
+			wifi_reg_event_handler(WIFI_EVENT_SCAN_DONE, wifi_scan_done_hdl, NULL);
+		}
+
+		pscan_config = PSCAN_ENABLE;
+		//set partial scan for entering to listen beacon quickly
+		ret = wifi_set_pscan_chan(&scan_channel_list[channel_index], &pscan_config, 1);
+		if(ret < 0){
+#if SCAN_USE_SEMAPHORE
+			rtw_up_sema(&scan_result_handler_ptr.scan_semaphore);
+#else
+			scan_result_handler_ptr.scan_running = 0;
+#endif
+			if(channel_index == SCAN_CHANNEL_NUM-1) {
+				wifi_scan_done_hdl(NULL, 0, 0, NULL);
+			}
+			 continue;
+		}
+
+		if ( wext_set_scan(WLAN0_NAME, NULL, 0, (RTW_SCAN_COMMAMD<<4 | RTW_SCAN_TYPE_ACTIVE | (RTW_BSS_TYPE_ANY << 8))) != RTW_SUCCESS)
+		{
+			goto error1_with_result_ptr;
+		}
+	}
+
+	return RTW_SUCCESS;
+
+error1_with_result_ptr:
+	wifi_unreg_event_handler(WIFI_EVENT_SCAN_DONE, wifi_scan_done_hdl_mcc);
+	wifi_unreg_event_handler(WIFI_EVENT_SCAN_RESULT_REPORT, wifi_scan_each_report_hdl);
+	wifi_unreg_event_handler(WIFI_EVENT_SCAN_DONE, wifi_scan_done_hdl);
+	rtw_free((u8*)scan_result_handler_ptr.pap_details);
+	scan_result_handler_ptr.pap_details = NULL;
+
+error2_with_result_ptr:
+	rtw_free((u8*)scan_result_handler_ptr.ap_details);
+	scan_result_handler_ptr.ap_details = NULL;
+
+err_exit:
+	rtw_memset((void *)&scan_result_handler_ptr, 0, sizeof(scan_result_handler_ptr));
+	return RTW_ERROR;
+}
+
 //----------------------------------------------------------------------------//
 int wifi_set_pscan_chan(__u8 * channel_list,__u8 * pscan_config, __u8 length)
 {
@@ -3388,7 +3525,7 @@ int wifi_get_antenna_info(unsigned char *antenna)
 {
 	int ret = 0;
 	int ant;
-	char buf[32];
+	char buf[32] = {0};
 	rtw_memset(buf, 0, sizeof(buf));
 	rtw_memcpy(buf, "get_ant_info", 12);
 	ret = wext_private_command_with_retval(WLAN0_NAME, buf, buf, 32);
@@ -3408,6 +3545,7 @@ void wifi_suspend_softap(void)
 		int count;
 		rtw_mac_t mac_list[AP_STA_NUM];
 	} client_info;
+	memset(&client_info, 0, sizeof(client_info));
 	client_info.count = AP_STA_NUM;
 	wifi_get_associated_client_list(&client_info, sizeof(client_info));
 	for(client_number = 0; client_number < client_info.count; client_number ++) {
@@ -3423,6 +3561,7 @@ void wifi_suspend_softap_beacon(void)
 		int count;
 		rtw_mac_t mac_list[AP_STA_NUM];
 	} client_info;
+	memset(&client_info, 0, sizeof(client_info));
 	client_info.count = AP_STA_NUM;
 	wifi_get_associated_client_list(&client_info, sizeof(client_info));
 	for(client_number = 0; client_number < client_info.count; client_number ++) {
@@ -3690,6 +3829,27 @@ u32 wifi_set_pmf(unsigned char pmf_mode){
 	return ret;
 }
 #endif
+#endif
+
+#ifdef CONFIG_MCC_STA_AP_MODE
+extern int rltk_wlan_txrpt_statistic(const char *ifname, rtw_fw_txrpt_stats_t *txrpt_stats);
+extern int rltk_wlan_ccx_txrpt_retry(rtw_fw_txrpt_retry_t *txrpt_retry);
+extern void rltk_wlan_enable_ccx_txrpt(const char *ifname, int enable);
+
+int wifi_get_txrpt_statistic(const char *ifname, rtw_fw_txrpt_stats_t *txrpt_stats)
+{
+	return rltk_wlan_txrpt_statistic(ifname, txrpt_stats);
+}
+
+int wifi_get_ccx_txrpt_retry(rtw_fw_txrpt_retry_t *txrpt_retry)
+{
+	return rltk_wlan_ccx_txrpt_retry(txrpt_retry);
+}
+
+void wifi_enable_ccx_txrpt(const char *ifname, int enable)
+{
+	rltk_wlan_enable_ccx_txrpt(ifname, enable);
+}
 #endif
 
 #endif	//#if CONFIG_WLAN

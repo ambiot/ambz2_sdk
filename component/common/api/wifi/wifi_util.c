@@ -69,7 +69,7 @@ int wext_set_bssid(const char *ifname, const __u8 *bssid)
 	memcpy(iwr.u.ap_addr.sa_data, bssid, ETH_ALEN);
 
 	if(bssid[ETH_ALEN]=='#' && bssid[ETH_ALEN + 1]=='@'){
-		memcpy(iwr.u.ap_addr.sa_data + ETH_ALEN, bssid + ETH_ALEN, 6);
+		memcpy(iwr.u.ap_addr.sa_data + ETH_ALEN, bssid + ETH_ALEN, 2);
 	}
 
 	if (iw_ioctl(ifname, SIOCSIWAP, &iwr) < 0) {

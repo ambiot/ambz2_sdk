@@ -94,7 +94,9 @@ typedef struct
 	uint16_t adv_interval;
 	uint8_t local_bd_type;
 	uint8_t adv_data[31];
+	uint8_t adv_data_size;
 	uint8_t scan_rsp_data[31];
+	uint8_t scan_rsp_data_size;
 } T_LEGACY_ADV_INFO;
 
 T_LEGACY_ADV_CONCURRENT lac_adapter;
@@ -223,15 +225,15 @@ void app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, uint16_t cause)
 		if (new_state.gap_init_state == GAP_INIT_STATE_STACK_READY)
 		{
 			APP_PRINT_INFO0("GAP stack ready");
-			printf("\n\r[BLE peripheral] GAP stack ready\n\r");
+			printf("[BLE peripheral] GAP stack ready\r\n");
 			uint8_t bt_addr[6]={0};
 #if (F_BT_LE_USE_RANDOM_ADDR==2) && F_BT_LE_LOCAL_IRK_SETTING_SUPPORT
 			T_GAP_RAND_ADDR_TYPE rand_addr_type = GAP_RAND_ADDR_RESOLVABLE;
 			T_GAP_CAUSE result;
 			result = le_gen_rand_addr(rand_addr_type, bt_addr);
-			printf("[%s]le_gen_rand_addr result = %x\n\r",__func__,result);
+			printf("[%s]le_gen_rand_addr result = %x\r\n",__func__,result);
 			result = le_set_rand_addr(bt_addr);
-			printf("[%s]le_set_rand_addr result = %x\n\r",__func__,result);
+			printf("[%s]le_set_rand_addr result = %x\r\n",__func__,result);
 			memset(bt_addr,0,sizeof(uint8_t)*6);
 #endif
 			/*stack ready*/
@@ -260,18 +262,18 @@ void app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, uint16_t cause)
             if (new_state.gap_adv_sub_state == GAP_ADV_TO_IDLE_CAUSE_CONN)
             {
                 APP_PRINT_INFO0("GAP adv stoped: because connection created");
-				printf("\n\rGAP adv stoped: because connection created\n\r");
+				printf("GAP adv stoped: because connection created\r\n");
             }
             else
             {
                 APP_PRINT_INFO0("GAP adv stoped");
-				printf("\n\rGAP adv stopped\n\r");
+				printf("GAP adv stopped\r\n");
             }
         }
         else if (new_state.gap_adv_state == GAP_ADV_STATE_ADVERTISING)
         {
             APP_PRINT_INFO0("GAP adv start");
-			printf("\n\rGAP adv start\n\r");
+			printf("GAP adv start\r\n");
         }
     }
 
@@ -304,7 +306,7 @@ void app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE new_state, uint
             {
                 APP_PRINT_ERROR1("app_handle_conn_state_evt: connection lost cause 0x%x", disc_cause);
             }
-            printf("\n\r[BLE peripheral] BT Disconnected, cause 0x%x, start ADV\n\r", disc_cause);
+            printf("[BLE peripheral] BT Disconnected, cause 0x%x, start ADV\r\n", disc_cause);
 #if (LEGACY_ADV_CONCURRENT == 1)
             legacy_adv_concurrent_start();
 #else
@@ -328,7 +330,7 @@ void app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE new_state, uint
             APP_PRINT_INFO5("GAP_CONN_STATE_CONNECTED:remote_bd %s, remote_addr_type %d, conn_interval 0x%x, conn_latency 0x%x, conn_supervision_timeout 0x%x",
                             TRACE_BDADDR(remote_bd), remote_bd_type,
                             conn_interval, conn_latency, conn_supervision_timeout);
-            printf("\n\r[BLE peripheral] BT Connected\n\r");
+            printf("[BLE peripheral] BT Connected\r\n");
 #if (LEGACY_ADV_CONCURRENT == 1)
             legacy_adv_concurrent_stop();
 #else
@@ -438,7 +440,7 @@ void app_handle_conn_param_update_evt(uint8_t conn_id, uint8_t status, uint16_t 
     case GAP_CONN_PARAM_UPDATE_STATUS_PENDING:
         {
             APP_PRINT_INFO0("app_handle_conn_param_update_evt update pending.");
-		    printf("\n\rble_central_app_handle_conn_param_update_evt update pending: conn_id %d\r\n", conn_id);
+		    printf("ble_central_app_handle_conn_param_update_evt update pending: conn_id %d\r\n", conn_id);
         }
         break;
 
@@ -648,7 +650,7 @@ T_APP_RESULT app_profile_callback(T_SERVER_ID service_id, void *p_data)
                             p_param->event_data.send_data_result.service_id,
                             p_param->event_data.send_data_result.attrib_idx,
                             p_param->event_data.send_data_result.credits);
-            printf("\n\rPROFILE_EVT_SEND_DATA_COMPLETE: conn_id %d, cause 0x%x, service_id %d, attrib_idx 0x%x, credits %d\r\n",
+            printf("PROFILE_EVT_SEND_DATA_COMPLETE: conn_id %d, cause 0x%x, service_id %d, attrib_idx 0x%x, credits %d\r\n",
                             p_param->event_data.send_data_result.conn_id,
                             p_param->event_data.send_data_result.cause,
                             p_param->event_data.send_data_result.service_id,
@@ -682,26 +684,26 @@ T_APP_RESULT app_profile_callback(T_SERVER_ID service_id, void *p_data)
                 case SIMP_NOTIFY_INDICATE_V3_ENABLE:
                     {
                         APP_PRINT_INFO0("SIMP_NOTIFY_INDICATE_V3_ENABLE");
-                        printf("\n\rSIMP_NOTIFY_INDICATE_V3_ENABLE\r\n");
+                        printf("SIMP_NOTIFY_INDICATE_V3_ENABLE\r\n");
                     }
                     break;
 
                 case SIMP_NOTIFY_INDICATE_V3_DISABLE:
                     {
                         APP_PRINT_INFO0("SIMP_NOTIFY_INDICATE_V3_DISABLE");
-                        printf("\n\rSIMP_NOTIFY_INDICATE_V3_DISABLE\r\n");
+                        printf("SIMP_NOTIFY_INDICATE_V3_DISABLE\r\n");
                     }
                     break;
                 case SIMP_NOTIFY_INDICATE_V4_ENABLE:
                     {
                         APP_PRINT_INFO0("SIMP_NOTIFY_INDICATE_V4_ENABLE");
-                        printf("\n\rSIMP_NOTIFY_INDICATE_V4_ENABLE\r\n");
+                        printf("SIMP_NOTIFY_INDICATE_V4_ENABLE\r\n");
                     }
                     break;
                 case SIMP_NOTIFY_INDICATE_V4_DISABLE:
                     {
                         APP_PRINT_INFO0("SIMP_NOTIFY_INDICATE_V4_DISABLE");
-                        printf("\n\rSIMP_NOTIFY_INDICATE_V4_DISABLE\r\n");
+                        printf("SIMP_NOTIFY_INDICATE_V4_DISABLE\r\n");
                     }
                     break;
                 default:
@@ -735,7 +737,7 @@ T_APP_RESULT app_profile_callback(T_SERVER_ID service_id, void *p_data)
                         for(int i = 0; i < p_simp_cb_data->msg_data.write.len; i ++){
                             printf("0x%02x ", *(p_simp_cb_data->msg_data.write.p_value + i));
                         }
-                        printf("\n\r");
+                        printf("\r\n");
                     }
                     break;
                 default:
@@ -760,14 +762,14 @@ T_APP_RESULT app_profile_callback(T_SERVER_ID service_id, void *p_data)
                 case BAS_NOTIFY_BATTERY_LEVEL_ENABLE:
                     {
                         APP_PRINT_INFO0("BAS_NOTIFY_BATTERY_LEVEL_ENABLE");
-                        printf("\n\rBAS_NOTIFY_BATTERY_LEVEL_ENABLE\r\n");
+                        printf("BAS_NOTIFY_BATTERY_LEVEL_ENABLE\r\n");
                     }
                     break;
 
                 case BAS_NOTIFY_BATTERY_LEVEL_DISABLE:
                     {
                         APP_PRINT_INFO0("BAS_NOTIFY_BATTERY_LEVEL_DISABLE");
-                        printf("\n\rBAS_NOTIFY_BATTERY_LEVEL_DISABLE\r\n");
+                        printf("BAS_NOTIFY_BATTERY_LEVEL_DISABLE\r\n");
                     }
                     break;
                 default:
@@ -939,8 +941,8 @@ void legacy_adv_concurrent_task(void *p_param)
 				}
 				le_adv_set_param(GAP_PARAM_ADV_LOCAL_ADDR_TYPE, sizeof(adv_info.local_bd_type), &adv_info.local_bd_type);
 #endif
-				le_adv_set_param(GAP_PARAM_ADV_DATA, sizeof(adv_info.adv_data), (void *)adv_info.adv_data);
-				le_adv_set_param(GAP_PARAM_SCAN_RSP_DATA, sizeof(adv_info.scan_rsp_data), (void *)adv_info.scan_rsp_data);
+				le_adv_set_param(GAP_PARAM_ADV_DATA, adv_info.adv_data_size, (void *)adv_info.adv_data);
+				le_adv_set_param(GAP_PARAM_SCAN_RSP_DATA, adv_info.scan_rsp_data_size, (void *)adv_info.scan_rsp_data);
 				legacy_adv_concurrent_send_msg();
 			}
 		}
@@ -972,9 +974,12 @@ void legacy_adv_concurrent_init(uint32_t adv_interval_0, uint32_t adv_interval_1
 	}
 
 	adv_info_0.adv_interval = adv_interval_0;
+
 	adv_info_0.local_bd_type = GAP_LOCAL_ADDR_LE_PUBLIC;
-	memcpy(&adv_info_0.adv_data, adv_data_0, 31);
-	memcpy(&adv_info_0.scan_rsp_data, scan_rsp_data_0, 31);
+	memcpy(adv_info_0.adv_data, adv_data_0, sizeof(adv_data_0));
+	memcpy(adv_info_0.scan_rsp_data, scan_rsp_data_0, sizeof(scan_rsp_data_0));
+	adv_info_0.adv_data_size = sizeof(adv_data_0);
+	adv_info_0.scan_rsp_data_size = sizeof(scan_rsp_data_0);
 
 	adv_info_1.adv_interval = adv_interval_1;
 #if (F_BT_LE_USE_RANDOM_ADDR == 1)
@@ -982,8 +987,10 @@ void legacy_adv_concurrent_init(uint32_t adv_interval_0, uint32_t adv_interval_1
 #else if (F_BT_LE_USE_RANDOM_ADDR == 0)
 	adv_info_1.local_bd_type = GAP_LOCAL_ADDR_LE_PUBLIC;
 #endif
-	memcpy(&adv_info_1.adv_data, adv_data_1, 31);
-	memcpy(&adv_info_1.scan_rsp_data, scan_rsp_data_1, 31);
+	memcpy(adv_info_1.adv_data, adv_data_1, sizeof(adv_data_1));
+	memcpy(adv_info_1.scan_rsp_data, scan_rsp_data_1, sizeof(scan_rsp_data_1));
+	adv_info_1.adv_data_size = sizeof(adv_data_1);
+	adv_info_1.scan_rsp_data_size = sizeof(scan_rsp_data_1);
 
 	memset(&lac_adapter, 0, sizeof(lac_adapter));
 	lac_adapter.start_stop_flag = true;

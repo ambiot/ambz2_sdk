@@ -2,9 +2,11 @@
 #if ((defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL) || \
 	(defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) || \
 	(defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE))
+#include "platform_opts.h"
+#include <platform/platform_stdlib.h>
+#if SUPPORT_LOG_SERVICE
 #include "log_service.h"
 #include "atcmd_bt.h"
-#include <platform/platform_stdlib.h>
 #include "gap.h"
 #include "gap_adv.h"
 #include "gap_bond_le.h"
@@ -16,7 +18,6 @@
 #include "os_mem.h"
 #include "profile_server.h"
 
-#define BLE_PRINT	printf
 
 #if defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL
 extern void *evt_queue_handle;
@@ -87,18 +88,18 @@ void ble_peripheral_at_cmd_send_msg(uint16_t sub_type)
 #if defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL
 	if (evt_queue_handle != NULL && io_queue_handle != NULL) {
 		if (os_msg_send(io_queue_handle, &io_msg, 0) == false) {
-			BLE_PRINT("ble peripheral at cmd send msg fail: subtype 0x%x", io_msg.subtype);
+			printf("ble peripheral at cmd send msg fail: subtype 0x%x\r\n", io_msg.subtype);
 		} else if (os_msg_send(evt_queue_handle, &event, 0) == false) {
-			BLE_PRINT("ble peripheral at cmd send event fail: subtype 0x%x", io_msg.subtype);
+			printf("ble peripheral at cmd send event fail: subtype 0x%x\r\n", io_msg.subtype);
 		}
 	}
 #endif
 #if defined(CONFIG_BT_SCATTERNET) && CONFIG_BT_SCATTERNET
 	if (ble_scatternet_evt_queue_handle != NULL && ble_scatternet_io_queue_handle != NULL) {
 		if (os_msg_send(ble_scatternet_io_queue_handle, &io_msg, 0) == false) {
-			BLE_PRINT("ble peripheral at cmd send msg fail: subtype 0x%x", io_msg.subtype);
+			printf("ble peripheral at cmd send msg fail: subtype 0x%x\r\n", io_msg.subtype);
 		} else if (os_msg_send(ble_scatternet_evt_queue_handle, &event, 0) == false) {
-			BLE_PRINT("ble peripheral at cmd send event fail: subtype 0x%x", io_msg.subtype);
+			printf("ble peripheral at cmd send event fail: subtype 0x%x\r\n", io_msg.subtype);
 		}
 	}
 #endif
@@ -163,14 +164,14 @@ int ble_peripheral_at_cmd_auth(int argc, char **argv)
 
 	if(strcmp(argv[1],"SEND") == 0) {
 		if(argc != 3){
-			BLE_PRINT("ERROR:input parameter error!\n\r");
+			printf("ERROR:input parameter error!\r\n");
 			return -1;
 		}
 		conn_id = atoi(argv[2]);
 		le_bond_pair(conn_id);
 	}else if(strcmp(argv[1], "KEY") == 0){
 		if(argc !=4){
-			BLE_PRINT("ERROR:input parameter error!\n\r");
+			printf("ERROR:input parameter error!\r\n");
 			return -1;
 		}
 		conn_id = atoi(argv[2]);
@@ -182,7 +183,7 @@ int ble_peripheral_at_cmd_auth(int argc, char **argv)
 		s8* str = (s8 *)argv[3];
 		for(unsigned int i = 0; i < strlen(argv[3]); i ++){
 			if((str[i ++] < '0') || (str[i ++] > '9')){
-				BLE_PRINT("ERROR:input parameter error!\n\r");
+				printf("ERROR:input parameter error!\r\n");
 				return -1;
 			}
 		}
@@ -190,7 +191,7 @@ int ble_peripheral_at_cmd_auth(int argc, char **argv)
 		passcode = atoi(argv[3]);
 		if (passcode > GAP_PASSCODE_MAX)
 		{
-			BLE_PRINT("ERROR:passcode is out of range[0-999999] !\n\r");
+			printf("ERROR:passcode is out of range[0-999999] !\r\n");
 			confirm = GAP_CFM_CAUSE_REJECT;
 		}
 		le_bond_passkey_input_confirm(conn_id, passcode, confirm);
@@ -231,11 +232,11 @@ int ble_peripheral_at_cmd_auth(int argc, char **argv)
 		ret = gap_set_pairable_mode();
 
 		if(ret == GAP_CAUSE_SUCCESS)
-			BLE_PRINT("\n\rSet pairable mode success!\r\n");
+			printf("Set pairable mode success!\r\n");
 		else
-			BLE_PRINT("\n\rSet pairable mode fail!\r\n");
+			printf("Set pairable mode fail!\r\n");
 	}else{
-		BLE_PRINT("ERROR:input parameter error!\n\r");
+		printf("ERROR:input parameter error!\r\n");
 		return -1;
 	}
 
@@ -295,7 +296,7 @@ int ble_peripheral_at_cmd_bond_information(int argc, char **argv)
 		for (i = 0; i < bond_storage_num; i++) {
 			p_entry = le_find_key_entry_by_idx(i);
 			if (p_entry != NULL) {
-			BLE_PRINT("bond_dev[%d]: bd 0x%02x%02x%02x%02x%02x%02x, addr_type %d, flags 0x%x\r\n",
+			printf("bond_dev[%d]: bd 0x%02x%02x%02x%02x%02x%02x, addr_type %d, flags 0x%x\r\n",
 							p_entry->idx,
 							p_entry->remote_bd.addr[5],
 							p_entry->remote_bd.addr[4],
@@ -326,10 +327,10 @@ int ble_peripheral_send_indi_notification(int argc, char **argv)
 	int data_count;
 
 	if (length == -1) {
-		printf("\n\rError:value length should be hexadecimal and start with '0X' or '0x'\r\n");
+		printf("Error:value length should be hexadecimal and start with '0X' or '0x'\r\n");
 		return -1;
 	} else if (length == 0) {
-		printf("\n\rError:value length should larger than 0\r\n");
+		printf("Error:value length should larger than 0\r\n");
 		return -1;
 	}
 
@@ -350,9 +351,11 @@ int ble_peripheral_send_indi_notification(int argc, char **argv)
 
 	return 0;
 }
+#endif
 
 int ble_peripheral_app_handle_at_cmd(uint16_t subtype, void *arg)
 {
+#if SUPPORT_LOG_SERVICE
 	int argc = 0;
 	char *argv[MAX_ARGC] = {0};
 
@@ -381,5 +384,8 @@ int ble_peripheral_app_handle_at_cmd(uint16_t subtype, void *arg)
 	}
 
 	return 0;
+#else
+	return 0;
+#endif
 }
 #endif

@@ -51,7 +51,7 @@ extern hal_i2c_func_stubs_t __rom_stubs_hal_i2c;     // symbol from linker scrip
  */
 hal_status_t hal_i2c_pin_register(hal_i2c_adapter_t *phal_i2c_adapter)
 {
-    hal_status_t ret;
+    hal_status_t ret = HAL_OK;
     if ((uint8_t)(phal_i2c_adapter->pltf_dat.scl_pin) != (uint8_t)0) {
         ret = hal_pinmux_register(phal_i2c_adapter->pltf_dat.scl_pin, PID_I2C0);
     }
@@ -72,7 +72,7 @@ hal_status_t hal_i2c_pin_register(hal_i2c_adapter_t *phal_i2c_adapter)
  */
 hal_status_t hal_i2c_pin_unregister(hal_i2c_adapter_t *phal_i2c_adapter)
 {
-    hal_status_t ret;
+    hal_status_t ret = HAL_OK;
     if ((uint8_t)(phal_i2c_adapter->pltf_dat.scl_pin) != (uint8_t)0) {
         ret = hal_pinmux_unregister(phal_i2c_adapter->pltf_dat.scl_pin, PID_I2C0);
     }

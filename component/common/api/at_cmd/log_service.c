@@ -1,13 +1,11 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
-#include "FreeRTOS.h"
 #if defined(configUSE_WAKELOCK_PMU) && (configUSE_WAKELOCK_PMU == 1)
 #include "freertos_pmu.h"
 #endif
 #include "log_service.h"
-#include "task.h"
-#include "semphr.h"
+#include "osdep_service.h"
 #include "main.h"
 //#include "wifi_util.h"
 #include "atcmd_wifi.h"
@@ -46,11 +44,11 @@ char log_buf[LOG_SERVICE_BUFLEN];
 char log_history[LOG_HISTORY_LEN][LOG_SERVICE_BUFLEN];
 static unsigned int log_history_count = 0;
 #endif
-xSemaphoreHandle log_rx_interrupt_sema = NULL;
+_sema log_rx_interrupt_sema = NULL;
 #if CONFIG_LOG_SERVICE_LOCK
-xSemaphoreHandle log_service_sema = NULL; 
+_sema log_service_sema = NULL; 
 #endif
-extern xSemaphoreHandle	uart_rx_interrupt_sema;
+extern _sema uart_rx_interrupt_sema;
 
 #if CONFIG_INIC_EN
 extern unsigned char inic_cmd_ioctl;
@@ -237,8 +235,10 @@ void* log_handler(char *cmd)
 	token = strtok(copy, "=");
 	param = strtok(NULL, "\0");
 #endif
-	if(token && (strlen(token) <= 4))
-		strcpy(tok, token);
+	if(token && (strlen(token) <= 4)) {
+		memset(tok, '\0',sizeof(tok));
+		strncpy(tok, token, sizeof(tok) - 1);
+	}
 	else{
 		//printf("\n\rAT Cmd format error!\n");
 		return NULL;
@@ -268,7 +268,8 @@ int parse_param(char *buf, char **argv)
 
 	if(buf == NULL)
 		goto exit;
-	strcpy(temp_buf, buf);
+	memset(temp_buf, '\0', sizeof(temp_buf));
+	strncpy(temp_buf, buf, sizeof(temp_buf) - 1);
 	
 	while((argc < MAX_ARGC) && (*buf_pos != '\0')) {
 		while((*buf_pos == ',') || (*buf_pos == '[') || (*buf_pos == ']')){
@@ -460,7 +461,7 @@ void log_service(void *param)
 #else
 		_AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ALWAYS, "\n\r[MEM] After do cmd, available heap %d\n\r", xPortGetFreeHeapSize());
 #endif
-		_AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ALWAYS, "\r\n\n#\r\n"); //"#" is needed for mp tool
+		_AT_DBG_MSG(AT_FLAG_COMMON, AT_DBG_ALWAYS, "\r\n\n# "); //"#" is needed for mp tool
 #if (defined(CONFIG_EXAMPLE_UART_ATCMD) && CONFIG_EXAMPLE_UART_ATCMD)
 		if(atcmd_lwip_is_tt_mode())
 			at_printf(STR_END_OF_ATDATA_RET);

@@ -83,14 +83,14 @@ int BC_req_scan_hdl(BC_band_t band, struct BC_wifi_scan_result* BC_scan_result)
 	
 	pscan_config = (uint8_t*)os_mem_alloc(RAM_TYPE_DATA_ON, pscan_config_size);
 	if(pscan_config == NULL) {
-		BC_printf("[%s] malloc pscan_config fail!\n\r",__FUNCTION__);
+		BC_printf("[%s] malloc pscan_config fail!\r\n",__FUNCTION__);
 		goto exit;
 	}
 	
 	memset(pscan_config, PSCAN_ENABLE, pscan_config_size);
 	ret = wifi_set_pscan_chan(pscan_channel, pscan_config, pscan_config_size);
 	if(ret < 0) {
-		BC_printf("[%s] wifi set partial scan channel fail\n\r",__FUNCTION__);
+		BC_printf("[%s] wifi set partial scan channel fail\r\n",__FUNCTION__);
 		goto exit;
 	}
 	
@@ -99,7 +99,7 @@ int BC_req_scan_hdl(BC_band_t band, struct BC_wifi_scan_result* BC_scan_result)
 	BC_scan_result->ap_num = 0;
 	ret = wifi_scan_networks(scan_result_handler,(void*) BC_scan_result);
 	if(ret != RTW_SUCCESS) {
-		BC_printf("wifi scan failed (%d)\n",ret);
+		BC_printf("wifi scan failed (%d)\r\n",ret);
 		ret = -1;
 	}
 	os_sem_take(wifi_scan_sema, 0xFFFFFFFF);
@@ -146,7 +146,7 @@ int BC_req_connect_hdl(uint8_t *ssid, uint8_t *password, uint8_t *bssid, rtw_sec
 		assoc_by_bssid = 1;
 	}
 	else if (wifi.ssid.len == 0) {
-		BC_printf("Error: SSID can't be empty\n\r");
+		BC_printf("Error: SSID can't be empty\r\n");
 		return -1;
 	}
 	
@@ -166,11 +166,11 @@ int BC_req_connect_hdl(uint8_t *ssid, uint8_t *password, uint8_t *bssid, rtw_sec
 	}
 	
 	if(ret != RTW_SUCCESS){
-		BC_printf("ERROR: Can't connect to AP\n\r");
+		BC_printf("ERROR: Can't connect to AP\r\n");
 		return ret;
 	}
 	tick2 = rtw_get_current_time();
-	BC_printf("Connected after %dms.\n\r", (tick2-tick1));
+	BC_printf("Connected after %dms.\r\n", (tick2-tick1));
 	
 #if CONFIG_LWIP_LAYER
 	/* Start DHCPClient */
@@ -180,7 +180,7 @@ int BC_req_connect_hdl(uint8_t *ssid, uint8_t *password, uint8_t *bssid, rtw_sec
 		return -1;
 	}
 	tick3 = rtw_get_current_time();
-	BC_printf("Got IP after %dms.\n\r", (tick3-tick1));
+	BC_printf("Got IP after %dms.\r\n", (tick3-tick1));
 #endif
 	
 	return 0;
@@ -195,11 +195,11 @@ void BC_req_status_hdl(BC_status_t *status, uint8_t *SSID, uint8_t *BSSID, rtw_s
 	//BC_printf("Status Request");
 	if (!rltk_wlan_running(WLAN0_IDX)) {
 		*status = BC_STATE_DISABLED;
-		BC_printf("%s is disabled\n\r", WLAN0_NAME);
+		BC_printf("%s is disabled\r\n", WLAN0_NAME);
 	}
 	else if (last_conn_error == RTW_WRONG_PASSWORD) {
 		*status = BC_STATE_WRONG_PASSWORD;
-		BC_printf("Wrong Password\n\r");
+		BC_printf("Wrong Password\r\n");
 	}
 	else if (wifi_is_ready_to_transceive(RTW_STA_INTERFACE)== RTW_SUCCESS) {
 		if (wifi_get_setting(WLAN0_NAME,&setting) != -1) {
@@ -215,12 +215,12 @@ void BC_req_status_hdl(BC_status_t *status, uint8_t *SSID, uint8_t *BSSID, rtw_s
 		}
 		else {
 			*status= BC_STATE_IDLE;
-			BC_DBG("Wifi not Connected\n\r");
+			BC_DBG("Wifi not Connected\r\n");
 		}
 	}
 	else {
 		*status = BC_STATE_IDLE;
-		BC_DBG("Wifi not Connected\n\r");
+		BC_DBG("Wifi not Connected\r\n");
 	}
 }
 
@@ -248,9 +248,9 @@ void BC_status_monitor(void *p_param)
 
 			if (gap_conn_state != GAP_CONN_STATE_CONNECTED) {					// BT not connected
 				if (airsync_specific) {
-					BC_printf("[%s] wifi connected, deinit BT Airsync Config\n\r", __FUNCTION__);
+					BC_printf("[%s] wifi connected, deinit BT Airsync Config\r\n", __FUNCTION__);
 				} else {
-					BC_printf("[%s] wifi connected, deinit BT Config\n\r", __FUNCTION__);
+					BC_printf("[%s] wifi connected, deinit BT Config\r\n", __FUNCTION__);
 				}
 				break;
 			}
@@ -276,11 +276,11 @@ void bt_config_wifi_init(void)
 
 	if (BC_status_monitor_task_hdl == NULL) {
 		if(os_task_create(&BC_status_monitor_task_hdl, (char const *)"BC_status_monitor", BC_status_monitor, NULL, 512, 1) != true){
-			BC_printf("[%s] Create BC_status_monitor failed", __FUNCTION__);
+			BC_printf("[%s] Create BC_status_monitor failed\r\n", __FUNCTION__);
 		}
 	}
 	else {
-		BC_printf("BC_status_monitor already on\n\r");
+		BC_printf("BC_status_monitor already on\r\n");
 	}
 }
 
