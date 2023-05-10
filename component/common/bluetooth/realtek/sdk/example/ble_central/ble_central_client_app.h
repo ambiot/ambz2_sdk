@@ -26,7 +26,6 @@ extern "C" {
 #include <app_msg.h>
 
 
-#define BLE_PRINT	printf
 #define BD_ADDR_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
 #define BD_ADDR_ARG(x) (x)[5],(x)[4],(x)[3],(x)[2],(x)[1],(x)[0]
 #define UUID_128_FORMAT "0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X"

@@ -45,7 +45,7 @@ void flash_erase_dword(u32 address, u32 dword_num)
 	flash_t flash;
 
 	u32 data_4=0;
-	u8 data_8[8];
+	u8 data_8[8] = {0};
 	/* erase backup sector 4k bytes*/ 
 	flash_erase_sector(&flash, FLASH_RESERVED_DATA_BASE);
 

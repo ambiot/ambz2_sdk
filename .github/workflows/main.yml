@@ -1,0 +1,29 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        
+        steps:                  
+            - name: checkout ambz2_sdk main branch
+              uses: actions/checkout@v3
+              with:
+                  ref: ${{ github.event.pull_request.head.sha }}
+                  path: ambz2_sdk
+                    
+            - name: Build is
+              run: |
+                    echo "Setting up build environment"
+                    cd ambz2_sdk/project/realtek_amebaz2_v0_example/GCC-RELEASE/
+                    make clean
+                    echo "Building firmware image"
+                    make is
+                    echo "Build image completed"
+                    make clean
+                    

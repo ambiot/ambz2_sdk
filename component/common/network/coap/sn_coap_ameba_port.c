@@ -4,7 +4,7 @@
 ///////////////////////////////////////////ramdom function///////////////////////////////////////////
 uint16_t randLIB_get_16bit(){
 
-	unsigned char rnd[2];
+	unsigned char rnd[2] = {0};
     rtw_get_random_bytes(rnd,2);
 
     return ( ((uint16_t)rnd[0] << 8) | ((uint16_t)rnd[1]) );
@@ -98,7 +98,7 @@ int coap_send(char *to_address, uint16_t port, int socket, sn_coap_hdr_s *coap_m
 		coap_free(message_ptr);
 		return -1;
 	}
-	memcpy((void *) &internet_address.sin_addr, (void *) host_entry->h_addr, host_entry->h_length);
+	memcpy((void *) &internet_address.sin_addr, (void *) host_entry->h_addr, sizeof(internet_address.sin_addr));
 
 	int n = sendto(socket, message_ptr, message_len, 0, (struct sockaddr *)&internet_address, sizeof(internet_address));
 

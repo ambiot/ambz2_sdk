@@ -53,7 +53,7 @@ u32 wifi_roaming_find_ap_from_scan_buf(char*buf, int buflen, char *target_ssid, 
 
 	while(plen < buflen)
 	{
-		u32 len, ssid_len, security_mode, security_type, channel;
+		u32 len, ssid_len, security_mode, security_type = 0, channel;
 		s32 rssi;
 		u8 *mac, *ssid;				
 		// len
@@ -131,7 +131,7 @@ void wifi_roaming_thread(void *param)
 {
 	rtw_wifi_setting_t	setting;
 	wifi_roaming_ap_t	roaming_ap;
-	int	ap_rssi;
+	int	ap_rssi = 0;
 	u32	i = 0, polling_count =0;
 	u8	*pscan_config = NULL;
 	u8	pscan_connect = PSCAN_ENABLE;

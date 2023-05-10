@@ -54,21 +54,21 @@ __weak int main (void)
 
 __weak void __iar_data_init3(void)
 {
-	
+
 }
 
 __weak void __iar_zero_init3(void)
 {
-	
+
 }
 
 #if (defined(CONFIG_MIIO)&&(CONFIG_MIIO))
 void HalHardFaultHandler_Patch_c(u32 HardDefaultArg, u32 lr)
 {
-	uint32_t crash_flag = 0xE32C04EDUL;
-	extern int arch_psm_set_value(const char*, const char*, const void*, uint32_t);
-	arch_psm_set_value("arch", "crash_flag", &crash_flag, sizeof(uint32_t));
-	((int_vector_t)(0xab5))();
+    uint32_t crash_flag = 0xE32C04EDUL;
+    extern int arch_psm_set_value(const char*, const char*, const void*, uint32_t);
+    arch_psm_set_value("arch", "crash_flag", &crash_flag, sizeof(uint32_t));
+    ((int_vector_t)(0xab5))();
 }
 
 void HalHardFaultHandler_Patch_asm(void)
@@ -94,54 +94,54 @@ void HalHardFaultHandler_Patch_asm(void)
 void sau_setup(ns_region_t *ns_region)
 {
 #if SAU_INIT_REGION0
-        //dbg_printf ("SAU 0: 0x%08x ~ 0x%08x as %s\r\n", SAU_INIT_START0, SAU_INIT_END0, SAU_INIT_NSC0?"Secure(NSC)":"Non-Secure");
-        if (SAU_INIT_NSC0 == 0) {
-            // Set Bus IDAU to match the SAU setting, use IDAU2
-            bus_idau_setup(0, SAU_INIT_START0, SAU_INIT_END0);
-        }
-        ns_region[0].start_addr = SAU_INIT_START0;
-        ns_region[0].end_addr = SAU_INIT_END0;
-        ns_region[0].is_valid = 1;
+    //dbg_printf ("SAU 0: 0x%08x ~ 0x%08x as %s\r\n", SAU_INIT_START0, SAU_INIT_END0, SAU_INIT_NSC0?"Secure(NSC)":"Non-Secure");
+    if (SAU_INIT_NSC0 == 0) {
+        // Set Bus IDAU to match the SAU setting, use IDAU2
+        bus_idau_setup(0, SAU_INIT_START0, SAU_INIT_END0);
+    }
+    ns_region[0].start_addr = SAU_INIT_START0;
+    ns_region[0].end_addr = SAU_INIT_END0;
+    ns_region[0].is_valid = 1;
 #endif
 #if SAU_INIT_REGION1
-        //dbg_printf ("SAU 1: 0x%08x ~ 0x%08x as %s\r\n", SAU_INIT_START1, SAU_INIT_END1, SAU_INIT_NSC1?"Secure(NSC)":"Non-Secure");
-        if (SAU_INIT_NSC1 == 0) {
-            // Set Bus IDAU to match the SAU setting, use IDAU3
-            bus_idau_setup(1, SAU_INIT_START1, SAU_INIT_END1);
-        }
-        ns_region[1].start_addr = SAU_INIT_START1;
-        ns_region[1].end_addr = SAU_INIT_END1;
-        ns_region[1].is_valid = 1;
+    //dbg_printf ("SAU 1: 0x%08x ~ 0x%08x as %s\r\n", SAU_INIT_START1, SAU_INIT_END1, SAU_INIT_NSC1?"Secure(NSC)":"Non-Secure");
+    if (SAU_INIT_NSC1 == 0) {
+        // Set Bus IDAU to match the SAU setting, use IDAU3
+        bus_idau_setup(1, SAU_INIT_START1, SAU_INIT_END1);
+    }
+    ns_region[1].start_addr = SAU_INIT_START1;
+    ns_region[1].end_addr = SAU_INIT_END1;
+    ns_region[1].is_valid = 1;
 #endif
-    
+
 #if SAU_INIT_REGION2
-        //dbg_printf ("SAU 2: 0x%08x ~ 0x%08x as %s\r\n", SAU_INIT_START2, SAU_INIT_END2, SAU_INIT_NSC2?"Secure(NSC)":"Non-Secure");
-        if (SAU_INIT_NSC2 == 0) {
-            // Set Bus IDAU to match the SAU setting, use IDAU0
-            bus_idau_setup(2, SAU_INIT_START2, SAU_INIT_END2);
-        }
-        ns_region[2].start_addr = SAU_INIT_START2;
-        ns_region[2].end_addr = SAU_INIT_END2;
-        ns_region[2].is_valid = 1;
+    //dbg_printf ("SAU 2: 0x%08x ~ 0x%08x as %s\r\n", SAU_INIT_START2, SAU_INIT_END2, SAU_INIT_NSC2?"Secure(NSC)":"Non-Secure");
+    if (SAU_INIT_NSC2 == 0) {
+    // Set Bus IDAU to match the SAU setting, use IDAU0
+        bus_idau_setup(2, SAU_INIT_START2, SAU_INIT_END2);
+    }
+    ns_region[2].start_addr = SAU_INIT_START2;
+    ns_region[2].end_addr = SAU_INIT_END2;
+    ns_region[2].is_valid = 1;
 #endif
 #if SAU_INIT_REGION3
-        //dbg_printf ("SAU 3: 0x%08x ~ 0x%08x as %s\r\n", SAU_INIT_START3, SAU_INIT_END3, SAU_INIT_NSC3?"Secure(NSC)":"Non-Secure");
-        if (SAU_INIT_NSC3 == 0) {
-            // Set Bus IDAU to match the SAU setting, use IDAU0
-            bus_idau_setup(3, SAU_INIT_START3, SAU_INIT_END3);
+    //dbg_printf ("SAU 3: 0x%08x ~ 0x%08x as %s\r\n", SAU_INIT_START3, SAU_INIT_END3, SAU_INIT_NSC3?"Secure(NSC)":"Non-Secure");
+    if (SAU_INIT_NSC3 == 0) {
+        // Set Bus IDAU to match the SAU setting, use IDAU0
+        bus_idau_setup(3, SAU_INIT_START3, SAU_INIT_END3);
 
-            ns_region[3].start_addr = SAU_INIT_START3;
-            ns_region[3].end_addr = SAU_INIT_END3;
-            ns_region[3].is_valid = 1;
-        }
+        ns_region[3].start_addr = SAU_INIT_START3;
+        ns_region[3].end_addr = SAU_INIT_END3;
+        ns_region[3].is_valid = 1;
+    }
 #endif
-        TZ_SAU_Setup();
+    TZ_SAU_Setup();
 }
 #endif
 
 void app_start (void)
-{    
-    dbg_printf ("Build @ %s, %s\r\n", __TIME__, __DATE__);
+{
+	dbg_printf ("Build @ %s, %s\r\n", __TIME__, __DATE__);
 
 #if (defined(CONFIG_MIIO)&&(CONFIG_MIIO))
 	extern int_vector_t ram_vector_table[];
@@ -156,11 +156,11 @@ void app_start (void)
 	// __iar_data_init3 replaced by __iar_cstart_call_ctors, just do c++ constructor
 	//__iar_cstart_call_ctors(NULL);
 #endif
-	
-    shell_cmd_init ();
-    main();
+
+	shell_cmd_init ();
+	main();
 #if defined ( __ICCARM__ )
-	// for compile issue, If user never call this function, Liking fail 
+	// for compile issue, If user never call this function, Liking fail
 	__iar_data_init3();
 #endif
 }

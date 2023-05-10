@@ -27,9 +27,6 @@
 #include <ble_scatternet_app_task.h>
 #include <app_msg.h>
 #include <ble_scatternet_app.h>
-#include <data_uart.h>
-#include <user_cmd_parse.h>
-#include "ble_scatternet_user_cmd.h"
 #include <basic_types.h>
 #include <gap_msg.h>
 
@@ -74,9 +71,9 @@ void ble_scatternet_send_msg(uint16_t sub_type)
 
     if (ble_scatternet_evt_queue_handle != NULL && ble_scatternet_io_queue_handle != NULL) {
         if (os_msg_send(ble_scatternet_io_queue_handle, &io_msg, 0) == false) {
-            data_uart_print("ble scatternet send msg fail: subtype 0x%x", io_msg.subtype);
+            printf("ble scatternet send msg fail: subtype 0x%x\r\n", io_msg.subtype);
         } else if (os_msg_send(ble_scatternet_evt_queue_handle, &event, 0) == false) {
-            data_uart_print("ble scatternet send event fail: subtype 0x%x", io_msg.subtype);
+            printf("ble scatternet send event fail: subtype 0x%x\r\n", io_msg.subtype);
         }
     }
 }
@@ -111,11 +108,6 @@ void ble_scatternet_app_main_task(void *p_param)
     os_msg_queue_create(&ble_scatternet_evt_queue_handle, BLE_SCATTERNET_MAX_NUMBER_OF_EVENT_MESSAGE, sizeof(uint8_t));
 
     gap_start_bt_stack(ble_scatternet_evt_queue_handle, ble_scatternet_io_queue_handle, BLE_SCATTERNET_MAX_NUMBER_OF_GAP_MESSAGE);
-
-    data_uart_init(ble_scatternet_evt_queue_handle, ble_scatternet_io_queue_handle);
-#if	defined (CONFIG_BT_USER_COMMAND) && (CONFIG_BT_USER_COMMAND)
-    user_cmd_init(&ble_scatternet_user_cmd_if, "ble_scatternet");
-#endif
 
     while (true)
     {

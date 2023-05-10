@@ -690,9 +690,9 @@ void LwIP_SetDNS(struct ip_addr* dns)
 #endif
 void LwIP_UseStaticIP(struct netif *pnetif)
 {
-	struct ip_addr ipaddr;
-	struct ip_addr netmask;
-	struct ip_addr gw;
+	struct ip_addr ipaddr = {0};
+	struct ip_addr netmask = {0};
+	struct ip_addr gw = {0};
 
 	/* Static address used */
 	if(pnetif->name[1] == '0'){

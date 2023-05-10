@@ -29,12 +29,9 @@
 #include <gap_bond_le.h>
 #include <ble_scatternet_app.h>
 #include <ble_scatternet_link_mgr.h>
-#include <ble_scatternet_user_cmd.h>
-#include <user_cmd_parse.h>
 #include <gcs_client.h>
 #include "platform_opts_bt.h"
 #include "gatt_builtin_services.h"
-#include "data_uart.h"
 #include "ble_central_at_cmd.h"
 #include "ble_peripheral_at_cmd.h"
 
@@ -80,14 +77,6 @@ void ble_scatternet_app_handle_io_msg(T_IO_MSG io_msg)
             ble_scatternet_app_handle_gap_msg(&io_msg);
         }
         break;
-#if	defined (CONFIG_BT_USER_COMMAND) && (CONFIG_BT_USER_COMMAND)
-    case IO_MSG_TYPE_UART:
-        uint8_t rx_char;
-        /* We handle user command informations from Data UART in this branch. */
-        rx_char = (uint8_t)io_msg.subtype;
-        user_cmd_collect(&ble_scatternet_user_cmd_if, &rx_char, sizeof(rx_char), ble_scatternet_user_cmd_table);
-        break;
-#endif
     case IO_MSG_TYPE_AT_CMD:
         {
             uint16_t subtype = io_msg.subtype;
@@ -138,14 +127,14 @@ void ble_scatternet_app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, uint16_t
             T_GAP_RAND_ADDR_TYPE rand_addr_type = GAP_RAND_ADDR_RESOLVABLE;
             T_GAP_CAUSE result;
             result = le_gen_rand_addr(rand_addr_type, bt_addr);
-            BLE_PRINT("[%s]le_gen_rand_addr result = %x\n\r",__func__,result);
+            printf("[%s]le_gen_rand_addr result = %x\r\n",__func__,result);
             result = le_set_rand_addr(bt_addr);
-            BLE_PRINT("[%s]le_set_rand_addr result = %x\n\r",__func__,result);
+            printf("[%s]le_set_rand_addr result = %x\r\n",__func__,result);
             memset(bt_addr,0,sizeof(uint8_t)*6);
 #endif
             /*stack ready*/
             gap_get_param(GAP_PARAM_BD_ADDR, bt_addr);
-            data_uart_print("local bd addr: 0x%2x:%2x:%2x:%2x:%2x:%2x\r\n",
+            printf("local bd addr: 0x%2x:%2x:%2x:%2x:%2x:%2x\r\n",
                             bt_addr[5],
                             bt_addr[4],
                             bt_addr[3],
@@ -155,7 +144,7 @@ void ble_scatternet_app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, uint16_t
 
 			ret = le_adv_start();
 			if(ret == GAP_CAUSE_SUCCESS)
-				data_uart_print("\n\rSTART ADV!!\n");
+				printf("START ADV!!\r\n");
         }
     }
 
@@ -164,12 +153,12 @@ void ble_scatternet_app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, uint16_t
         if (new_state.gap_scan_state == GAP_SCAN_STATE_IDLE)
         {
             APP_PRINT_INFO0("GAP scan stop");
-            data_uart_print("GAP scan stop\r\n");
+            printf("GAP scan stop\r\n");
         }
         else if (new_state.gap_scan_state == GAP_SCAN_STATE_SCANNING)
         {
             APP_PRINT_INFO0("GAP scan start");
-            data_uart_print("GAP scan start\r\n");
+            printf("GAP scan start\r\n");
         }
     }
 
@@ -180,18 +169,18 @@ void ble_scatternet_app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, uint16_t
             if (new_state.gap_adv_sub_state == GAP_ADV_TO_IDLE_CAUSE_CONN)
             {
                 APP_PRINT_INFO0("GAP adv stoped: because connection created");
-                data_uart_print("GAP adv stoped: because connection created\r\n");
+                printf("GAP adv stoped: because connection created\r\n");
             }
             else
             {
                 APP_PRINT_INFO0("GAP adv stoped");
-                data_uart_print("GAP adv stopped\r\n");
+                printf("GAP adv stopped\r\n");
             }
         }
         else if (new_state.gap_adv_state == GAP_ADV_STATE_ADVERTISING)
         {
             APP_PRINT_INFO0("GAP adv start");
-            data_uart_print("GAP adv start\r\n");
+            printf("GAP adv start\r\n");
         }
     }
 
@@ -232,13 +221,13 @@ void ble_scatternet_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE 
                                  disc_cause);
             }
 
-            data_uart_print("Disconnect conn_id %d, cause 0x%x\r\n", conn_id, disc_cause);
+            printf("Disconnect conn_id %d, cause 0x%x\r\n", conn_id, disc_cause);
 ///judge the type of disconnect is central or peripheral,if peripheral,start ADV	
 			if (ble_scatternet_app_link_table[conn_id].role == GAP_LINK_ROLE_SLAVE){
-				data_uart_print("As peripheral,recieve disconncect,please start ADV\r\n");
+				printf("As peripheral,recieve disconncect,please start ADV\r\n");
 				ret = le_adv_start();
 				if(ret == GAP_CAUSE_SUCCESS)
-					data_uart_print("\n\rSTART ADV!!\n");
+					printf("\n\rSTART ADV!!\n");
 			}
 				
 			if (ble_scatternet_app_link_table[conn_id].role == GAP_LINK_ROLE_MASTER)
@@ -262,7 +251,7 @@ void ble_scatternet_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE 
 				else if (ble_scatternet_app_link_table[conn_id].role == GAP_LINK_ROLE_SLAVE)
 					ble_scatternet_peripheral_app_max_links ++;
             }
-	        data_uart_print("Connected success conn_id %d\r\n", conn_id);
+	        printf("Connected success conn_id %d\r\n", conn_id);
 		////print bt address type
 			uint8_t local_bd_type;
             //uint8_t features[8];
@@ -271,7 +260,7 @@ void ble_scatternet_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE 
             le_get_conn_param(GAP_PARAM_CONN_BD_ADDR_TYPE, &remote_bd_type, conn_id);
             APP_PRINT_INFO3("GAP_CONN_STATE_CONNECTED: conn_id %d, local_bd_type %d, remote_bd_type %d\n",
                             conn_id, local_bd_type, remote_bd_type);
-			data_uart_print("GAP_CONN_STATE_CONNECTED: conn_id %d, local_bd_type %d, remote_bd_type %d\n",
+			printf("GAP_CONN_STATE_CONNECTED: conn_id %d, local_bd_type %d, remote_bd_type %d\r\n",
                             conn_id, local_bd_type, remote_bd_type);
 #if F_BT_LE_5_0_SET_PHY_SUPPORT
 			{
@@ -280,7 +269,7 @@ void ble_scatternet_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE 
 				le_get_conn_param(GAP_PARAM_CONN_RX_PHY_TYPE, &rx_phy, conn_id);
 				le_get_conn_param(GAP_PARAM_CONN_TX_PHY_TYPE, &tx_phy, conn_id);
 				APP_PRINT_INFO2("GAP_CONN_STATE_CONNECTED: tx_phy %d, rx_phy %d\n", tx_phy, rx_phy);
-				data_uart_print("GAP_CONN_STATE_CONNECTED: tx_phy %d, rx_phy %d\n", tx_phy, rx_phy);
+				printf("GAP_CONN_STATE_CONNECTED: tx_phy %d, rx_phy %d\r\n", tx_phy, rx_phy);
 			}
 #endif
         }
@@ -316,12 +305,12 @@ void ble_scatternet_app_handle_authen_state_evt(uint8_t conn_id, uint8_t new_sta
         {
             if (cause == GAP_SUCCESS)
             {
-                data_uart_print("Pair success\r\n");
+                printf("Pair success\r\n");
                 APP_PRINT_INFO0("ble_scatternet_app_handle_authen_state_evt: GAP_AUTHEN_STATE_COMPLETE pair success");
             }
             else
             {
-                data_uart_print("Pair failed: cause 0x%x\r\n", cause);
+                printf("Pair failed: cause 0x%x\r\n", cause);
                 APP_PRINT_INFO0("ble_scatternet_app_handle_authen_state_evt: GAP_AUTHEN_STATE_COMPLETE pair failed");
             }
         }
@@ -370,7 +359,7 @@ void ble_scatternet_app_handle_conn_param_update_evt(uint8_t conn_id, uint8_t st
             le_get_conn_param(GAP_PARAM_CONN_TIMEOUT, &conn_supervision_timeout, conn_id);
             APP_PRINT_INFO4("ble_scatternet_app_handle_conn_param_update_evt update success:conn_id %d, conn_interval 0x%x, conn_slave_latency 0x%x, conn_supervision_timeout 0x%x",
                             conn_id, conn_interval, conn_slave_latency, conn_supervision_timeout);
-			data_uart_print("\n\rble_scatternet_app_handle_conn_param_update_evt update success:conn_id %d, conn_interval 0x%x, conn_slave_latency 0x%x, conn_supervision_timeout 0x%x \r\n",
+			printf("ble_scatternet_app_handle_conn_param_update_evt update success:conn_id %d, conn_interval 0x%x, conn_slave_latency 0x%x, conn_supervision_timeout 0x%x \r\n",
                             conn_id, conn_interval, conn_slave_latency, conn_supervision_timeout);
         }
         break;
@@ -379,7 +368,7 @@ void ble_scatternet_app_handle_conn_param_update_evt(uint8_t conn_id, uint8_t st
         {
             APP_PRINT_ERROR2("ble_scatternet_app_handle_conn_param_update_evt update failed: conn_id %d, cause 0x%x",
                              conn_id, cause);
-			data_uart_print("\n\rble_scatternet_app_handle_conn_param_update_evt update failed: conn_id %d, cause 0x%x\r\n",
+			printf("ble_scatternet_app_handle_conn_param_update_evt update failed: conn_id %d, cause 0x%x\r\n",
                              conn_id, cause);
 
         }
@@ -388,7 +377,7 @@ void ble_scatternet_app_handle_conn_param_update_evt(uint8_t conn_id, uint8_t st
     case GAP_CONN_PARAM_UPDATE_STATUS_PENDING:
         {
             APP_PRINT_INFO1("ble_scatternet_app_handle_conn_param_update_evt update pending: conn_id %d", conn_id);
-			data_uart_print("\n\rble_scatternet_app_handle_conn_param_update_evt update pending: conn_id %d\r\n", conn_id);
+			printf("ble_scatternet_app_handle_conn_param_update_evt update pending: conn_id %d\r\n", conn_id);
 
         }
         break;
@@ -469,8 +458,7 @@ void ble_scatternet_app_handle_gap_msg(T_IO_MSG *p_gap_msg)
                             conn_id, display_value);
             le_bond_passkey_display_confirm(conn_id, GAP_CFM_CAUSE_ACCEPT);
             printf("GAP_MSG_LE_BOND_PASSKEY_DISPLAY: conn_id %d, passkey %06d\r\n",
-                            conn_id,
-                            display_value);
+                            conn_id, display_value);
         }
         break;
 
@@ -493,7 +481,7 @@ void ble_scatternet_app_handle_gap_msg(T_IO_MSG *p_gap_msg)
             //uint32_t passkey = 888888;
             conn_id = gap_msg.msg_data.gap_bond_passkey_input.conn_id;
             APP_PRINT_INFO1("GAP_MSG_LE_BOND_PASSKEY_INPUT: conn_id %d", conn_id);
-            data_uart_print("GAP_MSG_LE_BOND_PASSKEY_INPUT: conn_id %d\r\n", conn_id);
+            printf("GAP_MSG_LE_BOND_PASSKEY_INPUT: conn_id %d\r\n", conn_id);
             //le_bond_passkey_input_confirm(conn_id, passkey, GAP_CFM_CAUSE_ACCEPT);
         }
         break;
@@ -544,7 +532,7 @@ void ble_scatternet_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
 
             APP_PRINT_TRACE2("ble_scatternet_app_parse_scan_info: AD Structure Info: AD type 0x%x, AD Data Length %d", type,
                              length - 1);
-//            BLE_PRINT("ble_scatternet_app_parse_scan_info: AD Structure Info: AD type 0x%x, AD Data Length %d\n\r", type,
+//            printf("ble_scatternet_app_parse_scan_info: AD Structure Info: AD type 0x%x, AD Data Length %d\r\n", type,
 //                             length - 1);
 
 
@@ -559,7 +547,7 @@ void ble_scatternet_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
                     /* (flags & 0x10) -- Simultaneous LE and BR/EDR to Same Device Capable (Host) */
                     uint8_t flags = scan_info->data[pos + 1];
                     APP_PRINT_INFO1("GAP_ADTYPE_FLAGS: 0x%x", flags);
-					BLE_PRINT("GAP_ADTYPE_FLAGS: 0x%x\n\r", flags);
+					printf("GAP_ADTYPE_FLAGS: 0x%x\r\n", flags);
 
                 }
                 break;
@@ -574,7 +562,7 @@ void ble_scatternet_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
                     while (i >= 2)
                     {
                         APP_PRINT_INFO1("GAP_ADTYPE_16BIT_XXX: 0x%x", *p_uuid);
-                        BLE_PRINT("GAP_ADTYPE_16BIT_XXX: 0x%x\n\r", *p_uuid);
+                        printf("GAP_ADTYPE_16BIT_XXX: 0x%x\r\n", *p_uuid);
 						p_uuid ++;
                         i -= 2;
                     }
@@ -590,7 +578,7 @@ void ble_scatternet_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
                     while (i >= 4)
                     {
                         APP_PRINT_INFO1("GAP_ADTYPE_32BIT_XXX: 0x%x", *p_uuid);
-                        BLE_PRINT("GAP_ADTYPE_32BIT_XXX: 0x%x\n\r", (unsigned int)*p_uuid);
+                        printf("GAP_ADTYPE_32BIT_XXX: 0x%x\r\n", (unsigned int)*p_uuid);
 						p_uuid ++;
 
                         i -= 4;
@@ -605,7 +593,7 @@ void ble_scatternet_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
                     uint32_t *p_uuid = (uint32_t *)(buffer);
                     APP_PRINT_INFO4("GAP_ADTYPE_128BIT_XXX: 0x%8.8x%8.8x%8.8x%8.8x",
                                     p_uuid[3], p_uuid[2], p_uuid[1], p_uuid[0]);
-					BLE_PRINT("GAP_ADTYPE_128BIT_XXX: 0x%8.8x%8.8x%8.8x%8.8x\n\r",
+					printf("GAP_ADTYPE_128BIT_XXX: 0x%8.8x%8.8x%8.8x%8.8x\r\n",
 									(unsigned int)p_uuid[3], (unsigned int)p_uuid[2], (unsigned int)p_uuid[1], (unsigned int)p_uuid[0]);
 
                 }
@@ -616,7 +604,7 @@ void ble_scatternet_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
                 {
                     buffer[length - 1] = '\0';
                     APP_PRINT_INFO1("GAP_ADTYPE_LOCAL_NAME_XXX: %s", TRACE_STRING(buffer));
-					BLE_PRINT("GAP_ADTYPE_LOCAL_NAME_XXX: %s\n\r", buffer);
+					printf("GAP_ADTYPE_LOCAL_NAME_XXX: %s\r\n", buffer);
 
                 }
                 break;
@@ -624,7 +612,7 @@ void ble_scatternet_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
             case GAP_ADTYPE_POWER_LEVEL:
                 {
                     APP_PRINT_INFO1("GAP_ADTYPE_POWER_LEVEL: 0x%x", scan_info->data[pos + 1]);
-					BLE_PRINT("GAP_ADTYPE_POWER_LEVEL: 0x%x\n\r", scan_info->data[pos + 1]);
+					printf("GAP_ADTYPE_POWER_LEVEL: 0x%x\r\n", scan_info->data[pos + 1]);
 
                 }
                 break;
@@ -635,7 +623,7 @@ void ble_scatternet_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
                     uint16_t *p_max = p_min + 1;
                     APP_PRINT_INFO2("GAP_ADTYPE_SLAVE_CONN_INTERVAL_RANGE: 0x%x - 0x%x", *p_min,
                                     *p_max);
-					BLE_PRINT("GAP_ADTYPE_SLAVE_CONN_INTERVAL_RANGE: 0x%x - 0x%x\n\r", *p_min,
+					printf("GAP_ADTYPE_SLAVE_CONN_INTERVAL_RANGE: 0x%x - 0x%x\r\n", *p_min,
 									*p_max);
 
                 }
@@ -648,7 +636,7 @@ void ble_scatternet_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
 
                     APP_PRINT_INFO3("GAP_ADTYPE_SERVICE_DATA: UUID 0x%x, len %d, data %b", *p_uuid,
                                     data_len, TRACE_BINARY(data_len, &buffer[2]));
-					BLE_PRINT("GAP_ADTYPE_SERVICE_DATA: UUID 0x%x, len %d\n\r", *p_uuid,
+					printf("GAP_ADTYPE_SERVICE_DATA: UUID 0x%x, len %d\r\n", *p_uuid,
 								data_len);
 
                 }
@@ -657,7 +645,7 @@ void ble_scatternet_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
                 {
                     uint16_t *p_appearance = (uint16_t *)(buffer);
                     APP_PRINT_INFO1("GAP_ADTYPE_APPEARANCE: %d", *p_appearance);
-					BLE_PRINT("GAP_ADTYPE_APPEARANCE: %d\n\r", *p_appearance);
+					printf("GAP_ADTYPE_APPEARANCE: %d\r\n", *p_appearance);
 
                 }
                 break;
@@ -668,7 +656,7 @@ void ble_scatternet_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
                     uint16_t *p_company_id = (uint16_t *)(buffer);
                     APP_PRINT_INFO3("GAP_ADTYPE_MANUFACTURER_SPECIFIC: company_id 0x%x, len %d, data %b",
                                     *p_company_id, data_len, TRACE_BINARY(data_len, &buffer[2]));
-					BLE_PRINT("GAP_ADTYPE_MANUFACTURER_SPECIFIC: company_id 0x%x, len %d\n\r",
+					printf("GAP_ADTYPE_MANUFACTURER_SPECIFIC: company_id 0x%x, len %d\r\n",
 									*p_company_id, data_len);
 
                 }
@@ -680,8 +668,8 @@ void ble_scatternet_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
 
                     for (i = 0; i < (length - 1); i++)
                     {
-                        APP_PRINT_INFO1("  AD Data: Unhandled Data = 0x%x", scan_info->data[pos + i]);
-//						BLE_PRINT("  AD Data: Unhandled Data = 0x%x\n\r", scan_info->data[pos + i]);
+                        APP_PRINT_INFO1("  AD Data: Unhandled Data = 0x%x", scan_info->data[pos + 1 + i]);
+//						printf("  AD Data: Unhandled Data = 0x%x\r\n", scan_info->data[pos + 1 + i]);
 
                     }
                 }
@@ -689,7 +677,10 @@ void ble_scatternet_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
             }
         }
 
-        pos += length;
+        if (pos + length > 0xFF)    //Avoid pos + length overflow uint8_t
+            pos = 0xFF;
+        else
+            pos += length;
     }
 }
 /**
@@ -723,8 +714,8 @@ T_APP_RESULT ble_scatternet_app_gap_callback(uint8_t cb_type, void *p_cb_data)
 		sprintf(remote_addr_type,"%s",(p_data->p_le_scan_info->remote_addr_type == GAP_REMOTE_ADDR_LE_PUBLIC)? "public":
 							   (p_data->p_le_scan_info->remote_addr_type == GAP_REMOTE_ADDR_LE_RANDOM)? "random":"unknown");
 
-		BLE_PRINT("ADVType\t\t\t| AddrType\t|%s\t\t\t|rssi\n\r","BT_Addr");
-		BLE_PRINT("%s\t\t%s\t"BD_ADDR_FMT"\t%d\n\r",adv_type,remote_addr_type,BD_ADDR_ARG(p_data->p_le_scan_info->bd_addr),
+		printf("ADVType\t\t\t| AddrType\t|%s\t\t\t|rssi\r\n","BT_Addr");
+		printf("%s\t\t%s\t"BD_ADDR_FMT"\t%d\r\n",adv_type,remote_addr_type,BD_ADDR_ARG(p_data->p_le_scan_info->bd_addr),
 												p_data->p_le_scan_info->rssi);
 
         ble_scatternet_app_parse_scan_info(p_data->p_le_scan_info);
@@ -737,7 +728,7 @@ T_APP_RESULT ble_scatternet_app_gap_callback(uint8_t cb_type, void *p_cb_data)
                         p_data->p_le_conn_update_ind->conn_interval_min,
                         p_data->p_le_conn_update_ind->conn_latency,
                         p_data->p_le_conn_update_ind->supervision_timeout);
-		data_uart_print("GAP_MSG_LE_CONN_UPDATE_IND: conn_id %d, conn_interval_max 0x%x, conn_interval_min 0x%x, conn_latency 0x%x,supervision_timeout 0x%x\n\r",
+		printf("GAP_MSG_LE_CONN_UPDATE_IND: conn_id %d, conn_interval_max 0x%x, conn_interval_min 0x%x, conn_latency 0x%x,supervision_timeout 0x%x\r\n",
                         p_data->p_le_conn_update_ind->conn_id,
                         p_data->p_le_conn_update_ind->conn_interval_max,
                         p_data->p_le_conn_update_ind->conn_interval_min,
@@ -753,7 +744,7 @@ T_APP_RESULT ble_scatternet_app_gap_callback(uint8_t cb_type, void *p_cb_data)
 							p_data->p_le_phy_update_info->cause,
 							p_data->p_le_phy_update_info->rx_phy,
 							p_data->p_le_phy_update_info->tx_phy);
-			data_uart_print("GAP_MSG_LE_PHY_UPDATE_INFO:conn_id %d, cause 0x%x, rx_phy %d, tx_phy %d\n\r",
+			printf("GAP_MSG_LE_PHY_UPDATE_INFO:conn_id %d, cause 0x%x, rx_phy %d, tx_phy %d\r\n",
 							p_data->p_le_phy_update_info->conn_id,
 							p_data->p_le_phy_update_info->cause,
 							p_data->p_le_phy_update_info->rx_phy,
@@ -773,12 +764,12 @@ T_APP_RESULT ble_scatternet_app_gap_callback(uint8_t cb_type, void *p_cb_data)
 					if (remote_feats[LE_SUPPORT_FEATURES_MASK_ARRAY_INDEX1] & LE_SUPPORT_FEATURES_LE_2M_MASK_BIT)
 					{
 						APP_PRINT_INFO0("GAP_MSG_LE_REMOTE_FEATS_INFO: support 2M");
-						data_uart_print("GAP_MSG_LE_REMOTE_FEATS_INFO: support 2M\n\r");
+						printf("GAP_MSG_LE_REMOTE_FEATS_INFO: support 2M\r\n");
 					}
 					if (remote_feats[LE_SUPPORT_FEATURES_MASK_ARRAY_INDEX1] & LE_SUPPORT_FEATURES_LE_CODED_PHY_MASK_BIT)
 					{
 						APP_PRINT_INFO0("GAP_MSG_LE_REMOTE_FEATS_INFO: support CODED");
-						data_uart_print("GAP_MSG_LE_REMOTE_FEATS_INFO: support CODED\n\r");
+						printf("GAP_MSG_LE_REMOTE_FEATS_INFO: support CODED\r\n");
 					}
 				}
 			}
@@ -789,7 +780,7 @@ T_APP_RESULT ble_scatternet_app_gap_callback(uint8_t cb_type, void *p_cb_data)
 			APP_PRINT_INFO2("GAP_MSG_LE_MODIFY_WHITE_LIST: operation  0x%x, cause 0x%x",
 					p_data->p_le_modify_white_list_rsp->operation,
 					p_data->p_le_modify_white_list_rsp->cause);
-			data_uart_print("GAP_MSG_LE_MODIFY_WHITE_LIST: operation  0x%x, cause 0x%x\r\n",
+			printf("GAP_MSG_LE_MODIFY_WHITE_LIST: operation  0x%x, cause 0x%x\r\n",
 					p_data->p_le_modify_white_list_rsp->operation,
 					p_data->p_le_modify_white_list_rsp->cause);
 			break;
@@ -831,7 +822,7 @@ T_APP_RESULT ble_scatternet_gap_service_callback(T_SERVER_ID service_id, void *p
                 T_LOCAL_NAME device_name;
                 memcpy(device_name.local_name, p_gap_data->msg_data.p_value, p_gap_data->msg_data.len);
                 device_name.local_name[p_gap_data->msg_data.len] = 0;
-				//data_uart_print("GAPS_WRITE_DEVICE_NAME:device_name = %s \n\r",device_name.local_name);
+				//printf("GAPS_WRITE_DEVICE_NAME:device_name = %s \r\n",device_name.local_name);
                 flash_save_local_name(&device_name);
             }
             break;
@@ -843,13 +834,13 @@ T_APP_RESULT ble_scatternet_gap_service_callback(T_SERVER_ID service_id, void *p
 
                 LE_ARRAY_TO_UINT16(appearance_val, p_gap_data->msg_data.p_value);
                 appearance.local_appearance = appearance_val;
-				//data_uart_print("GAPS_WRITE_APPEARANCE:appearance = %s \n\r",appearance.local_appearance);
+				//printf("GAPS_WRITE_APPEARANCE:appearance = %s \r\n",appearance.local_appearance);
                 flash_save_local_appearance(&appearance);
             }
             break;
         default:
 			APP_PRINT_ERROR1("ble_scatternet_gap_service_callback: unhandled msg_data.opcode 0x%x", p_gap_data->msg_data.opcode);
-			//data_uart_print("ble_scatternet_gap_service_callback: unhandled msg_data.opcode 0x%x", p_gap_data->msg_data.opcode);
+			//printf("ble_scatternet_gap_service_callback: unhandled msg_data.opcode 0x%x\r\n", p_gap_data->msg_data.opcode);
             break;
         }
     }
@@ -883,7 +874,7 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
                                 i, p_result_table->result_data.srv_uuid16_disc_data.att_handle,
                                 p_result_table->result_data.srv_uuid16_disc_data.end_group_handle,
                                 p_result_table->result_data.srv_uuid16_disc_data.uuid16);
-                data_uart_print("ALL SRV UUID16[%d]: service range: 0x%x-0x%x, uuid16 0x%x\n\r",
+                printf("ALL SRV UUID16[%d]: service range: 0x%x-0x%x, uuid16 0x%x\r\n",
                				 i, p_result_table->result_data.srv_uuid16_disc_data.att_handle,
                				 p_result_table->result_data.srv_uuid16_disc_data.end_group_handle,
                				 p_result_table->result_data.srv_uuid16_disc_data.uuid16);
@@ -893,7 +884,7 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
                                 i, p_result_table->result_data.srv_uuid128_disc_data.att_handle,
                                 p_result_table->result_data.srv_uuid128_disc_data.end_group_handle,
                                 TRACE_BINARY(16, p_result_table->result_data.srv_uuid128_disc_data.uuid128));
-                data_uart_print("ALL SRV UUID128[%d]: service range: 0x%x-0x%x, service="UUID_128_FORMAT"\n\r",
+                printf("ALL SRV UUID128[%d]: service range: 0x%x-0x%x, service="UUID_128_FORMAT"\r\n",
                                 i, p_result_table->result_data.srv_uuid128_disc_data.att_handle,
                                 p_result_table->result_data.srv_uuid128_disc_data.end_group_handle,
                                 UUID_128(p_result_table->result_data.srv_uuid128_disc_data.uuid128));
@@ -902,7 +893,7 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
 
             default:
                 APP_PRINT_ERROR0("Invalid Discovery Result Type!");
-				data_uart_print("Invalid Discovery Result Type!\n\r");
+				printf("Invalid Discovery Result Type!\r\n");
                 break;
             }
         }
@@ -911,7 +902,7 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
     case GCS_BY_UUID128_SRV_DISCOV:
         APP_PRINT_INFO2("conn_id %d, GCS_BY_UUID128_SRV_DISCOV, is_success %d",
                         conn_id, discov_result.is_success);
-        data_uart_print("conn_id %d, GCS_BY_UUID128_SRV_DISCOV, is_success %d\n\r",
+        printf("conn_id %d, GCS_BY_UUID128_SRV_DISCOV, is_success %d\r\n",
                         conn_id, discov_result.is_success);
 
         for (i = 0; i < discov_result.result_num; i++)
@@ -923,7 +914,7 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
                 APP_PRINT_INFO3("SRV DATA[%d]: service range: 0x%x-0x%x",
                                 i, p_result_table->result_data.srv_disc_data.att_handle,
                                 p_result_table->result_data.srv_disc_data.end_group_handle);
-                data_uart_print("SRV DATA[%d]: service range: 0x%x-0x%x\n\r",
+                printf("SRV DATA[%d]: service range: 0x%x-0x%x\r\n",
                                 i, p_result_table->result_data.srv_disc_data.att_handle,
                                 p_result_table->result_data.srv_disc_data.end_group_handle);
 
@@ -931,7 +922,7 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
 
             default:
                 APP_PRINT_ERROR0("Invalid Discovery Result Type!");
-                data_uart_print("Invalid Discovery Result Type!\n\r");
+                printf("Invalid Discovery Result Type!\r\n");
                 break;
             }
         }
@@ -940,7 +931,7 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
     case GCS_BY_UUID_SRV_DISCOV:
         APP_PRINT_INFO2("conn_id %d, GCS_BY_UUID_SRV_DISCOV, is_success %d",
                         conn_id, discov_result.is_success);
-        data_uart_print("conn_id %d, GCS_BY_UUID_SRV_DISCOV, is_success %d\n\r",
+        printf("conn_id %d, GCS_BY_UUID_SRV_DISCOV, is_success %d\r\n",
                         conn_id, discov_result.is_success);
 
         for (i = 0; i < discov_result.result_num; i++)
@@ -952,7 +943,7 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
                 APP_PRINT_INFO3("SRV DATA[%d]: service range: 0x%x-0x%x",
                                 i, p_result_table->result_data.srv_disc_data.att_handle,
                                 p_result_table->result_data.srv_disc_data.end_group_handle);
-                data_uart_print("SRV DATA[%d]: service range: 0x%x-0x%x\n\r",
+                printf("SRV DATA[%d]: service range: 0x%x-0x%x\r\n",
                                 i, p_result_table->result_data.srv_disc_data.att_handle,
                                 p_result_table->result_data.srv_disc_data.end_group_handle);
 
@@ -960,7 +951,7 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
 
             default:
                 APP_PRINT_ERROR0("Invalid Discovery Result Type!");
-                data_uart_print("Invalid Discovery Result Type!\n\r");
+                printf("Invalid Discovery Result Type!\r\n");
                 break;
             }
         }
@@ -969,7 +960,7 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
     case GCS_ALL_CHAR_DISCOV:
         APP_PRINT_INFO2("conn_id %d, GCS_ALL_CHAR_DISCOV, is_success %d",
                         conn_id, discov_result.is_success);
-        data_uart_print("conn_id %d, GCS_ALL_CHAR_DISCOV, is_success %d\n\r",
+        printf("conn_id %d, GCS_ALL_CHAR_DISCOV, is_success %d\r\n",
                         conn_id, discov_result.is_success);
 
         for (i = 0; i < discov_result.result_num; i++)
@@ -990,12 +981,12 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
                                 properties & GATT_CHAR_PROP_WRITE_NO_RSP,
                                 properties & GATT_CHAR_PROP_WRITE,
                                 properties & GATT_CHAR_PROP_NOTIFY);
-                data_uart_print("CHAR UUID16[%d]: decl_handle 0x%x, properties 0x%x, value_handle 0x%x, uuid16 0x%x\n\r",
+                printf("CHAR UUID16[%d]: decl_handle 0x%x, properties 0x%x, value_handle 0x%x, uuid16 0x%x\r\n",
                                 i, p_result_table->result_data.char_uuid16_disc_data.decl_handle,
                                 p_result_table->result_data.char_uuid16_disc_data.properties,
                                 p_result_table->result_data.char_uuid16_disc_data.value_handle,
                                 p_result_table->result_data.char_uuid16_disc_data.uuid16);
-                data_uart_print("properties:indicate %d, read %d, write cmd %d, write %d, notify %d\n\r",
+                printf("properties:indicate %d, read %d, write cmd %d, write %d, notify %d\r\n",
                                 properties & GATT_CHAR_PROP_INDICATE,
                                 properties & GATT_CHAR_PROP_READ,
                                 properties & GATT_CHAR_PROP_WRITE_NO_RSP,
@@ -1019,12 +1010,12 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
                                 properties & GATT_CHAR_PROP_WRITE,
                                 properties & GATT_CHAR_PROP_NOTIFY
                                );
-                data_uart_print("CHAR UUID128[%d]:  decl hndl=0x%x, prop=0x%x, value hndl=0x%x, uuid128="UUID_128_FORMAT"\n\r",
+                printf("CHAR UUID128[%d]:  decl hndl=0x%x, prop=0x%x, value hndl=0x%x, uuid128="UUID_128_FORMAT"\r\n",
                                 i, p_result_table->result_data.char_uuid128_disc_data.decl_handle,
                                 p_result_table->result_data.char_uuid128_disc_data.properties,
                                 p_result_table->result_data.char_uuid128_disc_data.value_handle,
                                 UUID_128(p_result_table->result_data.char_uuid128_disc_data.uuid128));
-                data_uart_print("properties:indicate %d, read %d, write cmd %d, write %d, notify %d\n\r",
+                printf("properties:indicate %d, read %d, write cmd %d, write %d, notify %d\r\n",
                                 properties & GATT_CHAR_PROP_INDICATE,
                                 properties & GATT_CHAR_PROP_READ,
                                 properties & GATT_CHAR_PROP_WRITE_NO_RSP,
@@ -1035,7 +1026,7 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
                 break;
             default:
                 APP_PRINT_ERROR0("Invalid Discovery Result Type!");
-                data_uart_print("Invalid Discovery Result Type!\n\r");
+                printf("Invalid Discovery Result Type!\r\n");
                 break;
             }
         }
@@ -1044,7 +1035,7 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
     case GCS_BY_UUID_CHAR_DISCOV:
         APP_PRINT_INFO2("conn_id %d, GCS_BY_UUID_CHAR_DISCOV, is_success %d",
                         conn_id, discov_result.is_success);
-        data_uart_print("conn_id %d, GCS_BY_UUID_CHAR_DISCOV, is_success %d\n\r",
+        printf("conn_id %d, GCS_BY_UUID_CHAR_DISCOV, is_success %d\r\n",
                         conn_id, discov_result.is_success);
 
         for (i = 0; i < discov_result.result_num; i++)
@@ -1066,12 +1057,12 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
                                 properties & GATT_CHAR_PROP_WRITE,
                                 properties & GATT_CHAR_PROP_NOTIFY
                                );
-                data_uart_print("UUID16 CHAR[%d]: Characteristics by uuid16, decl hndl=0x%x, prop=0x%x, value hndl=0x%x, uuid16=<0x%x>\n\r",
+                printf("UUID16 CHAR[%d]: Characteristics by uuid16, decl hndl=0x%x, prop=0x%x, value hndl=0x%x, uuid16=<0x%x>\r\n",
                                 i, p_result_table->result_data.char_uuid16_disc_data.decl_handle,
                                 p_result_table->result_data.char_uuid16_disc_data.properties,
                                 p_result_table->result_data.char_uuid16_disc_data.value_handle,
                                 p_result_table->result_data.char_uuid16_disc_data.uuid16);
-                data_uart_print("properties:indicate %d, read %d, write cmd %d, write %d, notify %d\n\r",
+                printf("properties:indicate %d, read %d, write cmd %d, write %d, notify %d\r\n",
                                 properties & GATT_CHAR_PROP_INDICATE,
                                 properties & GATT_CHAR_PROP_READ,
                                 properties & GATT_CHAR_PROP_WRITE_NO_RSP,
@@ -1083,7 +1074,7 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
 
             default:
                 APP_PRINT_ERROR0("Invalid Discovery Result Type!");
-                data_uart_print("Invalid Discovery Result Type!");
+                printf("Invalid Discovery Result Type!\r\n");
                 break;
             }
         }
@@ -1092,7 +1083,7 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
     case GCS_BY_UUID128_CHAR_DISCOV:
         APP_PRINT_INFO2("conn_id %d, GCS_BY_UUID128_CHAR_DISCOV, is_success %d",
                         conn_id, discov_result.is_success);
-        data_uart_print("conn_id %d, GCS_BY_UUID128_CHAR_DISCOV, is_success %d\n\r",
+        printf("conn_id %d, GCS_BY_UUID128_CHAR_DISCOV, is_success %d\r\n",
                         conn_id, discov_result.is_success);
 
         for (i = 0; i < discov_result.result_num; i++)
@@ -1114,12 +1105,12 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
                                 properties & GATT_CHAR_PROP_WRITE,
                                 properties & GATT_CHAR_PROP_NOTIFY
                                );
-                data_uart_print("UUID128 CHAR[%d]: Characteristics by uuid128, decl hndl=0x%x, prop=0x%x, value hndl=0x%x, uuid128="UUID_128_FORMAT"\n\r",
+                printf("UUID128 CHAR[%d]: Characteristics by uuid128, decl hndl=0x%x, prop=0x%x, value hndl=0x%x, uuid128="UUID_128_FORMAT"\r\n",
                                 i, p_result_table->result_data.char_uuid128_disc_data.decl_handle,
                                 p_result_table->result_data.char_uuid128_disc_data.properties,
                                 p_result_table->result_data.char_uuid128_disc_data.value_handle,
                                 UUID_128(p_result_table->result_data.char_uuid128_disc_data.uuid128));
-                data_uart_print("properties:indicate %d, read %d, write cmd %d, write %d, notify %d\n\r",
+                printf("properties:indicate %d, read %d, write cmd %d, write %d, notify %d\r\n",
                                 properties & GATT_CHAR_PROP_INDICATE,
                                 properties & GATT_CHAR_PROP_READ,
                                 properties & GATT_CHAR_PROP_WRITE_NO_RSP,
@@ -1131,7 +1122,7 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
 
             default:
                 APP_PRINT_ERROR0("Invalid Discovery Result Type!");
-                BLE_PRINT("Invalid Discovery Result Type!\n\r");
+                printf("Invalid Discovery Result Type!\r\n");
                 break;
             }
         }
@@ -1140,7 +1131,7 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
     case GCS_ALL_CHAR_DESC_DISCOV:
         APP_PRINT_INFO2("conn_id %d, GCS_ALL_CHAR_DESC_DISCOV, is_success %d\r\n",
                         conn_id, discov_result.is_success);
-        data_uart_print("conn_id %d, GCS_ALL_CHAR_DESC_DISCOV, is_success %d\n\r",
+        printf("conn_id %d, GCS_ALL_CHAR_DESC_DISCOV, is_success %d\r\n",
                         conn_id, discov_result.is_success);
         for (i = 0; i < discov_result.result_num; i++)
         {
@@ -1151,7 +1142,7 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
                 APP_PRINT_INFO3("DESC UUID16[%d]: Descriptors handle=0x%x, uuid16=<0x%x>",
                                 i, p_result_table->result_data.char_desc_uuid16_disc_data.handle,
                                 p_result_table->result_data.char_desc_uuid16_disc_data.uuid16);
-                data_uart_print("DESC UUID16[%d]: Descriptors handle=0x%x, uuid16=<0x%x>\n\r",
+                printf("DESC UUID16[%d]: Descriptors handle=0x%x, uuid16=<0x%x>\r\n",
                                 i, p_result_table->result_data.char_desc_uuid16_disc_data.handle,
                                 p_result_table->result_data.char_desc_uuid16_disc_data.uuid16);
 
@@ -1160,14 +1151,14 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
                 APP_PRINT_INFO3("DESC UUID128[%d]: Descriptors handle=0x%x, uuid128=<%b>",
                                 i, p_result_table->result_data.char_desc_uuid128_disc_data.handle,
                                 TRACE_BINARY(16, p_result_table->result_data.char_desc_uuid128_disc_data.uuid128));
-                data_uart_print("DESC UUID128[%d]: Descriptors handle=0x%x, uuid128="UUID_128_FORMAT"\n\r",
+                printf("DESC UUID128[%d]: Descriptors handle=0x%x, uuid128="UUID_128_FORMAT"\r\n",
                                 i, p_result_table->result_data.char_desc_uuid128_disc_data.handle,
                                 UUID_128(p_result_table->result_data.char_desc_uuid128_disc_data.uuid128));
                 break;
 
             default:
                 APP_PRINT_ERROR0("Invalid Discovery Result Type!");
-                data_uart_print("Invalid Discovery Result Type!\n\r");
+                printf("Invalid Discovery Result Type!\r\n");
                 break;
             }
         }
@@ -1176,7 +1167,7 @@ void ble_scatternet_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY
     default:
         APP_PRINT_ERROR2("Invalid disc type: conn_id %d, discov_type %d",
                          conn_id, discov_result.discov_type);
-        data_uart_print("Invalid disc type: conn_id %d, discov_type %d\n\r",
+        printf("Invalid disc type: conn_id %d, discov_type %d\r\n",
                          conn_id, discov_result.discov_type);
         break;
     }
@@ -1206,7 +1197,7 @@ T_APP_RESULT ble_scatternet_gcs_client_callback(T_CLIENT_ID client_id, uint8_t c
                             p_gcs_cb_data->cb_content.read_result.cause,
                             p_gcs_cb_data->cb_content.read_result.handle,
                             p_gcs_cb_data->cb_content.read_result.value_size);
-            data_uart_print("READ RESULT: cause 0x%x, handle 0x%x, value_len %d\n\r",
+            printf("READ RESULT: cause 0x%x, handle 0x%x, value_len %d\r\n",
                             p_gcs_cb_data->cb_content.read_result.cause,
                             p_gcs_cb_data->cb_content.read_result.handle,
                             p_gcs_cb_data->cb_content.read_result.value_size);
@@ -1216,10 +1207,10 @@ T_APP_RESULT ble_scatternet_gcs_client_callback(T_CLIENT_ID client_id, uint8_t c
                 APP_PRINT_INFO1("READ VALUE: %b",
                                 TRACE_BINARY(p_gcs_cb_data->cb_content.read_result.value_size,
                                              p_gcs_cb_data->cb_content.read_result.p_value));
-                data_uart_print("READ VALUE: ");
+                printf("READ VALUE: ");
                 for(int i=0; i< p_gcs_cb_data->cb_content.read_result.value_size; i++)
-                    data_uart_print("0x%02x ", *(p_gcs_cb_data->cb_content.read_result.p_value + i));
-                data_uart_print("\n\r");
+                    printf("0x%02x ", *(p_gcs_cb_data->cb_content.read_result.p_value + i));
+                printf("\r\n");
             }
             break;
         case GCS_CLIENT_CB_TYPE_WRITE_RESULT:
@@ -1227,7 +1218,7 @@ T_APP_RESULT ble_scatternet_gcs_client_callback(T_CLIENT_ID client_id, uint8_t c
                             p_gcs_cb_data->cb_content.write_result.cause,
                             p_gcs_cb_data->cb_content.write_result.handle,
                             p_gcs_cb_data->cb_content.write_result.type);
-            data_uart_print("WRITE RESULT: cause 0x%x, handle 0x%x, type %d\n\r",
+            printf("WRITE RESULT: cause 0x%x, handle 0x%x, type %d\r\n",
                             p_gcs_cb_data->cb_content.write_result.cause,
                             p_gcs_cb_data->cb_content.write_result.handle,
                             p_gcs_cb_data->cb_content.write_result.type);
@@ -1241,14 +1232,14 @@ T_APP_RESULT ble_scatternet_gcs_client_callback(T_CLIENT_ID client_id, uint8_t c
                 APP_PRINT_INFO1("INDICATION: value %b",
                                 TRACE_BINARY(p_gcs_cb_data->cb_content.notif_ind.value_size,
                                              p_gcs_cb_data->cb_content.notif_ind.p_value));
-                data_uart_print("INDICATION: handle 0x%x, value_size %d\r\n",
+                printf("INDICATION: handle 0x%x, value_size %d\r\n",
                                 p_gcs_cb_data->cb_content.notif_ind.handle,
                                 p_gcs_cb_data->cb_content.notif_ind.value_size);
-                data_uart_print("INDICATION: value ");
+                printf("INDICATION: value ");
                 for (int i = 0; i < p_gcs_cb_data->cb_content.notif_ind.value_size; i++) {
-                    data_uart_print("0x%02x ", *(p_gcs_cb_data->cb_content.notif_ind.p_value+ i));
+                    printf("0x%02x ", *(p_gcs_cb_data->cb_content.notif_ind.p_value+ i));
                 }
-                data_uart_print("\n\r");
+                printf("\r\n");
             }
             else
             {
@@ -1258,14 +1249,14 @@ T_APP_RESULT ble_scatternet_gcs_client_callback(T_CLIENT_ID client_id, uint8_t c
                 APP_PRINT_INFO1("NOTIFICATION: value %b",
                                 TRACE_BINARY(p_gcs_cb_data->cb_content.notif_ind.value_size,
                                              p_gcs_cb_data->cb_content.notif_ind.p_value));
-                data_uart_print("NOTIFICATION: handle 0x%x, value_size %d\r\n",
+                printf("NOTIFICATION: handle 0x%x, value_size %d\r\n",
                                 p_gcs_cb_data->cb_content.notif_ind.handle,
                                 p_gcs_cb_data->cb_content.notif_ind.value_size);
-                data_uart_print("NOTIFICATION: value ");
+                printf("NOTIFICATION: value ");
                 for (int i = 0; i < p_gcs_cb_data->cb_content.notif_ind.value_size; i++) {
-                    data_uart_print("0x%02x ", *(p_gcs_cb_data->cb_content.notif_ind.p_value+ i));
+                    printf("0x%02x ", *(p_gcs_cb_data->cb_content.notif_ind.p_value+ i));
                 }
-                data_uart_print("\n\r");
+                printf("\r\n");
             }
             break;
         default:

@@ -28,7 +28,6 @@ extern "C" {
 #include <profile_server.h>
 
 
-#define BLE_PRINT	printf
 #define BD_ADDR_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
 #define BD_ADDR_ARG(x) (x)[5],(x)[4],(x)[3],(x)[2],(x)[1],(x)[0]
 #define UUID_128_FORMAT "0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X"
@@ -70,7 +69,7 @@ T_APP_RESULT ble_scatternet_app_gap_callback(uint8_t cb_type, void *p_cb_data);
  */
 T_APP_RESULT ble_scatternet_gcs_client_callback(T_CLIENT_ID client_id, uint8_t conn_id, void *p_data);
 #if F_BT_GAPS_CHAR_WRITEABLE
-	T_APP_RESULT ble_scatternet_gap_service_callback(T_SERVER_ID service_id, void *p_para);
+T_APP_RESULT ble_scatternet_gap_service_callback(T_SERVER_ID service_id, void *p_para);
 #endif
 
 #ifdef __cplusplus

@@ -61,7 +61,7 @@ int crypto_deinit(void)
 #if defined(CONFIG_FLASH_XIP_EN) && (CONFIG_FLASH_XIP_EN == 1)
 int xip_flash_remap_check(const uint8_t *ori_addr, u32 *remap_addr, const uint32_t buf_len) {
     u32 xip_phy_addr;
-    u8 pis_enc;
+    u32 pis_enc;
     int ret = SUCCESS;
 
     if (((u32)ori_addr >= XIP_REMAPPED_START_ADDR) && ((u32)ori_addr < XIP_REMAPPED_END_ADDR)) {
@@ -1298,7 +1298,8 @@ int crypto_random_seed (uint8_t *seed_buf, uint32_t seed_size)
     hal_timer_adapter_t *phs_tmr;
     uint32_t loop_cnt;
     uint32_t i;
-    
+
+    memset(&ls_timer, 0, sizeof(hal_timer_adapter_t));
     if ((seed_size == 0) || (seed_buf == NULL)) {
         return _ERRNO_CRYPTO_RNG_RANDOM_SEED_FAIL;
     }

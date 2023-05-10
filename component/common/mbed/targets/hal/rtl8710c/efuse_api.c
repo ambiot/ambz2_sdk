@@ -110,7 +110,7 @@ int efuse_disable_nonsec_jtag(void)
 int efuse_lock_susec_key(void)
 {
     uint32_t ret = _FALSE;
-    uint8_t ss_lock;
+    uint8_t ss_lock = 0;
 
     ret = hal_efuse_read (EFUSE_SSLOCK_OFFSET, &ss_lock, LDO_OUT_DEFAULT_VOLT);    
     if (ret == _TRUE) {
@@ -128,4 +128,11 @@ int efuse_lock_susec_key(void)
     }
 }
 
+void efuse_rotpk_enable(void)
+{
+	uint8_t rotpk_en = 0;
+	hal_efuse_read(EFUSE_SSLOCK_OFFSET, &rotpk_en, LDO_OUT_DEFAULT_VOLT);
+	rotpk_en &= ~(BIT(1));
+	hal_efuse_write(EFUSE_SSLOCK_OFFSET, rotpk_en, LDO_OUT_DEFAULT_VOLT);
+}
 #endif

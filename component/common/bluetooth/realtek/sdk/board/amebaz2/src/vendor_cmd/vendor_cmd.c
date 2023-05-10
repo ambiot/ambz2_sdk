@@ -14,6 +14,7 @@ P_FUN_GAP_APP_CB ext_app_cb = NULL;
 bool mailbox_to_bt(uint8_t *data, uint8_t len)
 {
 	T_GAP_DEV_STATE new_state;
+	memset(&new_state, 0, sizeof(T_GAP_DEV_STATE));
 	le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state );   
 	if (new_state.gap_init_state != GAP_INIT_STATE_STACK_READY) {
 		APP_PRINT_ERROR1("mailbox_to_bt: gap_init_state: 0x%x", new_state.gap_init_state);
@@ -33,6 +34,7 @@ bool mailbox_to_bt(uint8_t *data, uint8_t len)
 bool mailbox_to_bt_set_profile_report(uint8_t *data, uint8_t len)
 {
 	T_GAP_DEV_STATE new_state;
+	memset(&new_state, 0, sizeof(T_GAP_DEV_STATE));
 	le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state );   
 	if (new_state.gap_init_state != GAP_INIT_STATE_STACK_READY) {
 		APP_PRINT_INFO1("mailbox_to_bt_set_profile_report: gap_init_state: 0x%x", new_state.gap_init_state);
@@ -109,7 +111,7 @@ T_GAP_CAUSE le_adv_set_power_save_enable(uint8_t enable)
 #if BT_VENDOR_CMD_CONN_TX_POWER_SUPPORT
 T_GAP_CAUSE le_set_conn_tx_power(uint8_t conn_id, bool reset, uint8_t tx_power)
 {
-    uint16_t conn_handle;
+    uint16_t conn_handle = 0;
     if (le_get_conn_param(GAP_PARAM_CONN_HANDLE, &conn_handle, conn_id) == GAP_CAUSE_SUCCESS)
     {
         uint8_t param[5];

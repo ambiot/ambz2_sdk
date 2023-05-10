@@ -432,7 +432,7 @@ void fATWq(void *arg)
 #endif
 
 void fATWS(void *arg){
-	char buf[32] = {0};
+	char buf[33] = {0};
 	u8 *channel_list = NULL;
 	u8 *pscan_config = NULL;
 	int num_channel = 0;
@@ -453,9 +453,11 @@ void fATWS(void *arg){
 		goto exit;
 	}
 	if(arg){
-		strncpy(buf, arg, sizeof(buf));
+		memset((char *)buf, '\0', sizeof(buf));
+		strncpy((char *)buf, (char*)arg, sizeof(buf)-1);
 		argc = parse_param(buf, argv);
-		if(argc < 2){
+		if(argc <= 2){
+			printf("[ATWS]Usage: ATWS=channel_num[channel_1,...,channel_n]\n\r");
 			ret = RTW_BADARG;
 #if ATCMD_VER == ATVER_2
 			error_no = 1;
@@ -630,7 +632,7 @@ void fATWx(void *arg){
 					int    count;
 					rtw_mac_t mac_list[AP_STA_NUM];
 				} client_info;
-
+				memset(&client_info, 0, sizeof(client_info));
 				client_info.count = AP_STA_NUM;
 				wifi_get_associated_client_list(&client_info, sizeof(client_info));
 
@@ -720,7 +722,8 @@ void fATW0(void *arg){
 		goto exit;
 	}
 	printf("[ATW0]: _AT_WLAN_SET_SSID_ [%s]\n\r", (char*)arg);
-	strncpy((char *)wifi.ssid.val, (char*)arg, sizeof(wifi.ssid.val));
+	memset((char *)wifi.ssid.val, '\0', sizeof(wifi.ssid.val));
+	strncpy((char *)wifi.ssid.val, (char*)arg, sizeof(wifi.ssid.val) - 1);
 	wifi.ssid.len = strlen((char*)arg);
 exit:
 #if defined(CONFIG_INIC_CMD_RSP) && CONFIG_INIC_CMD_RSP
@@ -739,7 +742,8 @@ void fATW1(void *arg){
 	}	
 	printf("[ATW1]: _AT_WLAN_SET_PASSPHRASE_ [%s]\n\r", (char*)arg); 
 
-	strncpy((char *)password, (char*)arg, sizeof(password));	
+	memset((char *)password,'\0', sizeof(password));
+	strncpy((char *)password, (char*)arg, sizeof(password) - 1);	
 	wifi.password = password;
 	wifi.password_len = strlen((char*)arg);
 exit:
@@ -787,7 +791,8 @@ void fATW3(void *arg){
 		ret = RTW_BADARG;
 		goto exit;
     }
-	strncpy((char *)ap.ssid.val, (char*)arg, sizeof(ap.ssid.val));
+	memset((char *)ap.ssid.val, '\0', sizeof(ap.ssid.val));
+	strncpy((char *)ap.ssid.val, (char*)arg, sizeof(ap.ssid.val) - 1);
 
 	printf("[ATW3]: _AT_WLAN_AP_SET_SSID_ [%s]\n\r", ap.ssid.val); 
 exit:
@@ -805,7 +810,8 @@ void fATW4(void *arg){
         ret = RTW_BADARG;
         goto exit;
     }
-    strncpy((char *)password, (char*)arg, sizeof(password));
+    memset((char *)ap.ssid.val, '\0', sizeof(ap.ssid.val));
+    strncpy((char *)password, (char*)arg, sizeof(password) - 1);
     ap.password = password;
     ap.password_len = strlen((char*)arg);
     printf("[ATW4]: _AT_WLAN_AP_SET_SEC_KEY_ [%s]\n\r", ap.password);
@@ -1125,7 +1131,7 @@ void fATWC(void *arg){
 	/* To avoid gcc warnings */
 	( void ) arg;
 
-	int mode, ret;
+	int mode = 0, ret = 0;
 	unsigned long tick1 = xTaskGetTickCount();
 	unsigned long tick2, tick3;
 	char empty_bssid[6] = {0}, assoc_by_bssid = 0;
@@ -1293,7 +1299,8 @@ void fATWs(void *arg){
 	char *argv[MAX_ARGC] = {0};
 	printf("[ATWs]: _AT_WLAN_SCAN_WITH_SSID_ [%s]\n\r",  (char*)wifi.ssid.val);
 	if(arg){
-		strncpy(buf, arg, sizeof(buf));
+		memset(buf, '\0', sizeof(buf));
+		strncpy(buf, arg, sizeof(buf) - 1);
 		argc = parse_param(buf, argv);
 		if(argc == 2){
 			scan_buf_len = atoi(argv[1]);  	
@@ -1854,7 +1861,7 @@ void fATXP(void *arg)
 	int argc = 0;
 	char *argv[MAX_ARGC] = {0};
 	int ret = 0;
-	int mode, dtim;
+	int mode = 0, dtim = 0;
 	int tdma_slot_period, tdma_rfon_period_len_1, tdma_rfon_period_len_2, tdma_rfon_period_len_3;
 #if defined(CONFIG_INIC_CMD_RSP) && CONFIG_INIC_CMD_RSP
 	char *res = NULL;

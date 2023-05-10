@@ -130,7 +130,7 @@ void bt_config_app_set_adv_data(void)
 	
 	sprintf((char *)device_name,"Ameba_%02X%02X%02X",bt_addr[2],bt_addr[1],bt_addr[0]);
 	memcpy(adv_data+9,device_name,strlen((char const*)device_name));
-	//printf("Device name: \"%s\" (BD Address %02X:%02X:%02X:%02X:%02X:%02X) \n\r",
+	//printf("Device name: \"%s\" (BD Address %02X:%02X:%02X:%02X:%02X:%02X) \r\n",
 	//		device_name,bt_addr[5],bt_addr[4],bt_addr[3],bt_addr[2],bt_addr[1],bt_addr[0]);
 
 	le_set_gap_param(GAP_PARAM_DEVICE_NAME, GAP_DEVICE_NAME_LEN, device_name);
@@ -160,7 +160,7 @@ void bt_config_app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, uint16_t caus
 			bt_config_app_set_adv_data();
             le_adv_start();
 			set_bt_config_state(BC_DEV_IDLE); // BT Config Ready
-			BC_printf("BT Config Wifi ready\n\r");
+			BC_printf("BT Config Wifi ready\r\n");
         }
     }
 
@@ -175,13 +175,13 @@ void bt_config_app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, uint16_t caus
             else
             {
                 APP_PRINT_INFO0("GAP adv stopped");
-				BC_printf("ADV stopped\n\r");
+				BC_printf("ADV stopped\r\n");
             }
         }
         else if (new_state.gap_adv_state == GAP_ADV_STATE_ADVERTISING)
         {
             APP_PRINT_INFO0("GAP adv start");
-			BC_printf("ADV started\n\r");
+			BC_printf("ADV started\r\n");
         }
     }
 
@@ -211,7 +211,7 @@ void bt_config_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE new_s
                 APP_PRINT_ERROR1("bt_config_app_handle_conn_state_evt: connection lost cause 0x%x", disc_cause);
             }
 			bt_config_conn_id = 0;
-			BC_printf("Bluetooth Connection Disconnected\n\r");
+			BC_printf("Bluetooth Connection Disconnected\r\n");
 			if (wifi_is_ready_to_transceive(RTW_STA_INTERFACE) != RTW_SUCCESS) {		
 				bt_config_app_set_adv_data();
 				le_adv_start();
@@ -251,14 +251,14 @@ void bt_config_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE new_s
                                     ce_length_max 
                                    ); 
             if (cause == GAP_CAUSE_NON_CONN) {
-                BC_printf("No Bluetooth Connection\n\r");
+                BC_printf("No Bluetooth Connection\r\n");
                 break;
             }
 			//update_connection_time
             APP_PRINT_INFO5("GAP_CONN_STATE_CONNECTED:remote_bd %s, remote_addr_type %d, conn_interval 0x%x, conn_latency 0x%x, conn_supervision_timeout 0x%x",
                             TRACE_BDADDR(remote_bd), remote_bd_type,
                             conn_interval, conn_latency, conn_supervision_timeout);
-			BC_printf("Bluetooth Connection Established\n\r");
+			BC_printf("Bluetooth Connection Established\r\n");
 			bt_config_conn_id = conn_id;
 			set_bt_config_state(BC_DEV_BT_CONNECTED); // BT Config Bluetooth Connected
         }
@@ -379,7 +379,7 @@ void bt_config_app_handle_gap_msg(T_IO_MSG *p_gap_msg)
     T_LE_GAP_MSG gap_msg;
     uint8_t conn_id;
     memcpy(&gap_msg, &p_gap_msg->u.param, sizeof(p_gap_msg->u.param));
-	//printf("bt_config_app_handle_gap_msg: subtype %d\n\r", p_gap_msg->subtype);
+	//printf("bt_config_app_handle_gap_msg: subtype %d\r\n", p_gap_msg->subtype);
 
     APP_PRINT_TRACE1("bt_config_app_handle_gap_msg: subtype %d", p_gap_msg->subtype);
     switch (p_gap_msg->subtype)
@@ -485,7 +485,7 @@ T_APP_RESULT bt_config_app_gap_callback(uint8_t cb_type, void *p_cb_data)
     {
 #if defined(CONFIG_PLATFORM_8721D)
     case GAP_MSG_LE_DATA_LEN_CHANGE_INFO:
-	//printf("GAP_MSG_LE_DATA_LEN_CHANGE_INFO: conn_id %d, tx octets 0x%x, max_tx_time 0x%x", p_data->p_le_data_len_change_info->conn_id, p_data->p_le_data_len_change_info->max_tx_octets,  p_data->p_le_data_len_change_info->max_tx_time);
+	//printf("GAP_MSG_LE_DATA_LEN_CHANGE_INFO: conn_id %d, tx octets 0x%x, max_tx_time 0x%x\r\n", p_data->p_le_data_len_change_info->conn_id, p_data->p_le_data_len_change_info->max_tx_octets,  p_data->p_le_data_len_change_info->max_tx_time);
         APP_PRINT_INFO3("GAP_MSG_LE_DATA_LEN_CHANGE_INFO: conn_id %d, tx octets 0x%x, max_tx_time 0x%x",
                         p_data->p_le_data_len_change_info->conn_id,
                         p_data->p_le_data_len_change_info->max_tx_octets,

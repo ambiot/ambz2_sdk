@@ -714,9 +714,9 @@ uint8_t hal_sdio_dev_process_rpwm2 (hal_sdio_dev_adapter_t *psdio_adp)
  */
 hal_status_t hal_sdio_dev_init (void)
 {
-    hal_status_t ret;
-    uint16_t tx_bd_num;
-    uint16_t rx_bd_num;
+    hal_status_t ret = HAL_OK;
+    uint16_t tx_bd_num = 0;
+    uint16_t rx_bd_num = 0;
     uint32_t i;
 	sdiod_rx_packet_t *prx_pkt;
 

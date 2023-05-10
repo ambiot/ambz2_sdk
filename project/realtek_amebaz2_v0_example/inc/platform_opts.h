@@ -102,7 +102,7 @@
 #endif
 
 /* For Simple Link */
-#define CONFIG_INCLUDE_SIMPLE_CONFIG		1
+#define CONFIG_INCLUDE_SIMPLE_CONFIG		0
 #define CONFIG_INCLUDE_DPP_CONFIG		0
 /*For fast reconnection*/
 #ifdef PLATFORM_OHOS

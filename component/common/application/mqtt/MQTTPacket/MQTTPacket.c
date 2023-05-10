@@ -1,4 +1,4 @@
-/****************************************************************************
+/*******************************************************************************
  * Copyright (c) 2014 IBM Corp.
  *
  * All rights reserved. This program and the accompanying materials
@@ -14,6 +14,7 @@
  *    Ian Craggs - initial API and implementation and/or initial documentation
  *    Sergio R. Caprile - non-blocking packet read functions for stream transport
  *******************************************************************************/
+#include "platform_opts.h"
 
 #include "StackTrace.h"
 #include "MQTTPacket.h"
@@ -53,7 +54,7 @@ int MQTTPacket_encode(unsigned char* buf, int length)
  */
 int MQTTPacket_decode(int (*getcharfn)(unsigned char*, int), int* value)
 {
-	unsigned char c;
+	unsigned char c = 0;
 	int multiplier = 1;
 	int len = 0;
 #define MAX_NO_OF_REMAINING_LENGTH_BYTES 4
@@ -81,22 +82,27 @@ exit:
 }
 
 
-int MQTTPacket_len(int rem_len)
+int MQTTPacket_VBIlen(int rem_len)
 {
-	rem_len += 1; /* header byte */
+	int rc = 0;
 
-	/* now remaining_length field */
 	if (rem_len < 128)
-		rem_len += 1;
+		rc = 1;
 	else if (rem_len < 16384)
-		rem_len += 2;
-	else if (rem_len < 2097151)
-		rem_len += 3;
+		rc = 2;
+	else if (rem_len < 2097152)
+		rc = 3;
 	else
-		rem_len += 4;
-	return rem_len;
+		rc = 4;
+	return rc;
 }
 
+
+int MQTTPacket_len(int rem_len)
+{
+  /* header byte + remaining length */
+	return rem_len + 1  + MQTTPacket_VBIlen(rem_len);
+}
 
 static unsigned char* bufptr;
 
@@ -262,7 +268,7 @@ int MQTTPacket_equals(MQTTString* a, char* bptr)
 	int alen = 0,
 		blen = 0;
 	char *aptr;
-	
+
 	if (a->cstring)
 	{
 		aptr = a->cstring;
@@ -274,7 +280,7 @@ int MQTTPacket_equals(MQTTString* a, char* bptr)
 		alen = a->lenstring.len;
 	}
 	blen = strlen(bptr);
-	
+
 	return (alen == blen) && (strncmp(aptr, bptr, alen) == 0);
 }
 
@@ -306,7 +312,7 @@ int MQTTPacket_read(unsigned char* buf, int buflen, int (*getfn)(unsigned char*,
 	/* 3. read the rest of the buffer using a callback to supply the rest of the data */
 	if((rem_len + len) > buflen)
 		goto exit;
-	if ((*getfn)(buf + len, rem_len) != rem_len)
+	if (rem_len && ((*getfn)(buf + len, rem_len) != rem_len))
 		goto exit;
 
 	header.byte = buf[0];
@@ -323,7 +329,7 @@ exit:
  */
 static int MQTTPacket_decodenb(MQTTTransport *trp)
 {
-	unsigned char c;
+	unsigned char c = 0;
 	int rc = MQTTPACKET_READ_ERROR;
 
 	FUNC_ENTRY;
@@ -333,7 +339,7 @@ static int MQTTPacket_decodenb(MQTTTransport *trp)
 	}
 	do {
 		int frc;
-		if (++(trp->len) > MAX_NO_OF_REMAINING_LENGTH_BYTES)
+		if (trp->len >= MAX_NO_OF_REMAINING_LENGTH_BYTES)
 			goto exit;
 		if ((frc=(*trp->getfn)(trp->sck, &c, 1)) == -1)
 			goto exit;
@@ -341,6 +347,7 @@ static int MQTTPacket_decodenb(MQTTTransport *trp)
 			rc = 0;
 			goto exit;
 		}
+		++(trp->len);
 		trp->rem_len += (c & 127) * trp->multiplier;
 		trp->multiplier *= 128;
 	} while ((c & 128) != 0);
@@ -388,16 +395,17 @@ int MQTTPacket_readnb(unsigned char* buf, int buflen, MQTTTransport *trp)
 		++trp->state;
 		/*FALLTHROUGH*/
 	case 2:
-		/* read the rest of the buffer using a callback to supply the rest of the data */
-		if ((frc=(*trp->getfn)(trp->sck, buf + trp->len, trp->rem_len)) == -1)
-			goto exit;
-		if (frc == 0)
-			return 0;
-		trp->rem_len -= frc;
-		trp->len += frc;
-		if(trp->rem_len)
-			return 0;
-
+		if(trp->rem_len){
+			/* read the rest of the buffer using a callback to supply the rest of the data */
+			if ((frc=(*trp->getfn)(trp->sck, buf + trp->len, trp->rem_len)) == -1)
+				goto exit;
+			if (frc == 0)
+				return 0;
+			trp->rem_len -= frc;
+			trp->len += frc;
+			if(trp->rem_len)
+				return 0;
+		}
 		header.byte = buf[0];
 		rc = header.bits.type;
 		break;
@@ -407,4 +415,3 @@ exit:
 	trp->state = 0;
 	return rc;
 }
-

@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "FreeRTOS.h"
-#include "task.h"
+#include "osdep_service.h"
 #include "main.h"
 #include "udp.h"
 #include <sockets.h>
@@ -75,8 +74,8 @@ static int is_need_connect_to_AP = 0;
 static u8 mac_addr[6];
 
 extern int get_sc_profile_fmt(void);
-extern int get_sc_profile_info(void *fmt_info_t);
-extern int get_sc_dsoc_info(void *dsoc_info_t);
+extern void get_sc_profile_info(void *fmt_info_t);
+extern void get_sc_dsoc_info(void *dsoc_info_t);
 extern int rtl_dsoc_parse(u8 *mac_addr, u8 *buf, void *userdata, unsigned int *len);
 void filter1_add_enable(void);
 extern void remove_filter(void);
@@ -730,7 +729,7 @@ enum sc_result SC_parse_scan_result_and_connect(scan_buf_arg* scan_buf, rtw_netw
 	int parsed_len = 0;
 	u8 scan_channel = 0;
 	int i = 0;
-	enum sc_result ret;
+	enum sc_result ret = -1;
 	u8 pscan_config = PSCAN_ENABLE | PSCAN_SIMPLE_CONFIG;
 
 	memset((void*)&scan_result, 0, sizeof(struct scan_with_ssid_result));
@@ -990,10 +989,10 @@ int sc_set_val2(rtw_network_info_t *wifi)
 enum sc_result SC_connect_to_AP(void)
 {
 	enum sc_result ret = SC_ERROR;
-	u8 scan_channel;
+	u8 scan_channel = 0;
 	u8 pscan_config;
 	int max_retry = 5, retry = 0;
-	rtw_security_t security_mode;
+	rtw_security_t security_mode = 0;
 	rtw_network_info_t wifi = {0};
 	if(!(fixed_channel_num == 0)){
 		scan_channel = fixed_channel_num;

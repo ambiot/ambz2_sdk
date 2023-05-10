@@ -78,6 +78,7 @@ typedef struct ns
 	struct ns* nextseed;
 #if (ATCMD_VER == ATVER_2) && ATCMD_SUPPORT_SSL
 	void *context;
+	void *ssl_conf;
 #endif
 } node;
 

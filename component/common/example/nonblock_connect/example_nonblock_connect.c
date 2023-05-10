@@ -21,34 +21,40 @@ static void example_nonblock_connect_thread(void *param)
 	vTaskDelay(10000);
 	printf("\nExample: Non-blocking socket connect\n");
 
-	server_fd = socket(AF_INET, SOCK_STREAM, 0);
-	fcntl(server_fd, F_SETFL, fcntl(server_fd, F_GETFL, 0) | O_NONBLOCK);
+	if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) >= 0) {
+		fcntl(server_fd, F_SETFL, fcntl(server_fd, F_GETFL, 0) | O_NONBLOCK);
 
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
-	server_addr.sin_port = htons(SERVER_PORT);
-	connect(server_fd, (struct sockaddr *) &server_addr, sizeof(server_addr));
+		server_addr.sin_family = AF_INET;
+		server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
+		server_addr.sin_port = htons(SERVER_PORT);
+		connect(server_fd, (struct sockaddr *) &server_addr, sizeof(server_addr));
 
-	if(errno == EINPROGRESS) {
-		fd_set wfds;
-		struct timeval time_out;
+		if(errno == EINPROGRESS) {
+			fd_set wfds;
+			struct timeval time_out;
 
-		time_out.tv_sec = 3;	// Set select timeout of 3 seconds
-		time_out.tv_usec = 0;
-		FD_ZERO(&wfds) ;
-		FD_SET(server_fd, &wfds);	// Only set server fd
+			time_out.tv_sec = 3;	// Set select timeout of 3 seconds
+			time_out.tv_usec = 0;
+			FD_ZERO(&wfds) ;
+			FD_SET(server_fd, &wfds);	// Only set server fd
 
-		// Use select to wait for non-blocking connect
-		if(select(server_fd + 1, NULL, &wfds, NULL, &time_out) == 1)
-			printf("Server connection successful\n");
-		else
-			printf("Server connection failed\n");
+			// Use select to wait for non-blocking connect
+			if(select(server_fd + 1, NULL, &wfds, NULL, &time_out) == 1)
+				printf("Server connection successful\n");
+			else
+				printf("Server connection failed\n");
+		}
+		else {
+			printf("ERROR: connect\n");
+		}
+
+	} else {
+		printf("socket error\n");
+		goto exit;
 	}
-	else {
-		printf("ERROR: connect\n");
-	}
-
-	close(server_fd);
+exit:
+	if(server_fd >= 0)
+		close(server_fd);
 	vTaskDelete(NULL);
 }
 

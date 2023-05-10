@@ -10,12 +10,11 @@
   * @version  v1.0
   * *************************************************************************************
   */
-
+#include <stdio.h>
 #include "trace.h"
 #include <string.h>
 #include "gatt.h"
 #include "gls.h"
-#include "data_uart.h"
 
 
 /** @brief service related UUIDs. */
@@ -1734,7 +1733,7 @@ static void gls_ctl_pnt_write_ind_post_proc(uint8_t conn_id, T_SERVER_ID service
 
     PROFILE_PRINT_INFO4("gls_ctl_pnt_write_ind_post_proc  Write GLS Control Point: OpCode = %d, operator = %d, length = %d, filter type = %d",
                         p_value[0], p_value[1], write_length, p_value[2]);
-	data_uart_print("\n\rgls_ctl_pnt_write_ind_post_proc  Write GLS Control Point: OpCode = %d, operator = %d, length = %d, filter type = %d \r\n",p_value[0], p_value[1], write_length, p_value[2]);
+	printf("gls_ctl_pnt_write_ind_post_proc  Write GLS Control Point: OpCode = %d, operator = %d, length = %d, filter type = %d \r\n",p_value[0], p_value[1], write_length, p_value[2]);
 
     /* Notify Application. */
     if (pfn_gls_cb)
@@ -1744,7 +1743,7 @@ static void gls_ctl_pnt_write_ind_post_proc(uint8_t conn_id, T_SERVER_ID service
         memcpy(&GLS_upsteam_msg.msg_data.write, p_value, write_length);
         pfn_gls_cb(service_id, (void *)&GLS_upsteam_msg);
     }
-	data_uart_print("\n\rgls_ctl_pnt_write_ind_post_proc:glc_racp.ctrl_point.op_code = 0x%x ,gls_send_data_flag = %d\r\n",glc_racp.ctrl_point.op_code,gls_send_data_flag);
+	printf("gls_ctl_pnt_write_ind_post_proc:glc_racp.ctrl_point.op_code = 0x%x ,gls_send_data_flag = %d\r\n",glc_racp.ctrl_point.op_code,gls_send_data_flag);
     if (p_value[0] != GLC_RACP_OPCODE_ABORT_OPERATION)
     {
         memset(&glc_racp.ctrl_point, 0, sizeof(T_GLC_CONTROL_POINT));
@@ -1822,12 +1821,12 @@ T_APP_RESULT gls_attr_write_cb(uint8_t conn_id, T_SERVER_ID service_id, uint16_t
 {
     T_APP_RESULT cause = APP_RESULT_SUCCESS;
     PROFILE_PRINT_INFO2("gls_attr_write_cb attrib_index = %d, length = %x", attrib_index, length);
-	data_uart_print("\n\rgls_attr_write_cb attrib_index = %d, length = %x \r\n",attrib_index, length);
+	printf("gls_attr_write_cb attrib_index = %d, length = %x \r\n",attrib_index, length);
     switch (attrib_index)
     {
     case GLS_CHAR_GLC_RACP_INDEX:
         {
-        	data_uart_print("\n\rglc_racp.ctrl_point.op_code = 0x%x \r\n",glc_racp.ctrl_point.op_code);
+        	printf("glc_racp.ctrl_point.op_code = 0x%x \r\n",glc_racp.ctrl_point.op_code);
             /* Attribute value has variable size, make sure written value size is valid. */
             if ((length > sizeof(T_GLC_CONTROL_POINT)) || (p_value == NULL))
             {
@@ -1837,7 +1836,7 @@ T_APP_RESULT gls_attr_write_cb(uint8_t conn_id, T_SERVER_ID service_id, uint16_t
             else if (GLC_RACP_OPERATION_ACTIVE(glc_racp.ctrl_point.op_code) &&
                      (p_value[0] != GLC_RACP_OPCODE_ABORT_OPERATION))
             {
-            	data_uart_print("\n\rGLC_ERR_PROC_ALREADY_IN_PROGRESS \r\n");
+            	printf("GLC_ERR_PROC_ALREADY_IN_PROGRESS \r\n");
                 cause = (T_APP_RESULT)(ATT_ERR | GLC_ERR_PROC_ALREADY_IN_PROGRESS);
             }
             /* Make sure Control Point is configured indication enable. */
@@ -1851,7 +1850,7 @@ T_APP_RESULT gls_attr_write_cb(uint8_t conn_id, T_SERVER_ID service_id, uint16_t
                 /** handle RACP request after sending write response */
                 PROFILE_PRINT_INFO2("gls_attr_write_cb opcode: old = %d, new = %d\n", glc_racp.ctrl_point.op_code,
                                     p_value[0]);
-				data_uart_print("\n\rgls_attr_write_cb opcode: old = %d, new = %d\r\n",glc_racp.ctrl_point.op_code,p_value[0]);
+				printf("gls_attr_write_cb opcode: old = %d, new = %d\r\n",glc_racp.ctrl_point.op_code,p_value[0]);
                 *p_write_ind_post_proc = gls_ctl_pnt_write_ind_post_proc;
             }
 

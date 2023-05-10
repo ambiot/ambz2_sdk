@@ -760,7 +760,7 @@ const T_FUN_GATT_SERVICE_CBS hids_cbs =
   */
 T_SERVER_ID hids_add_service(void *p_func)
 {
-    T_SERVER_ID service_id;
+    T_SERVER_ID service_id = 0;
     if (false == server_add_service(&service_id, (uint8_t *)hids_attr_tbl, hids_attr_tbl_len, hids_cbs))
     {
         APP_PRINT_ERROR1("hids_add_service: ServiceId %d", service_id);

@@ -741,7 +741,7 @@ sntp_stop(void)
 int atcmd_sntp(char* hostname){
   
 	ip_addr_t sntp_server_address;
-	err_t err;
+	err_t err = ERR_OK;
   
 	if (sntp_pcb == NULL) {
 		sntp_pcb = udp_new();
