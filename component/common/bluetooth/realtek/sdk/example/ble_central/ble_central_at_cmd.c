@@ -580,8 +580,6 @@ int ble_central_at_cmd_connect(int argc, char **argv)
 	}
 #endif
 
-		return 0;
-
 	u8 DestAddr[6] = {0};
 	u8 DestAddrType = GAP_REMOTE_ADDR_LE_PUBLIC;
 #if (F_BT_LE_USE_RANDOM_ADDR==1)
