@@ -810,7 +810,7 @@ void fATW4(void *arg){
         ret = RTW_BADARG;
         goto exit;
     }
-    memset((char *)ap.ssid.val, '\0', sizeof(ap.ssid.val));
+    memset((char *)password, '\0', sizeof(password));
     strncpy((char *)password, (char*)arg, sizeof(password) - 1);
     ap.password = password;
     ap.password_len = strlen((char*)arg);
