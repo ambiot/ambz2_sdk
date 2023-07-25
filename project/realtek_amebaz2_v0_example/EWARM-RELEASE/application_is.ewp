@@ -49,16 +49,16 @@
                 <option>
                     <name>GRuntimeLibSelect</name>
                     <version>0</version>
-                    <state>1</state>
+                    <state>2</state>
                 </option>
                 <option>
                     <name>GRuntimeLibSelectSlave</name>
                     <version>0</version>
-                    <state>1</state>
+                    <state>2</state>
                 </option>
                 <option>
                     <name>RTDescription</name>
-                    <state>Use the normal configuration of the C/C++ runtime library. No locale interface, C locale, no file descriptor support, no multibytes in printf and scanf, and no hex floats in strtod.</state>
+                    <state>Use the full configuration of the C/C++ runtime library. Full locale interface, C locale, file descriptor support, multibytes in printf and scanf, and hex floats in strtod.</state>
                 </option>
                 <option>
                     <name>OGProductVersion</name>
@@ -112,7 +112,7 @@
                 </option>
                 <option>
                     <name>RTConfigPath2</name>
-                    <state>$TOOLKIT_DIR$\inc\c\DLib_Config_Normal.h</state>
+                    <state>$TOOLKIT_DIR$\inc\c\DLib_Config_Full.h</state>
                 </option>
                 <option>
                     <name>GBECoreSlave</name>
@@ -231,6 +231,8 @@
                     <state>_NO_DEFINITIONS_IN_HEADER_FILES</state>
                     <state>V8M_STKOVF</state>
                     <state>CONFIG_SYSTEM_TIME64=0</state>
+                    <state>ENABLE_AMAZON_COMMON</state>
+                    <state>MBEDTLS_CONFIG_FILE="aws_mbedtls_config.h"</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
@@ -368,8 +370,8 @@
                     <state>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\app\stdio_port</state>
                     <state>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\utilities\include</state>
                     <state>$PROJ_DIR$\..\..\..\component\os\freertos</state>
-                    <state>$PROJ_DIR$\..\..\..\component\os\freertos\freertos_v10.0.1\Source\include</state>
-                    <state>$PROJ_DIR$\..\..\..\component\os\freertos\freertos_v10.0.1\Source\portable\IAR\ARM_RTL8710C</state>
+                    <state>$PROJ_DIR$\..\..\..\component\os\freertos\freertos_v10.4.3\include</state>
+                    <state>$PROJ_DIR$\..\..\..\component\os\freertos\freertos_v10.4.3\portable\GCC\ARM_CM33_NTZ\non_secure</state>
                     <state>$PROJ_DIR$\..\..\..\component\common\api</state>
                     <state>$PROJ_DIR$\..\..\..\component\common\api\at_cmd</state>
                     <state>$PROJ_DIR$\..\..\..\component\common\api\platform</state>
@@ -395,7 +397,9 @@
                     <state>$PROJ_DIR$\..\..\..\component\common\network\lwip\lwip_v2.0.2\port\realtek</state>
                     <state>$PROJ_DIR$\..\..\..\component\common\network\lwip\lwip_v2.0.2\port\realtek\freertos</state>
                     <state>$PROJ_DIR$\..\..\..\component\common\api\wifi\rtw_wpa_supplicant\src</state>
-                    <state>$PROJ_DIR$\..\..\..\component\common\network\ssl\mbedtls-2.4.0\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls_config</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls_utils</state>
                     <state>$PROJ_DIR$\..\..\..\component\common\network\ssl\ssl_ram_map\rom</state>
                     <state>$PROJ_DIR$\..\..\..\component\common\drivers\wlan\realtek\include</state>
                     <state>$PROJ_DIR$\..\..\..\component\common\drivers\wlan\realtek\src\osdep</state>
@@ -460,6 +464,66 @@
                     <state>$PROJ_DIR$\..\..\..\component\common\bluetooth\realtek\sdk\example\bt_datatrans</state>
                     <state>$PROJ_DIR$\..\..\..\component\common\application\mqtt\MQTTPacket\V5</state>
                     <state>$PROJ_DIR$\..\..\..\component\common\application\mqtt\MQTTPacket</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\freertos_plus\standard\utils\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\logging\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\abstractions\wifi\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\unity\src</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\unity\extras\fixture\src</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\c_sdk\standard\common\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\abstractions\platform\freertos\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\abstractions\platform\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\abstractions\secure_sockets\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\c_sdk\standard\common\include\private</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\abstractions\pkcs11\corePKCS11\source\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\abstractions\pkcs11\corePKCS11\source\dependency\3rdparty\pkcs11</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\c_sdk\standard\common\include\private</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\c_sdk\standard\common\include\private</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\abstractions\backoff_algorithm\source\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\coreHTTP\source\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\coreHTTP\source\interface</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\abstractions\transport\secure_sockets</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\coreMQTT\source\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\jsmn</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\freertos_plus\aws\ota\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls_utils</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\freertos_plus\standard\crypto\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\demos\dev_mode_key_provisioning\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\c_sdk\aws\defender\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\c_sdk\standard\mqtt\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\c_sdk\standard\serializer\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\c_sdk\aws\shadow\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\c_sdk\standard\mqtt\test\access</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\coreHTTP\source\dependency\3rdparty\http_parser</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\c_sdk\standard\https\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\c_sdk\standard\https\test\access</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\c_sdk\standard\mqtt\src</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\c_sdk\standard\mqtt\test\mock</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\tinycbor\src</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\freertos_plus\aws\ota\src</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\freertos_plus\standard\tls\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\demos\common\pkcs11_helpers</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\demos\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\demos\network_manager</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\vendors\realtek\boards\amebaZ2\aws_demos\config_files</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\demos\common\http_demo_helpers</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\device_shadow_for_aws\source\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\coreJSON\source\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\demos\common\mqtt_demo_helpers</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\freertos_plus\aws\ota\test</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\jobs_for_aws\source\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\device_defender_for_aws\source\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\demos\device_defender_for_aws</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\abstractions\platform\include\platform</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\coreMQTT-Agent\source\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\abstractions\mqtt_agent\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\demos\common\mqtt_subscription_manager</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\ota_for_aws\source\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\ota_for_aws\source</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\ota_for_aws\source\portable</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\ota_for_aws\source\portable\os</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\abstractions\mqtt_agent\include</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\vendors\realtek\boards\amebaZ2\ports\ota</state>
+                    <state>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\coreMQTT-Agent\source\include</state>
                 </option>
                 <option>
                     <name>CCStdIncCheck</name>
@@ -2133,6 +2197,9 @@
             <name>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\fwlib\lib\lib\hal_pmc.a</name>
         </file>
         <file>
+            <name>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\bsp\lib\common\IAR\lib_amazon.a</name>
+        </file>
+        <file>
             <name>$PROJ_DIR$\..\..\..\component\soc\realtek\8710c\misc\bsp\lib\common\IAR\lib_dct.a</name>
         </file>
         <file>
@@ -2170,6 +2237,9 @@
                     <name>rtw_wpa_supplicant</name>
                     <file>
                         <name>$PROJ_DIR$\..\..\..\component\common\api\wifi\rtw_wpa_supplicant\src\crypto\tls_polarssl.c</name>
+                        <excluded>
+                            <configuration>Debug</configuration>
+                        </excluded>
                     </file>
                     <file>
                         <name>$PROJ_DIR$\..\..\..\component\common\api\wifi\rtw_wpa_supplicant\wpa_supplicant\wifi_eap_config.c</name>
@@ -2463,6 +2533,9 @@
             <name>ssl</name>
             <group>
                 <name>mbedtls</name>
+                <excluded>
+                    <configuration>Debug</configuration>
+                </excluded>
                 <file>
                     <name>$PROJ_DIR$\..\..\..\component\common\network\ssl\mbedtls-2.4.0\library\aesni.c</name>
                 </file>
@@ -2603,6 +2676,246 @@
                 </file>
             </group>
             <group>
+                <name>mbedtls_amazon</name>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\aes.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\aesni.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\arc4.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\aria.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\asn1parse.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\asn1write.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\base64.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\bignum.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\blowfish.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\camellia.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\ccm.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\certs.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\chacha20.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\chachapoly.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\cipher.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\cipher_wrap.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\cmac.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\ctr_drbg.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\debug.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\des.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\dhm.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\ecdh.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\ecdsa.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\ecjpake.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\ecp.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\ecp_curves.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\entropy.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\entropy_poll.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\error.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\gcm.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\havege.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\hkdf.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\hmac_drbg.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\md.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\md2.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\md4.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\md5.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\md_wrap.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\memory_buffer_alloc.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls_rtk\net_sockets.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\nist_kw.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\oid.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\padlock.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\pem.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\pk.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\pk_wrap.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\pkcs11.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\pkcs12.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\pkcs5.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\pkparse.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\pkwrite.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\platform.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\platform_util.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\poly1305.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\ripemd160.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\rsa.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\rsa_internal.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\sha1.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\sha256.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\sha512.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\ssl_cache.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\ssl_ciphersuites.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\ssl_cli.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\ssl_cookie.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\ssl_srv.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\ssl_ticket.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\ssl_tls.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\threading.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\timing.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\version.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\version_features.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\x509.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\x509_create.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\x509_crl.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\x509_crt.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\x509_csr.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\x509write_crt.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\x509write_csr.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\lib_amazon\freertos_LTS\libraries\3rdparty\mbedtls\library\xtea.c</name>
+                </file>
+            </group>
+            <group>
                 <name>ssl_ram_map</name>
                 <file>
                     <name>$PROJ_DIR$\..\..\..\component\common\network\ssl\ssl_ram_map\rom\rom_ssl_ram_map.c</name>
@@ -2626,6 +2939,9 @@
         <name>os</name>
         <group>
             <name>freertos</name>
+            <excluded>
+                <configuration>Debug</configuration>
+            </excluded>
             <group>
                 <name>portable</name>
                 <file>
@@ -2658,6 +2974,45 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\..\..\..\component\os\freertos\freertos_v10.0.1\Source\timers.c</name>
+            </file>
+        </group>
+        <group>
+            <name>freertos_10.4.3</name>
+            <group>
+                <name>portable</name>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\os\freertos\freertos_heap5_config.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\os\freertos\freertos_heap_rtk.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\os\freertos\freertos_v10.4.3\portable\IAR\ARM_CM33_NTZ\non_secure\port.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\component\os\freertos\freertos_v10.4.3\portable\IAR\ARM_CM33_NTZ\non_secure\portasm.s</name>
+                </file>
+            </group>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\os\freertos\freertos_v10.4.3\croutine.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\os\freertos\freertos_v10.4.3\event_groups.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\os\freertos\freertos_v10.4.3\list.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\os\freertos\freertos_v10.4.3\queue.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\os\freertos\freertos_v10.4.3\stream_buffer.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\os\freertos\freertos_v10.4.3\tasks.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\component\os\freertos\freertos_v10.4.3\timers.c</name>
             </file>
         </group>
         <group>
@@ -2853,9 +3208,6 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\..\..\..\component\common\example\amazon_freertos\example_amazon_freertos.c</name>
-                <excluded>
-                    <configuration>Debug</configuration>
-                </excluded>
             </file>
             <file>
                 <name>$PROJ_DIR$\..\..\..\component\common\example\bcast\example_bcast.c</name>

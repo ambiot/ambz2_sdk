@@ -33,9 +33,81 @@
 #ifndef FREERTOS_CONFIG_AMAZON_H
 #define FREERTOS_CONFIG_AMAZON_H
 
+/* This demo creates a virtual network connection by accessing the raw Ethernet
+ * or WiFi data to and from a real network connection.  Many computers have more
+ * than one real network port, and configNETWORK_INTERFACE_TO_USE is used to tell
+ * the demo which real port should be used to create the virtual port.  The ports
+ * available are displayed on the console when the application is executed.  For
+ * example, on my development laptop setting configNETWORK_INTERFACE_TO_USE to 4
+ * results in the wired network being used, while setting
+ * configNETWORK_INTERFACE_TO_USE to 2 results in the wireless network being
+ * used. */
+#define configNETWORK_INTERFACE_TO_USE       2L
+/* The address of an echo server that will be used by the two demo echo client
+ * tasks:
+ * http://www.freertos.org/FreeRTOS-Plus/FreeRTOS_Plus_TCP/TCP_Echo_Clients.html,
+ * http://www.freertos.org/FreeRTOS-Plus/FreeRTOS_Plus_TCP/UDP_Echo_Clients.html. */
+#define configECHO_SERVER_ADDR0              192
+#define configECHO_SERVER_ADDR1              168
+#define configECHO_SERVER_ADDR2              2
+#define configECHO_SERVER_ADDR3              7
+#define configTCP_ECHO_CLIENT_PORT           7
+
+/* Default MAC address configuration.  The demo creates a virtual network
+ * connection that uses this MAC address by accessing the raw Ethernet/WiFi data
+ * to and from a real network connection on the host PC.  See the
+ * configNETWORK_INTERFACE_TO_USE definition above for information on how to
+ * configure the real network connection to use. */
+#define configMAC_ADDR0                      0x00
+#define configMAC_ADDR1                      0x11
+#define configMAC_ADDR2                      0x22
+#define configMAC_ADDR3                      0x33
+#define configMAC_ADDR4                      0x44
+#define configMAC_ADDR5                      0x21
+
+/* Default IP address configuration.  Used in ipconfigUSE_DHCP is set to 0, or
+ * ipconfigUSE_DHCP is set to 1 but a DNS server cannot be contacted. */
+#define configIP_ADDR0                       192
+#define configIP_ADDR1                       168
+#define configIP_ADDR2                       0
+#define configIP_ADDR3                       105
+
+/* Default gateway IP address configuration.  Used in ipconfigUSE_DHCP is set to
+ * 0, or ipconfigUSE_DHCP is set to 1 but a DNS server cannot be contacted. */
+#define configGATEWAY_ADDR0                  192
+#define configGATEWAY_ADDR1                  168
+#define configGATEWAY_ADDR2                  0
+#define configGATEWAY_ADDR3                  1
+
+/* Default DNS server configuration.  OpenDNS addresses are 208.67.222.222 and
+ * 208.67.220.220.  Used in ipconfigUSE_DHCP is set to 0, or ipconfigUSE_DHCP is
+ * set to 1 but a DNS server cannot be contacted.*/
+#define configDNS_SERVER_ADDR0               208
+#define configDNS_SERVER_ADDR1               67
+#define configDNS_SERVER_ADDR2               222
+#define configDNS_SERVER_ADDR3               222
+
+/* Default netmask configuration.  Used in ipconfigUSE_DHCP is set to 0, or
+ * ipconfigUSE_DHCP is set to 1 but a DNS server cannot be contacted. */
+#define configNET_MASK0                      255
+#define configNET_MASK1                      255
+#define configNET_MASK2                      255
+#define configNET_MASK3                      0
+
+/* The UDP port to which print messages are sent. */
+#define configPRINT_PORT                     ( 15000 )
+
+#define configPROFILING                      ( 0 )
+
+#ifdef AMAZON_FREERTOS_ENABLE_UNIT_TESTS
+#undef configASSERT
+/* Unity includes for testing. */
+#include "unity_internals.h"
+#define configASSERT(x)	if( ( x ) == 0 )  TEST_ABORT()
+#endif
 
 /* FreeRTOS v10.2.0 config for Amazon usage */
-#define configUSE_POSIX_ERRNO 1
+//#define configUSE_POSIX_ERRNO 1
 
 #undef configMINIMAL_STACK_SIZE
 #undef configMINIMAL_SECURE_STACK_SIZE
@@ -43,6 +115,12 @@
 /* Constants that describe the hardware and memory usage. */
 #define configMINIMAL_STACK_SIZE                    ( ( unsigned short ) 256 ) //number of double word
 #define configMINIMAL_SECURE_STACK_SIZE         ( ( unsigned short ) 64*4 ) //number of byte
+
+#undef configUSE_TRACE_FACILITY
+#define configUSE_TRACE_FACILITY 1
+
+#undef configTIMER_QUEUE_LENGTH
+#define configTIMER_QUEUE_LENGTH  (10 + 32)
 
 extern void cli(void);
 /* Map the FreeRTOS printf() to the logging task printf. */
@@ -70,11 +148,13 @@ extern void vLoggingPrint( const char * pcMessage );
 #define configSUPPORT_STATIC_ALLOCATION              1
 #define configUSE_MALLOC_FAILED_HOOK 1
 
-#define configECHO_SERVER_ADDR0 (192)
-#define configECHO_SERVER_ADDR1 (168)
-#define configECHO_SERVER_ADDR2 (1)
-#define configECHO_SERVER_ADDR3 (108)
-#define configTCP_ECHO_CLIENT_PORT (8883)
+#define configNUM_THREAD_LOCAL_STORAGE_POINTERS		1
+
+#define configPLATFORM_NAME "RealtekAmebaZ2"
+
+#define configUSE_DAEMON_TASK_STARTUP_HOOK		0
+
+#define configRUN_FREERTOS_SECURE_ONLY          1
 
 #if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1)
 extern void rtw_create_secure_context(u32 secure_stack_size);

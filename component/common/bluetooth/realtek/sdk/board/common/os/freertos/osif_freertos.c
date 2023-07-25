@@ -408,7 +408,9 @@ bool osif_task_signal_clear(void *p_handle)
 #endif
     BaseType_t ret;
 
+#ifndef ENABLE_AMAZON_COMMON
 extern BaseType_t xTaskNotifyStateClear( TaskHandle_t xTask );
+#endif
     ret = xTaskNotifyStateClear((TaskHandle_t)p_handle);
     if (ret == pdTRUE)
     {

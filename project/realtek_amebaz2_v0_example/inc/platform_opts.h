@@ -59,6 +59,19 @@
 #define BT_WHITELIST_BASE_1		(0x200000 - 0xA000)
 #define BT_WHITELIST_PAGE_SIZE		(0x1000)
 #define BT_WHITELIST_BASE_2		(BT_WHITELIST_BASE_1 + BT_WHITELIST_PAGE_SIZE)
+
+/**
+ * For Amazon FreeRTOS usage
+ */
+// OTA use
+#define AWS_OTA_IMAGE_STATE_FLASH_OFFSET     0x00003000 // Flash reserved section 0x0000_3000 - 0x0000_4000-1
+
+// PKCS11 use
+#define pkcs11OBJECT_CERT_FLASH_OFFSET       (0x200000 - 0xB000) //Flash location for CERT
+#define pkcs11OBJECT_PRIV_KEY_FLASH_OFFSET   (0x200000 - 0xC000) //Flash location for Priv Key
+#define pkcs11OBJECT_PUB_KEY_FLASH_OFFSET    (0x200000 - 0xD000) //Flash location for Pub Key
+#define pkcs11OBJECT_VERIFY_KEY_FLASH_OFFSET (0x200000 - 0xE000) //Flash location for code verify Key
+
 /**
  * For Wlan configurations
  */
@@ -358,14 +371,14 @@
 #define WPS_CONNECT_RETRY_INTERVAL	5000 // in ms
 #endif 
 
-#define AUTO_RECONNECT_COUNT	8
+#define AUTO_RECONNECT_COUNT	999
 #define AUTO_RECONNECT_INTERVAL	5 // in sec
 
 /*For trust zone example */
 #define CONFIG_EXAMPLE_TRUST_ZONE 0
 
 /* For Amazon FreeRTOS SDK example */
-#define CONFIG_EXAMPLE_AMAZON_FREERTOS 0
+#define CONFIG_EXAMPLE_AMAZON_FREERTOS 1
 
 #define CONFIG_EXAMPLE_AMAZON_AFQP_TESTS 0
    
@@ -375,7 +388,7 @@
 #undef CONFIG_EXAMPLE_WLAN_FAST_CONNECT
 #undef CONFIG_FAST_DHCP
 #define CONFIG_INCLUDE_SIMPLE_CONFIG		0
-#define CONFIG_EXAMPLE_WLAN_FAST_CONNECT	0
+#define CONFIG_EXAMPLE_WLAN_FAST_CONNECT	1
 #define CONFIG_FAST_DHCP 0
 #if defined(CONFIG_BUILD_SECURE)
 #define ENABLE_AMAZON_COMMON

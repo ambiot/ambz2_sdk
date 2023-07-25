@@ -139,9 +139,17 @@ void sau_setup(ns_region_t *ns_region)
 }
 #endif
 
+#ifdef ENABLE_AMAZON_COMMON
+__weak void os_heap_init(void) { /* default os_heap_init, for FreeRTOS heap5 */ }
+#endif
+
 void app_start (void)
 {
 	dbg_printf ("Build @ %s, %s\r\n", __TIME__, __DATE__);
+
+#ifdef ENABLE_AMAZON_COMMON
+	os_heap_init();
+#endif
 
 #if (defined(CONFIG_MIIO)&&(CONFIG_MIIO))
 	extern int_vector_t ram_vector_table[];

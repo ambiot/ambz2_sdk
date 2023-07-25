@@ -38,12 +38,21 @@ endif
 is: toolchain
 	@$(MAKE) -f application.is.mk
 
+.PHONY: amazon
+amazon: toolchain
+	@$(MAKE) -f lib_amazon.mk
+
+.PHONY: tz
+tz: toolchain
+	@$(MAKE) -f application.tz.mk
+
 .PHONY: mp
 mp: toolchain
 	@$(MAKE) -f application.is.mk mp
 
 .PHONY: clean
 clean:
+	@$(MAKE) -f lib_amazon.mk clean
 	@$(MAKE) -f application.is.mk clean
 
 debug: toolchain

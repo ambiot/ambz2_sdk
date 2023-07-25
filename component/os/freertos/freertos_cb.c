@@ -11,6 +11,7 @@ void vAssertCalled( uint32_t ulLine, const char *pcfile )
 	while(lock_assert);
 }
 
+#ifndef ENABLE_AMAZON_COMMON
 void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
 {
 	asm(" nop");
@@ -27,12 +28,14 @@ void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
 #endif	
 
 }
+#endif
 
 void vApplicationTickHook( void )
 {
 	asm(" nop");
 }
 
+#ifndef ENABLE_AMAZON_COMMON
 void vApplicationMallocFailedHook( void )
 {
     char *pcCurrentTask = "NoTsk";
@@ -44,6 +47,7 @@ void vApplicationMallocFailedHook( void )
     taskDISABLE_INTERRUPTS();
     for( ;; );
 }
+#endif
 
 // defined in port.c
 void vPortUsageFaultHandler( void );
