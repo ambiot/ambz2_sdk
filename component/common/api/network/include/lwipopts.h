@@ -3,7 +3,7 @@
   * This module is a confidential and proprietary property of RealTek and
   * possession or use of this module requires written permission of RealTek.
   *
-  * Copyright(c) 2016, Realtek Semiconductor Corporation. All rights reserved. 
+  * Copyright(c) 2016, Realtek Semiconductor Corporation. All rights reserved.
   *
 ******************************************************************************/
 
@@ -13,7 +13,7 @@
 #include <platform/platform_stdlib.h>
 #include "platform_opts.h"
 #define WIFI_LOGO_CERTIFICATION_CONFIG 0    //for ping 10k test buffer setting
-    
+
 /**
  * SYS_LIGHTWEIGHT_PROT==1: if you want inter-task protection for certain
  * critical regions during buffer allocation, deallocation and memory
@@ -189,26 +189,26 @@ extern unsigned int sys_now(void);
 /* Support TCP Keepalive */
 #define LWIP_TCP_KEEPALIVE				1
 
-/*LWIP_UART_ADAPTER==1: Enable LWIP_UART_ADAPTER when CONFIG_GAGENT is enabled, 
+/*LWIP_UART_ADAPTER==1: Enable LWIP_UART_ADAPTER when CONFIG_GAGENT is enabled,
    because some GAGENT functions denpond on the following macro definitions.*/
 #define LWIP_UART_ADAPTER                   0
 
-#if (defined(CONFIG_MIIO) && (CONFIG_MIIO)) 
-#undef  LWIP_SO_SNDTIMEO        
+#if (defined(CONFIG_MIIO) && (CONFIG_MIIO))
+#undef  LWIP_SO_SNDTIMEO
 #define LWIP_SO_SNDTIMEO                		1
 #endif
 
 #if LWIP_UART_ADAPTER || CONFIG_ETHERNET
-#undef  LWIP_SO_SNDTIMEO        
+#undef  LWIP_SO_SNDTIMEO
 #define LWIP_SO_SNDTIMEO                		1
 
-#undef  SO_REUSE        
+#undef  SO_REUSE
 #define SO_REUSE                        			1
 
-#undef MEMP_NUM_NETCONN                	
+#undef MEMP_NUM_NETCONN
 #define MEMP_NUM_NETCONN                	10
 
-#undef TCP_WND                
+#undef TCP_WND
 #define TCP_WND                                       (4*TCP_MSS)
 
 #define TCP_KEEPIDLE_DEFAULT			10000UL
@@ -218,16 +218,16 @@ extern unsigned int sys_now(void);
 
 #if (defined(CONFIG_EXAMPLE_UART_ATCMD) && (CONFIG_EXAMPLE_UART_ATCMD)) \
     || (defined(CONFIG_EXAMPLE_SPI_ATCMD) && (CONFIG_EXAMPLE_SPI_ATCMD))
-#undef  LWIP_SO_SNDTIMEO        
+#undef  LWIP_SO_SNDTIMEO
 #define LWIP_SO_SNDTIMEO                		1
 
-#undef  SO_REUSE        
+#undef  SO_REUSE
 #define SO_REUSE                        			1
 
 #undef SO_REUSE_RXTOALL
 #define SO_REUSE_RXTOALL				1
 
-#undef MEMP_NUM_NETCONN                	
+#undef MEMP_NUM_NETCONN
 #define MEMP_NUM_NETCONN                	10
 
 #undef MEMP_NUM_TCP_PCB
@@ -236,7 +236,7 @@ extern unsigned int sys_now(void);
 #undef MEMP_NUM_UDP_PCB
 #define MEMP_NUM_UDP_PCB				(MEMP_NUM_NETCONN)
 
-#undef TCP_WND                
+#undef TCP_WND
 #define TCP_WND                                       	(4*TCP_MSS)
 
 #define TCP_KEEPIDLE_DEFAULT			10000UL
@@ -249,7 +249,7 @@ extern unsigned int sys_now(void);
 
 #if defined(CONFIG_EXAMPLE_AMAZON_ALEXA) && CONFIG_EXAMPLE_AMAZON_ALEXA
 
-#undef TCP_WND                
+#undef TCP_WND
 #define TCP_WND                                       	(4*TCP_MSS)
 
 #undef TCP_SND_BUF
@@ -267,6 +267,12 @@ extern unsigned int sys_now(void);
 #define LWIP_STATS 0
 #define LWIP_PROVIDE_ERRNO 1
 
+#ifdef ENABLE_AMAZON_COMMON
+#undef LWIP_STATS
+#define LWIP_STATS 1
+#define LWIP_SNMP                  LWIP_UDP
+#define MIB2_STATS                 LWIP_SNMP
+#endif
 
 /*
    --------------------------------------
@@ -274,13 +280,13 @@ extern unsigned int sys_now(void);
    --------------------------------------
 */
 
-/* 
+/*
 Certain platform allows computing and verifying the IP, UDP, TCP and ICMP checksums by hardware:
  - To use this feature let the following define uncommented.
  - To disable it and process by CPU comment the  the checksum.
 */
 //Do checksum by lwip - WLAN nic does not support Checksum offload
-//#define CHECKSUM_BY_HARDWARE 
+//#define CHECKSUM_BY_HARDWARE
 
 
 #ifdef CHECKSUM_BY_HARDWARE
@@ -289,7 +295,7 @@ Certain platform allows computing and verifying the IP, UDP, TCP and ICMP checks
   /* CHECKSUM_GEN_UDP==0: Generate checksums by hardware for outgoing UDP packets.*/
   #define CHECKSUM_GEN_UDP                0
   /* CHECKSUM_GEN_TCP==0: Generate checksums by hardware for outgoing TCP packets.*/
-  #define CHECKSUM_GEN_TCP                0 
+  #define CHECKSUM_GEN_TCP                0
   /* CHECKSUM_CHECK_IP==0: Check checksums by hardware for incoming IP packets.*/
   #define CHECKSUM_CHECK_IP               0
   /* CHECKSUM_CHECK_UDP==0: Check checksums by hardware for incoming UDP packets.*/
@@ -330,7 +336,7 @@ Certain platform allows computing and verifying the IP, UDP, TCP and ICMP checks
 /**
  * LWIP_SOCKET==1: Enable Socket API (require to use sockets.c)
  */
-#define LWIP_SOCKET                     1	
+#define LWIP_SOCKET                     1
 
 /*
    -----------------------------------
@@ -357,7 +363,7 @@ Certain platform allows computing and verifying the IP, UDP, TCP and ICMP checks
 #define TCPIP_THREAD_PRIO               (configMAX_PRIORITIES - 2)
 
 /* Added by Realtek. For DHCP server reply unicast DHCP packets before the ip actually assigned. */
-#define ETHARP_SUPPORT_STATIC_ENTRIES   1	 
+#define ETHARP_SUPPORT_STATIC_ENTRIES   1
 
 /* Added by Realtek start */
 #define LWIP_RANDOMIZE_INITIAL_LOCAL_PORTS 1
@@ -372,7 +378,7 @@ Certain platform allows computing and verifying the IP, UDP, TCP and ICMP checks
 #undef LWIP_DEBUG
 #define LWIP_RAW                        1
 #define LWIP_AUTOIP                     1
-#define TCPIP_THREAD_NAME              "TCP_IP" 
+#define TCPIP_THREAD_NAME              "TCP_IP"
 
 #define LWIP_IPV6                       0
 #if LWIP_IPV6
@@ -382,7 +388,7 @@ Certain platform allows computing and verifying the IP, UDP, TCP and ICMP checks
 
 /*CONFIG_LIBCOAP_ON is defined to 1 in the lib_coap project options preprocessor defined symbol
 CONFIG_EXAMPLE_COAP_SERVER and CONFIG_EXAMPLE_COAP_CLIENT is defined in platform_opts.h*/
-#if CONFIG_EXAMPLE_COAP_SERVER || CONFIG_EXAMPLE_COAP_CLIENT || (defined(CONFIG_LIBCOAP_ON) && (CONFIG_LIBCOAP_ON))   
+#if CONFIG_EXAMPLE_COAP_SERVER || CONFIG_EXAMPLE_COAP_CLIENT || (defined(CONFIG_LIBCOAP_ON) && (CONFIG_LIBCOAP_ON))
 #if defined LWIP_TIMEVAL_PRIVATE
 #undef LWIP_TIMEVAL_PRIVATE
 #define LWIP_TIMEVAL_PRIVATE            1
@@ -390,7 +396,7 @@ CONFIG_EXAMPLE_COAP_SERVER and CONFIG_EXAMPLE_COAP_CLIENT is defined in platform
 #undef SO_REUSE
 #define SO_REUSE                        1
 #undef MEMP_NUM_NETCONN
-#define MEMP_NUM_NETCONN                20   
+#define MEMP_NUM_NETCONN                20
 #define MEMP_USE_CUSTOM_POOLS           1
 #undef LWIP_IPV6
 #define LWIP_IPV6                       1
@@ -400,13 +406,13 @@ CONFIG_EXAMPLE_COAP_SERVER and CONFIG_EXAMPLE_COAP_CLIENT is defined in platform
 #undef MEMP_NUM_SYS_TIMEOUT
 #define MEMP_NUM_SYS_TIMEOUT            20
 #ifndef xchar
-#define xchar(i)                ((i) < 10 ? '0' + (i) : 'A' + (i) - 10)               
+#define xchar(i)                ((i) < 10 ? '0' + (i) : 'A' + (i) - 10)
 #endif
 #endif
-#endif 
-      
-#if defined(ENABLE_AMAZON_COMMON) 
-#define LWIP_COMPAT_MUTEX_ALLOWED  
+#endif
+
+#if defined(ENABLE_AMAZON_COMMON)
+#define LWIP_COMPAT_MUTEX_ALLOWED
 #define ERRNO   1
 #define LWIP_SO_SNDTIMEO                1
 #define SYS_LIGHTWEIGHT_PROT    1

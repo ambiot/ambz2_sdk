@@ -1,0 +1,11 @@
+FreeRTOS Kernel              10.4.3-LTS-Patch-2	  freertos_v10.4.3 @ 1e084392
+FreeRTOS+TCP                 2.3.2-LTS-Patch-2	  Not Support
+coreMQTT                     1.1.0                coreMQTT @ ff9830a
+coreHTTP                     2.0.0                coreHTTP @ b349f89
+corePKCS11                   3.0.0                corePKCS11 @ cc4129e
+coreJSON                     3.0.0                coreJSON @ 26fe707
+AWS IoT Device Shadow	     1.0.2                device_shadow_for_aws @ 508ce43
+AWS IoT OTA                  3.0.0                ota_for_aws  @ 666241d
+AWS IoT Jobs                 1.1.0                jobs_for_asw @ 1978844
+AWS IoT Device Defender      1.1.0                device_defender_for_aws @ 548b468
+AWS IoT Fleet Provisioning   1.0.1                fleet-provisioning @ c04b33ce
