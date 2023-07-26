@@ -1,3 +1,24 @@
+
+For github usage
+
+[GCC]
+1. git clone -b amazon https://github.com/ambiot/ambz2_sdk.git
+2. git submodule update --init --recursive --depth 1
+3. modified lib_amazon/freertos_LTS/vendors/realtek/boards/amebaZ2/aws_demos/config_files/aws_demo_config.h
+4. cd project/realtek_amebaz2_v0_example/GCC-RELEASE/
+5. make amazon
+6. make is
+
+[IAR]
+1. git clone -b amazon https://github.com/ambiot/ambz2_sdk.git
+2. git submodule update --init --recursive --depth 1
+3. modified lib_amazon/freertos_LTS/vendors/realtek/boards/amebaZ2/aws_demos/config_files/aws_demo_config.h
+4. open project/realtek_amebaz2_v0_example/EWARM-RELEASEProject_is.eww
+5. Build lib_amazon
+6. Build application_is
+
+===============================================================================================================================================
+
 7.1d_patch_amaozn_v202012-LTS_20230322_w_v19_(v02).zip
 
 [Description]
