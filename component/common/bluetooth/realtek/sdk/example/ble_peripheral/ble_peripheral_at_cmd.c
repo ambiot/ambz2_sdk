@@ -46,6 +46,13 @@ extern uint16_t bt_mesh_device_matter_adv_interval;
 #endif
 #endif
 
+#if defined(CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT) && CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT
+#if defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE
+extern T_GAP_DEV_STATE bt_mesh_provisioner_ota_client_gap_dev_state;
+extern uint16_t bt_mesh_provisioner_ota_client_adv_interval;
+#endif
+#endif
+
 static u8 ctoi(char c)
 {
 	if((c >= 'A') && (c <= 'F')) {
@@ -129,6 +136,16 @@ int ble_peripheral_at_cmd_set_adv_int(int argc, char **argv)
 	new_state = bt_mesh_device_matter_gap_dev_state;
 	if (new_state.gap_init_state) {
 		bt_mesh_device_matter_adv_interval = adv_int_min;
+		return 0;
+	}
+#endif
+#endif
+
+#if defined(CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT) && CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT
+#if defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE
+	new_state = bt_mesh_provisioner_ota_client_gap_dev_state;
+	if (new_state.gap_init_state) {
+		bt_mesh_provisioner_ota_client_adv_interval = adv_int_min;
 		return 0;
 	}
 #endif
@@ -351,6 +368,68 @@ int ble_peripheral_send_indi_notification(int argc, char **argv)
 
 	return 0;
 }
+
+int ble_peripheral_parse_param(char *buf, char **argv)
+{
+	int argc = 1;
+	char str_buf[256];
+	memset(str_buf, 0, 256);
+	int str_count = 0;
+	int buf_cnt = 0;
+	static char temp_buf[256];
+	char *buf_pos = temp_buf;
+	memset(temp_buf, 0, sizeof(temp_buf));
+
+	if(buf == NULL)
+		goto exit;
+	strncpy(temp_buf, buf, sizeof(temp_buf));
+
+	while((argc < MAX_ARGC) && (*buf_pos != '\0')) {
+		while((*buf_pos == ',') || (*buf_pos == '[') || (*buf_pos == ']')){
+			if((*buf_pos == ',') && (*(buf_pos+1) == ',')){
+				argv[argc] = NULL;
+				argc++;
+			}
+			*buf_pos = '\0';
+			buf_pos++;
+		}
+
+		if(*buf_pos == '\0')
+			break;
+		else if(*buf_pos == '"'){
+			memset(str_buf,'\0',256);
+			str_count = 0;
+			buf_cnt = 0;
+			*buf_pos = '\0';
+			buf_pos ++;
+			if(*buf_pos == '\0')
+			break;
+			argv[argc] = buf_pos;
+			while((*buf_pos != '"')&&(*buf_pos != '\0')){
+				if(*buf_pos == '\\'){
+				buf_pos ++;
+					buf_cnt++;
+				}
+				str_buf[str_count] = *buf_pos;
+				str_count++;
+				buf_cnt++;
+				buf_pos ++;
+			}
+			*buf_pos = '\0';
+			memcpy(buf_pos-buf_cnt,str_buf,buf_cnt);
+		}
+		else{
+			argv[argc] = buf_pos;
+		}
+		argc++;
+		buf_pos++;
+
+		while( (*buf_pos != ',')&&(*buf_pos != '\0')&&(*buf_pos != '[')&&(*buf_pos != ']') )
+			buf_pos++;
+	}
+exit:
+	return argc;
+}
 #endif
 
 int ble_peripheral_app_handle_at_cmd(uint16_t subtype, void *arg)
@@ -360,7 +439,7 @@ int ble_peripheral_app_handle_at_cmd(uint16_t subtype, void *arg)
 	char *argv[MAX_ARGC] = {0};
 
 	if (arg) {
-		argc = parse_param(arg, argv);
+		argc = ble_peripheral_parse_param(arg, argv);
 	}
 
 	switch (subtype) {

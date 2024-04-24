@@ -22,6 +22,7 @@
 
 #if defined(CONFIG_BT_CENTRAL) && CONFIG_BT_CENTRAL
 #include "ble_central_app_flags.h"
+extern uint8_t ble_central_app_max_links;
 extern void *ble_central_evt_queue_handle;
 extern void *ble_central_io_queue_handle;
 extern T_GAP_DEV_STATE ble_central_gap_dev_state;
@@ -62,6 +63,16 @@ extern int bt_mesh_scatternet_central_app_max_links;
 extern T_GAP_DEV_STATE bt_mesh_device_matter_gap_dev_state;
 extern int bt_mesh_device_matter_scan_state;
 extern int bt_mesh_device_matter_central_app_max_links;
+#endif
+#endif
+
+#if defined(CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT) && CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT
+#if defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE
+#include "bt_mesh_provisioner_ota_client_app_flags.h"
+#include "bt_mesh_provisioner_ota_client_app_task.h"
+extern T_GAP_DEV_STATE bt_mesh_provisioner_ota_client_gap_dev_state;
+extern int bt_mesh_provisioner_ota_client_scan_state;
+extern int bt_mesh_provisioner_ota_client_central_app_max_links;
 #endif
 #endif
 
@@ -556,11 +567,28 @@ void ble_central_at_cmd_send_msg(uint16_t sub_type)
 	}
 #endif
 #endif
+#if defined(CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT) && CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT
+#if defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE
+	if (bt_mesh_provisioner_ota_client_evt_queue_handle != NULL && bt_mesh_provisioner_ota_client_io_queue_handle != NULL) {
+		if (os_msg_send(bt_mesh_provisioner_ota_client_io_queue_handle, &io_msg, 0) == false) {
+			printf("ble central at cmd send msg fail: subtype 0x%x\r\n", io_msg.subtype);
+		} else if (os_msg_send(bt_mesh_provisioner_ota_client_evt_queue_handle, &event, 0) == false) {
+			printf("ble central at cmd send event fail: subtype 0x%x\r\n", io_msg.subtype);
+		}
+	}
+#endif
+#endif
 }
 
 int ble_central_at_cmd_connect(int argc, char **argv)
 {
 	(void) argc;
+#if defined(CONFIG_BT_CENTRAL) && CONFIG_BT_CENTRAL
+	if (ble_central_app_max_links >= BLE_CENTRAL_APP_MAX_LINKS) {
+		printf("central: exceed the max links number\r\n");
+		return 0;
+	}
+#endif
 #if defined(CONFIG_BT_SCATTERNET) && CONFIG_BT_SCATTERNET
 	if(ble_scatternet_central_app_max_links >= BLE_SCATTERNET_CENTRAL_APP_MAX_LINKS){
 		printf("scatternet: exceed the max links number\r\n");
@@ -575,6 +603,12 @@ int ble_central_at_cmd_connect(int argc, char **argv)
 #endif
 #if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
 	if (bt_mesh_device_matter_central_app_max_links >= BT_MESH_DEVICE_MATTER_CENTRAL_APP_MAX_LINKS) {
+		printf("scatternet: exceed the max links number\r\n");
+		return 0;
+	}
+#endif
+#if defined(CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT) && CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT
+	if (bt_mesh_provisioner_ota_client_central_app_max_links >= BT_MESH_PROVISIONER_OTA_CLIENT_CENTRAL_APP_MAX_LINKS) {
 		printf("scatternet: exceed the max links number\r\n");
 		return 0;
 	}
@@ -713,6 +747,9 @@ int ble_central_at_cmd_get_conn_info(int argc, char **argv)
 #endif
 #if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
 	conn_max_link = BT_MESH_DEVICE_MATTER_APP_MAX_LINKS;
+#endif
+#if defined(CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT) && CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT
+	conn_max_link = BT_MESH_PROVISIONER_OTA_CLIENT_APP_MAX_LINKS;
 #endif
 
 	for (conn_id = 0; conn_id < conn_max_link; conn_id++)
@@ -921,9 +958,16 @@ int ble_central_at_cmd_scan(int argc, char **argv)
 	}
 #endif
 
-#if ((defined(CONFIG_BT_MESH_CENTRAL) && CONFIG_BT_MESH_CENTRAL))
+#if ((defined(CONFIG_BT_MESH_CENTRAL) && CONFIG_BT_MESH_CENTRAL) || \
+	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET) || \
+	(defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER) || \
+	(defined(CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT) && CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT))
 #if defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE
+#if defined(CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT) && CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT
+	new_state = bt_mesh_provisioner_ota_client_gap_dev_state;
+#else
 	new_state = bt_mesh_provisioner_multiple_profile_gap_dev_state;
+#endif
 #elif defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE
 #if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
 	new_state = bt_mesh_device_matter_gap_dev_state;
@@ -955,6 +999,8 @@ int ble_central_at_cmd_scan(int argc, char **argv)
 				} while (new_state.gap_scan_state != GAP_SCAN_STATE_SCANNING);
 #if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
 				bt_mesh_device_matter_scan_state = 1;
+#elif defined(CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT) && CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT
+				bt_mesh_provisioner_ota_client_scan_state = 1;
 #else
 				bt_mesh_multiple_profile_scan_state = 1;
 #endif
@@ -963,6 +1009,8 @@ int ble_central_at_cmd_scan(int argc, char **argv)
 			if (scan_is_processing) {
 #if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
 				bt_mesh_device_matter_scan_state = 0;
+#elif defined(CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT) && CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT
+				bt_mesh_provisioner_ota_client_scan_state = 0;
 #else
 				bt_mesh_multiple_profile_scan_state = 0;
 #endif
@@ -1270,6 +1318,68 @@ int ble_central_at_cmd_set_phy(int argc, char **argv)
 	return cause;
 }
 #endif
+
+int ble_central_parse_param(char *buf, char **argv)
+{
+	int argc = 1;
+	char str_buf[256];
+	memset(str_buf, 0, 256);
+	int str_count = 0;
+	int buf_cnt = 0;
+	static char temp_buf[256];
+	char *buf_pos = temp_buf;
+	memset(temp_buf, 0, sizeof(temp_buf));
+
+	if(buf == NULL)
+		goto exit;
+	strncpy(temp_buf, buf, sizeof(temp_buf));
+
+	while((argc < MAX_ARGC) && (*buf_pos != '\0')) {
+		while((*buf_pos == ',') || (*buf_pos == '[') || (*buf_pos == ']')){
+			if((*buf_pos == ',') && (*(buf_pos+1) == ',')){
+				argv[argc] = NULL;
+				argc++;
+			}
+			*buf_pos = '\0';
+			buf_pos++;
+		}
+
+		if(*buf_pos == '\0')
+			break;
+		else if(*buf_pos == '"'){
+			memset(str_buf,'\0',256);
+			str_count = 0;
+			buf_cnt = 0;
+			*buf_pos = '\0';
+			buf_pos ++;
+			if(*buf_pos == '\0')
+			break;
+			argv[argc] = buf_pos;
+			while((*buf_pos != '"')&&(*buf_pos != '\0')){
+				if(*buf_pos == '\\'){
+				buf_pos ++;
+					buf_cnt++;
+				}
+				str_buf[str_count] = *buf_pos;
+				str_count++;
+				buf_cnt++;
+				buf_pos ++;
+			}
+			*buf_pos = '\0';
+			memcpy(buf_pos-buf_cnt,str_buf,buf_cnt);
+		}
+		else{
+			argv[argc] = buf_pos;
+		}
+		argc++;
+		buf_pos++;
+
+		while( (*buf_pos != ',')&&(*buf_pos != '\0')&&(*buf_pos != '[')&&(*buf_pos != ']') )
+			buf_pos++;
+	}
+exit:
+	return argc;
+}
 #endif
 
 int ble_central_app_handle_at_cmd(uint16_t subtype, void *arg)
@@ -1280,7 +1390,7 @@ int ble_central_app_handle_at_cmd(uint16_t subtype, void *arg)
 	char *argv[MAX_ARGC] = {0};
 
 	if (arg) {
-		argc = parse_param(arg, argv);
+		argc = ble_central_parse_param(arg, argv);
 	}
 
 	switch (subtype) {

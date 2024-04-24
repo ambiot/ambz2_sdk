@@ -231,7 +231,7 @@ int bt_config_app_init(void)
 	
 	/*Check WIFI init complete*/
 	if( ! (wifi_is_up(RTW_STA_INTERFACE) || wifi_is_up(RTW_AP_INTERFACE))) {
-		BC_printf("WIFI is disabled\n\r");
+		BC_printf("WIFI is disabled\r\n");
 		return -1;
 	}
 	
@@ -254,7 +254,7 @@ int bt_config_app_init(void)
 	
 	if (new_state.gap_init_state == GAP_INIT_STATE_STACK_READY) {
 		bt_stack_already_on = 1;
-		BC_printf("BT Stack already on\n\r");
+		BC_printf("BT Stack already on\r\n");
 	}
 	else{
 		bt_trace_init();
@@ -293,13 +293,13 @@ void bt_config_app_deinit(void)
 	
 	le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state);
 	if (new_state.gap_init_state != GAP_INIT_STATE_STACK_READY) {
-		BC_printf("BT Stack is not running\n\r");
+		BC_printf("BT Stack is not running\r\n");
 	}
 #if F_BT_DEINIT
 	else {
 		bte_deinit();
 		bt_trace_uninit();
-		BC_printf("BT Stack deinitalized\n\r");
+		BC_printf("BT Stack deinitalized\r\n");
 	}
 #endif
 	set_bt_config_state(BC_DEV_DISABLED); // BT Config off

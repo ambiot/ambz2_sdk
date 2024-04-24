@@ -19,8 +19,12 @@
 #include "mbedtls/ecdh.h"
 #include "mbedtls/ecdsa.h"
 #include "mbedtls/pk.h"
+#if CONFIG_MBEDTLS_VERSION3 != 1 
 #include "mbedtls/pk_internal.h"
 #include "mbedtls/arc4.h"
+#else
+#include "basic_types.h"
+#endif
 
 #if defined(CONFIG_PLATFORM_8710C) && defined(CONFIG_BUILD_SECURE) && (CONFIG_BUILD_SECURE == 1)
 typedef struct ssl_func_stubs_s {
@@ -408,10 +412,12 @@ typedef struct ssl_func_stubs_s {
 	int (*mbedtls_ecjpake_write_round_two)(mbedtls_ecjpake_context *ctx, unsigned char *buf, size_t len, size_t *olen, int (*f_rng)(void *, unsigned char *, size_t), void *p_rng);
 	int (*mbedtls_ecjpake_derive_secret)(mbedtls_ecjpake_context *ctx, unsigned char *buf, size_t len, size_t *olen, int (*f_rng)(void *, unsigned char *, size_t), void *p_rng);
 	// arc4
+#if CONFIG_MBEDTLS_VERSION3 == 0
 	void (*mbedtls_arc4_init)(mbedtls_arc4_context *ctx);
 	void (*mbedtls_arc4_free)(mbedtls_arc4_context *ctx);
 	void (*mbedtls_arc4_setup)(mbedtls_arc4_context *ctx, const unsigned char *key, unsigned int keylen);
 	int (*mbedtls_arc4_crypt)(mbedtls_arc4_context *ctx, size_t length, const unsigned char *input, unsigned char *output);
+#endif
 	// ecdh
 	int (*mbedtls_ecdh_gen_public)(mbedtls_ecp_group *grp, mbedtls_mpi *d, mbedtls_ecp_point *Q, int (*f_rng)(void *, unsigned char *, size_t), void *p_rng);
 	int (*mbedtls_ecdh_compute_shared)(mbedtls_ecp_group *grp, mbedtls_mpi *z, const mbedtls_ecp_point *Q, const mbedtls_mpi *d, int (*f_rng)(void *, unsigned char *, size_t), void *p_rng);

@@ -41,6 +41,7 @@
 #if LWIP_NETCONN /* don't build if not configured for use in lwipopts.h */
 
 #include "lwip/priv/api_msg.h"
+#include "lwip/priv/tcp_priv.h"
 
 #include "lwip/ip.h"
 #include "lwip/ip_addr.h"
@@ -856,6 +857,14 @@ lwip_netconn_do_close_internal(struct netconn *conn  WRITE_DELAYED_PARAM)
   } else {
     close = 0;
   }
+
+  //modified by realtek
+#if defined(LWIP_TCP_PCB_PURGE_IMMEDIATELY_ON_CLOSE) && LWIP_TCP_PCB_PURGE_IMMEDIATELY_ON_CLOSE
+  if (close) {
+    tcp_pcb_purge(tpcb);
+    tpcb->snd_queuelen = 0;
+  }
+#endif
 
   /* Set back some callback pointers */
   if (close) {

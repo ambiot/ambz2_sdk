@@ -153,7 +153,7 @@ int read_uart_atcmd_setting_from_system_data(UART_LOG_CONF* uartconf)
 
 	if(load_default == _TRUE){
 		// load default setting
-		uartconf->BaudRate = 38400;
+		uartconf->BaudRate = 115200;
 		uartconf->DataBits = 8;
 		uartconf->Parity = ParityNone;
 		uartconf->StopBits = 1;
@@ -394,7 +394,7 @@ void uart_irq(uint32_t id, SerialIrq event)
 		if(buf_count == 4){
 			// if this is a data command with hex data, then '\n' should not be treated
 			// as the end of command
-			if(strncmp(temp_buf, "ATPT", C_NUM_AT_CMD)==0){
+			if(strncmp((const char *)temp_buf, "ATPT", C_NUM_AT_CMD)==0){
 				is_data_cmd = _TRUE;
 			}
 		}
@@ -494,7 +494,7 @@ void uart_irq(uint32_t id, SerialIrq event)
 			if((buf_count == 0) && (rc != 'A')){
 				// some consoles send "\r\n" for enter, 
 				//so skip '\n' here to prevent ERROR message each time it sends command
-				if(gAT_Echo == 1 && rc != KEY_NL){
+				if(gAT_Echo == 1 && rc != KEY_NL && rc!= NULL){
 					uart_at_send_string("\r\nERROR:command should start with 'A'"STR_END_OF_ATCMD_RET);
 				}
 				return;
@@ -586,8 +586,8 @@ int uart_atcmd_module_init(void){
 
 void example_uart_atcmd(void)
 {
-	//if(xTaskCreate(uart_atcmd_thread, ((const char*)"uart_atcmd_thread"), 1024, NULL, tskIDLE_PRIORITY + 1 , NULL) != pdPASS)
-	//	printf("\n\r%s xTaskCreate(uart_atcmd_thread) failed", __FUNCTION__);
+	// if(xTaskCreate(uart_atcmd_thread, ((const char*)"uart_atcmd_thread"), 1024, NULL, tskIDLE_PRIORITY + 1 , NULL) != pdPASS)
+	// 	printf("\n\r%s xTaskCreate(uart_atcmd_thread) failed", __FUNCTION__);
 	p_wlan_init_done_callback = uart_atcmd_module_init;
 	return;
 }

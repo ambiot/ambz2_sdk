@@ -28,7 +28,7 @@ static void example_socket_select_thread(void *param)
 	struct sockaddr_in server_addr;
 	int server_fd = -1;
 	int socket_used[MAX_SOCKETS];
-
+restart:
 	// Delay to wait for IP by DHCP
   	while(wifi_is_ready_to_transceive(RTW_STA_INTERFACE) != RTW_SUCCESS){
 		printf("\n\rWait for WIFI connection ...\r\n");
@@ -40,6 +40,9 @@ static void example_socket_select_thread(void *param)
 
 #if CONNECT_REMOTE
 reconnect:
+	if (wifi_is_connected_to_ap() == RTW_ERROR)
+		goto restart;
+		
 	if((remote_fd = socket(AF_INET, SOCK_STREAM, 0)) >= 0) {
 		remote_addr.sin_family = AF_INET;
 		remote_addr.sin_addr.s_addr = inet_addr(REMOTE_HOST);

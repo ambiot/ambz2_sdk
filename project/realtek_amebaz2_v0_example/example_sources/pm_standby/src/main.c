@@ -49,26 +49,26 @@ static gpio_irq_t my_GPIO_IRQ;
 static serial_t my_UART;
 volatile char rc = 0;
 
-static void uart_send_string (serial_t *my_UART, char *pstr)
+static void uart_send_string(serial_t *my_UART, char *pstr)
 {
-    unsigned int i = 0;
-    while (*(pstr+i) != 0) {
-        serial_putc(my_UART, *(pstr+i));
-        i++;
-    }
+	unsigned int i = 0;
+	while (*(pstr + i) != 0) {
+		serial_putc(my_UART, *(pstr + i));
+		i++;
+	}
 }
 
-static void uart_irq (uint32_t id, SerialIrq event)
+static void uart_irq(uint32_t id, SerialIrq event)
 {
-    serial_t *my_UART = (void*)id;
-    if (event == RxIrq) {
-        rc = serial_getc(my_UART);
-        serial_putc(my_UART, rc);
-    }
-    if((event == TxIrq) && (rc != 0)){
-        uart_send_string(my_UART, "\r\n8710c$ \r\n");
-        rc = 0;
-    }
+	serial_t *my_UART = (void *)id;
+	if (event == RxIrq) {
+		rc = serial_getc(my_UART);
+		serial_putc(my_UART, rc);
+	}
+	if ((event == TxIrq) && (rc != 0)) {
+		uart_send_string(my_UART, "\r\n8710c$ \r\n");
+		rc = 0;
+	}
 }
 #endif
 
@@ -78,9 +78,9 @@ static void uart_irq (uint32_t id, SerialIrq event)
 #define WAKEUP_GTIMER TIMER3
 static gtimer_t my_Gtimer;
 
-static void Gtimer_timeout_handler (uint32_t id)
+static void Gtimer_timeout_handler(uint32_t id)
 {
-    dbg_printf("You will never see this message   \r\n");
+	dbg_printf("You will never see this message   \r\n");
 }
 #endif
 
@@ -92,81 +92,83 @@ static void Gtimer_timeout_handler (uint32_t id)
 static pwmout_t my_PWM;
 extern void pwmout_period_int(pwmout_t *obj, pwm_period_callback_t callback, u8 enable);
 
-static void PWM_period_handler (uint32_t id)
+static void PWM_period_handler(uint32_t id)
 {
-    dbg_printf("You will never see this message   \r\n");
+	dbg_printf("You will never see this message   \r\n");
+	pwmout_period_int(&my_PWM, 0, 0); // disable interrupt to sync the count
 }
 #endif
 
 
-int main (void)
+int main(void)
 {
-    dbg_printf("\r\n   PM_Standby DEMO   \r\n");
-    //dbg_printf("Wait 10s to enter Standby\r\n");
-    //hal_delay_us(10 * 1000 * 1000);
+	dbg_printf("\r\n   PM_Standby DEMO   \r\n");
+	//dbg_printf("Wait 10s to enter Standby\r\n");
+	//hal_delay_us(10 * 1000 * 1000);
 
 #if (WAKEUP_SOURCE == 0)
-    dbg_printf("Enter Standby, wake up by Stimer \r\n");
-    for (int i = 5; i > 0; i--) {
-        dbg_printf("Enter Standby by %d seconds \r\n", i);
-        hal_delay_us(1 * 1000 * 1000);
-    }
-    Standby(SLP_STIMER, SLEEP_DURATION, CLOCK, 0);
+	dbg_printf("Enter Standby, wake up by Stimer \r\n");
+	for (int i = 5; i > 0; i--) {
+		dbg_printf("Enter Standby by %d seconds \r\n", i);
+		hal_delay_us(1 * 1000 * 1000);
+	}
+	Standby(SLP_STIMER, SLEEP_DURATION, CLOCK, 0);
 
 #elif (WAKEUP_SOURCE == 1)
-    dbg_printf("Enter Standby, wake up by GPIO");
+	dbg_printf("Enter Standby, wake up by GPIO");
 //if there is no GPIO wakeup source please set a GPIO IRQ for wake up
 #if (GPIO_WAKEUP_SOURCE  == 0)
-    gpio_irq_init(&my_GPIO_IRQ, WAKUPE_GPIO_PIN, NULL, (uint32_t)&my_GPIO_IRQ);
-    gpio_irq_pull_ctrl(&my_GPIO_IRQ, PullNone);
-    gpio_irq_set(&my_GPIO_IRQ, IRQ_FALL, 1);
-    dbg_printf("_A%d \r\n", WAKUPE_GPIO_PIN);
+	gpio_irq_init(&my_GPIO_IRQ, WAKUPE_GPIO_PIN, NULL, (uint32_t)&my_GPIO_IRQ);
+	gpio_irq_pull_ctrl(&my_GPIO_IRQ, PullNone);
+	gpio_irq_set(&my_GPIO_IRQ, IRQ_FALL, 1);
+	dbg_printf("_A%d \r\n", WAKUPE_GPIO_PIN);
 #else
-    dbg_printf("   \r\n");
+	dbg_printf("   \r\n");
 #endif
-    for (int i = 5; i > 0; i--) {
-        dbg_printf("Enter Standby by %d seconds \r\n", i);
-        hal_delay_us(1 * 1000 * 1000);
-    }
-    Standby(SLP_GPIO, SLEEP_DURATION, CLOCK, 17);
+	for (int i = 5; i > 0; i--) {
+		dbg_printf("Enter Standby by %d seconds \r\n", i);
+		hal_delay_us(1 * 1000 * 1000);
+	}
+	Standby(SLP_GPIO, SLEEP_DURATION, CLOCK, 17);
 
 #elif (WAKEUP_SOURCE == 2)
-    dbg_printf("Enter Standby, wake up by UART \r\n");
-    serial_init(&my_UART, UART_TX, UART_RX);
-    serial_baud(&my_UART, 38400);
-    serial_format(&my_UART, 8, ParityNone, 1);
-    serial_irq_handler(&my_UART, uart_irq, (uint32_t)&my_UART);
-    serial_irq_set(&my_UART, RxIrq, 1);
-    serial_irq_set(&my_UART, TxIrq, 1);
-    for (int i = 5; i > 0; i--) {
-        dbg_printf("Enter Standby by UART %d seconds \r\n", i);
-        hal_delay_us(1 * 1000 * 1000);
-    }
-    Standby(SLP_UART, SLEEP_DURATION, CLOCK, 0);
+	dbg_printf("Enter Standby, wake up by UART \r\n");
+	serial_init(&my_UART, UART_TX, UART_RX);
+	serial_baud(&my_UART, 38400);
+	serial_format(&my_UART, 8, ParityNone, 1);
+	serial_irq_handler(&my_UART, uart_irq, (uint32_t)&my_UART);
+	serial_irq_set(&my_UART, RxIrq, 1);
+	serial_irq_set(&my_UART, TxIrq, 1);
+	for (int i = 5; i > 0; i--) {
+		dbg_printf("Enter Standby by UART %d seconds \r\n", i);
+		hal_delay_us(1 * 1000 * 1000);
+	}
+	Standby(SLP_UART, SLEEP_DURATION, CLOCK, 0);
 
 #elif (WAKEUP_SOURCE == 3)
-    dbg_printf("Enter Standby, wake up by Gtimer \r\n");
-    gtimer_init(&my_Gtimer, WAKEUP_GTIMER);
-    for (int i = 5; i > 0; i--) {
-        dbg_printf("Enter Standby by %d seconds \r\n", i);
-        hal_delay_us(1 * 1000 * 1000);
-    }
-    gtimer_start_one_shout(&my_Gtimer, GTIMER_SLEEP_DURATION, (void*)Gtimer_timeout_handler, NULL);
-    Standby(SLP_GTIMER, SLEEP_DURATION, CLOCK, 0);
+	dbg_printf("Enter Standby, wake up by Gtimer \r\n");
+	gtimer_init(&my_Gtimer, WAKEUP_GTIMER);
+	for (int i = 5; i > 0; i--) {
+		dbg_printf("Enter Standby by %d seconds \r\n", i);
+		hal_delay_us(1 * 1000 * 1000);
+	}
+	gtimer_start_one_shout(&my_Gtimer, GTIMER_SLEEP_DURATION, (void *)Gtimer_timeout_handler, NULL);
+	Standby(SLP_GTIMER, SLEEP_DURATION, CLOCK, 0);
 
 #elif (WAKEUP_SOURCE == 4)
-    dbg_printf("Enter Standby, wake up by PWM \r\n");
-    pwmout_init(&my_PWM, WAKEUP_PWM_PIN);
-    pwmout_period_int(&my_PWM, 0, 0);
-    pwmout_period(&my_PWM, PWM_SLEEP_DURATION);
-    for (int i = 5; i > 0; i--) {
-        dbg_printf("Enter Standby by %d seconds \r\n", i);
-        hal_delay_us(1 * 1000 * 1000);
-    }
-    pwmout_period_int(&my_PWM, (pwm_period_callback_t)PWM_period_handler, 1);
-    Standby(SLP_PWM, SLEEP_DURATION, CLOCK, 0);
+	dbg_printf("Enter Standby, wake up by PWM \r\n");
+	pwmout_init(&my_PWM, WAKEUP_PWM_PIN);
+	pwmout_period_int(&my_PWM, 0, 0);
+	pwmout_period(&my_PWM, PWM_SLEEP_DURATION);
+	pwmout_start(&my_PWM);
+	for (int i = 5; i > 0; i--) {
+		dbg_printf("Enter Standby by %d seconds \r\n", i);
+		hal_delay_us(1 * 1000 * 1000);
+	}
+	pwmout_period_int(&my_PWM, (pwm_period_callback_t)PWM_period_handler, 1);
+	Standby(SLP_PWM, SLEEP_DURATION, CLOCK, 0);
 #endif
 
-    dbg_printf("You won't see this log \r\n");
-    while(1);
+	dbg_printf("You won't see this log \r\n");
+	while (1);
 }

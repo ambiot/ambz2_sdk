@@ -34,6 +34,7 @@ uint32_t offer_ip = 0;
 uint32_t server_ip = 0;
 #endif
 #define WIFI_RETRYCOUNT 5
+int wifi_retry_connect = 0;//For fast wifi connect retry
 /*
 * Usage:
 *       wifi connection indication trigger this function to save current

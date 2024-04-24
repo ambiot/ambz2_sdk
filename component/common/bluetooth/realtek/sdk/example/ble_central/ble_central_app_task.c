@@ -53,6 +53,7 @@ void *ble_central_evt_queue_handle;  //!< Event queue handle
 void *ble_central_io_queue_handle;   //!< IO queue handle
 
 extern T_GAP_DEV_STATE ble_central_gap_dev_state;
+extern uint8_t ble_central_app_max_links;
 
 /*============================================================================*
  *                              Functions
@@ -127,6 +128,8 @@ void ble_central_app_task_deinit(void)
 	ble_central_gap_dev_state.gap_adv_state = 0;
 	ble_central_gap_dev_state.gap_scan_state = 0;
 	ble_central_gap_dev_state.gap_conn_state = 0;
+
+	ble_central_app_max_links = 0;
 
 }
 
