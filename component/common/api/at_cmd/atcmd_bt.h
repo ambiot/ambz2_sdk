@@ -10,8 +10,7 @@
 #define MESH_BIT            0x02
 #define STACK_BIT           0x01
 
-typedef enum
-{
+typedef enum {
 	BT_ATCMD_SCAN,
 	BT_ATCMD_CONNECT,
 	BT_ATCMD_DISCONNECT,
@@ -32,8 +31,7 @@ typedef enum
 	BT_ATCMD_MAX
 } BT_AT_CMD_TYPE;
 
-typedef enum
-{
+typedef enum {
 	BT_COMMAND_CENTRAL,
 	BT_COMMAND_PERIPHERAL,
 	BT_COMMAND_SCATTERNET,

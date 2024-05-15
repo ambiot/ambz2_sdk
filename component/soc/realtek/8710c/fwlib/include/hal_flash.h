@@ -50,6 +50,7 @@ extern "C"
 #define FLASH_TYPE_ZBIT 10
 #define FLASH_TYPE_TSTE 11
 #define FLASH_TYPE_PUYA 12
+#define FLASH_TYPE_GTEC 13
 
 #define FLASH_CMD_ENSO      0xB1            // enter secured OTP
 #define FLASH_CMD_EXSO      0xC1            // exit secured OTP

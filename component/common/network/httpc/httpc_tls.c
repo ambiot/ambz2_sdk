@@ -45,7 +45,11 @@ static int _verify_func(void *data, x509_crt *crt, int depth, int *flags)
 }
 
 #elif (HTTPC_USE_TLS == HTTPC_TLS_MBEDTLS)
-
+#if CONFIG_MBEDTLS_VERSION3 == 1
+#include "mbedtls/build_info.h"
+#else
+#include "mbedtls/config.h"
+#endif
 #include "mbedtls/ssl.h"
 #include "mbedtls/platform.h"
 #include "mbedtls/net_sockets.h"
@@ -199,7 +203,10 @@ exit:
 		memset(tls, 0, sizeof(struct httpc_tls));
 		mbedtls_x509_crt_init(&tls->ca);
 		mbedtls_x509_crt_init(&tls->cert);
+
+#if !defined(configENABLE_TRUSTZONE) || (configENABLE_TRUSTZONE == 0) || !defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) || (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 0)
 		mbedtls_pk_init(&tls->key);
+#endif
 		mbedtls_ssl_init(ssl);
 		mbedtls_ssl_config_init(conf);
 
@@ -222,7 +229,28 @@ exit:
 				ret = -1;
 				goto exit;
 			}
+
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1) && defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) && (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 1)
+			extern mbedtls_pk_context* NS_ENTRY secure_mbedtls_pk_parse_key(void);         
+			tls->key = secure_mbedtls_pk_parse_key();
+
+			if(tls->key == NULL){
+				ret = -1;
+				goto exit;
+			}
+
+			if((ret = mbedtls_ssl_conf_own_cert(conf, &tls->cert, tls->key)) != 0) {
+				printf("\n[HTTPC] ERROR: mbedtls_ssl_conf_own_cert %d\n", ret);
+				ret = -1;
+				goto exit;
+			}
+#else
+
+#if CONFIG_MBEDTLS_VERSION3 == 1
+			if((ret = mbedtls_pk_parse_key(&tls->key, (const unsigned char *) client_key, strlen(client_key) + 1, NULL, 0, rtw_get_random_bytes_f_rng, 1 )) != 0) {
+#else
 			if((ret = mbedtls_pk_parse_key(&tls->key, (const unsigned char *) client_key, strlen(client_key) + 1, NULL, 0)) != 0) {
+#endif
 				printf("\n[HTTPC] ERROR: mbedtls_pk_parse_key %d\n", ret);
 				ret = -1;
 				goto exit;
@@ -233,6 +261,7 @@ exit:
 				ret = -1;
 				goto exit;
 			}
+#endif
 		}
 
 		if(ca_certs) {
@@ -274,9 +303,17 @@ exit:
 	if(ret && tls) {
 		mbedtls_ssl_free(&tls->ctx);
 		mbedtls_ssl_config_free(&tls->conf);
+
 		mbedtls_x509_crt_free(&tls->ca);
 		mbedtls_x509_crt_free(&tls->cert);  
+
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1) && defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) && (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 1)
+		extern void NS_ENTRY secure_mbedtls_pk_free(mbedtls_pk_context *pk);
+		secure_mbedtls_pk_free(tls->key);
+#else
 		mbedtls_pk_free(&tls->key);
+#endif
+
 		free(tls);
 		tls = NULL;
 	}
@@ -300,7 +337,14 @@ void httpc_tls_free(void *tls_in)
 	mbedtls_ssl_config_free(&tls->conf);
 	mbedtls_x509_crt_free(&tls->ca);
 	mbedtls_x509_crt_free(&tls->cert);
+
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1) && defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) && (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 1)
+	extern void NS_ENTRY secure_mbedtls_pk_free(mbedtls_pk_context *pk);
+	secure_mbedtls_pk_free(tls->key);
+#else
 	mbedtls_pk_free(&tls->key);
+#endif
+
 	free(tls);
 #endif
 }

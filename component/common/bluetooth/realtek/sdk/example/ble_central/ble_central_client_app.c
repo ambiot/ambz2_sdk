@@ -49,6 +49,7 @@ T_CLIENT_ID   ble_central_gcs_client_id;         /**< General Common Services cl
     * @{
     */
 T_GAP_DEV_STATE ble_central_gap_dev_state = {0, 0, 0, 0, 0};                /**< GAP device state */
+uint8_t ble_central_app_max_links = 0;
 /*============================================================================*
  *                              Functions
  *============================================================================*/
@@ -122,7 +123,7 @@ void ble_central_app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, uint16_t ca
 #endif
             /*stack ready*/
             gap_get_param(GAP_PARAM_BD_ADDR, bt_addr);
-            printf("local bd addr: 0x%2x:%2x:%2x:%2x:%2x:%2x\r\n",
+            printf("local bd addr: 0x%02x:%02x:%02x:%02x:%02x:%02x\r\n",
                             bt_addr[5],
                             bt_addr[4],
                             bt_addr[3],
@@ -181,6 +182,9 @@ void ble_central_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE new
             }
 
             printf("Disconnect conn_id %d, cause 0x%x\r\n", conn_id, disc_cause);
+            if (ble_central_app_link_table[conn_id].role == GAP_LINK_ROLE_MASTER) {
+                ble_central_app_max_links--;
+            }
             memset(&ble_central_app_link_table[conn_id], 0, sizeof(T_APP_LINK));
         }
         break;
@@ -190,6 +194,8 @@ void ble_central_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE new
             le_get_conn_addr(conn_id, ble_central_app_link_table[conn_id].bd_addr,
                              (void *)&ble_central_app_link_table[conn_id].bd_type);
             printf("Connected success conn_id %d\r\n", conn_id);
+            ble_central_app_link_table[conn_id].role = GAP_LINK_ROLE_MASTER;
+            ble_central_app_max_links++;
 #if F_BT_LE_5_0_SET_PHY_SUPPORT
 			{
 			uint8_t tx_phy;
@@ -1118,7 +1124,7 @@ T_APP_RESULT ble_central_gcs_client_callback(T_CLIENT_ID client_id, uint8_t conn
                 printf("INDICATION: value ");
                 for(int i=0; i < p_gcs_cb_data->cb_content.notif_ind.value_size; i++)
                     printf("0x%02x ", *(p_gcs_cb_data->cb_content.notif_ind.p_value+ i));
-                printf("\r\nr");
+                printf("\r\n");
             }
             else
             {

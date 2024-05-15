@@ -134,7 +134,7 @@ void ble_scatternet_app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, uint16_t
 #endif
             /*stack ready*/
             gap_get_param(GAP_PARAM_BD_ADDR, bt_addr);
-            printf("local bd addr: 0x%2x:%2x:%2x:%2x:%2x:%2x\r\n",
+            printf("local bd addr: 0x%02x:%02x:%02x:%02x:%02x:%02x\r\n",
                             bt_addr[5],
                             bt_addr[4],
                             bt_addr[3],

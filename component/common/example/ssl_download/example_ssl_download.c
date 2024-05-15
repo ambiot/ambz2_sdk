@@ -9,6 +9,10 @@
 #include "platform_opts.h"
 
 #define STACKSIZE     2048
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1) && defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) && (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 1)
+#include "device_lock.h"
+#endif
+
 #if CONFIG_USE_POLARSSL
 
 #include <lwip/sockets.h>
@@ -172,6 +176,15 @@ static void example_ssl_download_thread(void *param)
 	mbedtls_net_context server_fd;
 	mbedtls_ssl_context ssl;
 	mbedtls_ssl_config conf;
+
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1) && defined(CONFIG_SSL_CLIENT_PRIVATE_IN_TZ) && (CONFIG_SSL_CLIENT_PRIVATE_IN_TZ == 1)
+	extern void rtw_create_secure_context(u32 secure_stack_size);
+	rtw_create_secure_context(STACKSIZE*2);
+	extern int NS_ENTRY secure_mbedtls_platform_set_calloc_free(void);
+	secure_mbedtls_platform_set_calloc_free();
+	extern void NS_ENTRY secure_set_ns_device_lock(void (*device_mutex_lock_func)(uint32_t), void (*device_mutex_unlock_func)(uint32_t));
+	secure_set_ns_device_lock(device_mutex_lock, device_mutex_unlock);
+#endif
 
 	// Delay to wait for IP by DHCP
 	vTaskDelay(10000);

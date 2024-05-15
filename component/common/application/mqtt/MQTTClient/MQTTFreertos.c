@@ -221,6 +221,7 @@ void FreeRTOS_disconnect(Network* n)
 void NetworkInit(Network* n)
 {
 	n->my_socket = -1;
+	n->my_port = 1883;
 	n->mqttread = FreeRTOS_read;
 	n->mqttwrite = FreeRTOS_write;
 	n->disconnect = FreeRTOS_disconnect;
@@ -566,6 +567,7 @@ void FreeRTOS_disconnect(Network* n)
 void NetworkInit(Network* n)
 {
 	n->my_socket = -1;
+	n->my_port = 1883;
 	n->mqttread = FreeRTOS_read;
 	n->mqttwrite = FreeRTOS_write;
 	n->disconnect = FreeRTOS_disconnect;
@@ -798,10 +800,11 @@ int NetworkConnect(Network* n, char* addr, int port)
 #else
 
 #if CONFIG_MBEDTLS_VERSION3 == 1
-			if ( mbedtls_pk_parse_key(client_rsa, (const unsigned char *)n->private_key, strlen(n->private_key)+1, NULL, 0, rtw_get_random_bytes_f_rng, 1 ) != 0 ) {
+			if ( mbedtls_pk_parse_key(client_rsa, (const unsigned char *)n->private_key, strlen(n->private_key)+1, NULL, 0, rtw_get_random_bytes_f_rng, 1 ) != 0 )
 #else
-			if ( mbedtls_pk_parse_key(client_rsa, (const unsigned char *)n->private_key, strlen(n->private_key)+1, NULL, 0) != 0 ) {
+			if ( mbedtls_pk_parse_key(client_rsa, (const unsigned char *)n->private_key, strlen(n->private_key)+1, NULL, 0) != 0 )
 #endif
+			{
 				mqtt_printf(MQTT_DEBUG, "parse client_rsa failed!");
 				goto err;
 			}

@@ -33,6 +33,7 @@
 #include "platform_opts.h"
 #include "hal_sys_ctrl.h"
 #include "partition_rtl8710c.h"
+#include "crypto_api.h"
 
 extern void shell_cmd_init (void);
 extern void shell_task (void);
@@ -40,7 +41,7 @@ extern void bus_idau_setup(uint32_t idau_idx, uint32_t start_addr, uint32_t end_
 
 //void app_start (void) __attribute__ ((noreturn));
 
-#if !defined ( __CC_ARM ) && !(defined(__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)) /* ARM Compiler 4/5 */
+#if !defined(PLATFORM_OHOS) && !defined ( __CC_ARM ) && !(defined(__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)) /* ARM Compiler 4/5 */
 // for __CC_ARM compiler, it will add a __ARM_use_no_argv symbol for every main() function, that cause linker report error 
 /// default main
 __weak int main (void)
@@ -139,30 +140,115 @@ void sau_setup(ns_region_t *ns_region)
 }
 #endif
 
+
+#if defined (__ICCARM__)
+extern void *__iar_cstart_call_ctors(void *ptr);
+#elif defined (__GNUC__)
+extern void __libc_init_array(void);
+void _init(void){}
+#endif
+
+#if defined(CONFIG_BUILD_SECURE)
+NS_ENTRY
+#endif
+void __secure_init_array( void )
+{
+#if defined (__ICCARM__)
+    // __iar_data_init3 replaced by __iar_cstart_call_ctors, just do c++ constructor
+    __iar_cstart_call_ctors(NULL);
+#elif defined (__GNUC__)
+    __libc_init_array();
+#endif
+}
+
+#ifdef PLATFORM_OHOS
+#include "los_tick_pri.h"
+extern VOID osPendSV(VOID);
+extern VOID OsHwiDefaultHandler(VOID);
+extern VOID SysTick_Handler(VOID);
+#endif
+extern int_vector_t ram_vector_table[];
+
+static u32 rand_seed[4]; //z1, z2, z3, z4,
+static u32 rand_first;
+u32 Rand (void)
+{
+    u32 b;
+
+    if (!rand_first) {
+        rand_seed[0] = 12345;
+        rand_seed[1] = 12345;
+        rand_seed[2] = 12345;
+        rand_seed[3] = 12345;
+        rand_first = 1;
+    }
+
+    b  = ((rand_seed[0] << 6) ^ rand_seed[0]) >> 13;
+    rand_seed[0] = ((rand_seed[0] & 4294967294U) << 18) ^ b;
+    b  = ((rand_seed[1] << 2) ^ rand_seed[1]) >> 27;
+    rand_seed[1] = ((rand_seed[1] & 4294967288U) << 2) ^ b;
+    b  = ((rand_seed[2]<< 13) ^ rand_seed[2]) >> 21;
+    rand_seed[2] = ((rand_seed[2] & 4294967280U) << 7) ^ b;
+    b  = ((rand_seed[3] << 3) ^ rand_seed[3]) >> 12;
+    rand_seed[3] = ((rand_seed[3] & 4294967168U) << 13) ^ b;
+    return (rand_seed[0] ^ rand_seed[1] ^ rand_seed[2] ^ rand_seed[3]);
+}
+
+static void app_gen_random_seed(void)
+{
+    u8 random[4] = {0};
+    u32 data;
+      /* to reset gtimer8 */
+    hal_timer_adapter_t ls_timer;
+    hal_timer_init (&ls_timer, GTimer8);
+    hal_timer_deinit(&ls_timer);
+    crypto_init();
+    crypto_random_generate((unsigned char *)random, 4);
+    rand_first = 1;
+    data = (random[3] << 24) | (random[2] << 16) | (random[1] << 8) | (random[0]);
+    rand_seed[0] = data;
+    rand_seed[1] = data;
+    rand_seed[2] = data;
+    rand_seed[3] = data;
+}
+
+#if defined(CONFIG_BUILD_SECURE)
+SECTION_NS_ENTRY_FUNC
+void NS_ENTRY app_gen_random_seed_nsc(void)
+#else
+void app_gen_random_seed_nsc(void)
+#endif
+{
+    app_gen_random_seed();
+}
+
 void app_start (void)
 {
 	dbg_printf ("Build @ %s, %s\r\n", __TIME__, __DATE__);
 
 #if (defined(CONFIG_MIIO)&&(CONFIG_MIIO))
-	extern int_vector_t ram_vector_table[];
 	ram_vector_table[3] = (int_vector_t)HalHardFaultHandler_Patch_asm;
 	ram_vector_table[4] = (int_vector_t)HalHardFaultHandler_Patch_asm;
 	ram_vector_table[5] = (int_vector_t)HalHardFaultHandler_Patch_asm;
 	ram_vector_table[6] = (int_vector_t)HalHardFaultHandler_Patch_asm;
 	ram_vector_table[7] = (int_vector_t)HalHardFaultHandler_Patch_asm;
 #endif
-	
-#if defined (__ICCARM__)
-	// __iar_data_init3 replaced by __iar_cstart_call_ctors, just do c++ constructor
-	//__iar_cstart_call_ctors(NULL);
+#ifdef PLATFORM_OHOS	
+	ram_vector_table[2] = (int_vector_t)OsHwiDefaultHandler;
+	ram_vector_table[3] = (int_vector_t)OsHwiDefaultHandler;
+	ram_vector_table[4] = (int_vector_t)OsHwiDefaultHandler;
+	ram_vector_table[5] = (int_vector_t)OsHwiDefaultHandler;
+	ram_vector_table[6] = (int_vector_t)OsHwiDefaultHandler;
+	ram_vector_table[14] = (int_vector_t)osPendSV;
+	ram_vector_table[15] = (int_vector_t)SysTick_Handler;
 #endif
 
+	__secure_init_array();
 	shell_cmd_init ();
+	app_gen_random_seed();
 	main();
 #if defined ( __ICCARM__ )
 	// for compile issue, If user never call this function, Liking fail
 	__iar_data_init3();
 #endif
 }
-
-

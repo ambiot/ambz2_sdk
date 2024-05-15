@@ -362,6 +362,7 @@ Certain platform allows computing and verifying the IP, UDP, TCP and ICMP checks
 /* Added by Realtek start */
 #define LWIP_RANDOMIZE_INITIAL_LOCAL_PORTS 1
 #define LWIP_DNS_LEGACY_SUPPORT 0
+#define LWIP_TCP_PCB_PURGE_IMMEDIATELY_ON_CLOSE 1 //Purge TCP PCB immediately upon socket closure
 /* Added by Realtek end */
 
 /* Extra options for lwip_v2.0.2 which should not affect lwip_v1.4.1 */

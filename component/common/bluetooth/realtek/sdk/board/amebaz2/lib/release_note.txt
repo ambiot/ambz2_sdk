@@ -2,6 +2,12 @@
 /*
  * Release Note
  */
+	v1.0.1.243
+	2023/03/31
+	1. Modify max mtu size for gap_config API.
+	2. Adjust APIs in F_BT_GAP_KEY_MANAGER_SUPPORT.
+	3. Modify annotation of le_update_conn_param.
+	
 	v1.0.1.186
 	2022/09/28
 	1. Add API le_bond_get_pair_procedure_type.

@@ -7,6 +7,10 @@
 #include "task.h"
 #include "semphr.h"
 
+#if defined(CONFIG_PLATFORM_8710C)
+#include "ota_8710c.h"
+#endif
+
 #if defined(CONFIG_PLATFORM_8711B)
 extern const update_file_img_id OtaImgId[2];
 u8 uart_signature[9] = {0};
@@ -661,6 +665,8 @@ void auto_reboot(void)
 
 	/* CPU reset: Cortex-M3 SCB->AIRCR*/
 	NVIC_SystemReset();
+#elif defined(CONFIG_PLATFORM_8710C)
+        ota_platform_reset();
 #else
 	// Set processor clock to default before system reset
 	HAL_WRITE32(SYSTEM_CTRL_BASE, 0x14, 0x00000021);

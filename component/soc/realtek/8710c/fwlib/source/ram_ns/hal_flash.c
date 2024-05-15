@@ -477,22 +477,30 @@ void hal_flash_set_quad_enable (phal_spic_adaptor_t phal_spic_adaptor)
         case FLASH_TYPE_XMC:
         case FLASH_TYPE_PUYA:
         case FLASH_TYPE_ZBIT:
+        case FLASH_TYPE_GTEC:
             status_value = hal_flash_get_status(phal_spic_adaptor, cmd->rdsr2);
-            hal_flash_set_status(phal_spic_adaptor, cmd->wrsr2, 0x2 | status_value);
+            if ((status_value & 0x2) == 0) {
+                hal_flash_set_status(phal_spic_adaptor, cmd->wrsr2, 0x2 | status_value);
+            }
             break;
 
         case FLASH_TYPE_MXIC:
             status_value = hal_flash_get_status(phal_spic_adaptor, cmd->rdsr);
-            hal_flash_set_status(phal_spic_adaptor, cmd->wrsr, 0x40 | status_value);
+            if ((status_value & 0x40) == 0) {
+                hal_flash_set_status(phal_spic_adaptor, cmd->wrsr, 0x40 | status_value);
+            }
             break;
 
         case FLASH_TYPE_GD:
         case FLASH_TYPE_XTX:
         case FLASH_TYPE_TSTE:
-            data[0] = hal_flash_get_status(phal_spic_adaptor, cmd->rdsr);
-            data[1] = hal_flash_get_status(phal_spic_adaptor, cmd->rdsr2) | 0x2;
-            hal_flash_set_write_enable(phal_spic_adaptor);
-            spic_tx_cmd(phal_spic_adaptor, cmd->wrsr, 2, data);
+            data[1] = hal_flash_get_status(phal_spic_adaptor, cmd->rdsr2);
+            if ((data[1] & 0x2) == 0) {
+                data[0] = hal_flash_get_status(phal_spic_adaptor, cmd->rdsr);
+                data[1] |= 0x2;
+                hal_flash_set_write_enable(phal_spic_adaptor);
+                spic_tx_cmd(phal_spic_adaptor, cmd->wrsr, 2, data);
+            }
             break;
 
         case FLASH_TYPE_EON:
@@ -521,12 +529,12 @@ void hal_flash_unset_quad_enable (phal_spic_adaptor_t phal_spic_adaptor)
     u8 data[2];
 
     switch (flash_type) {
-        case FLASH_TYPE_WINBOND:         
         case FLASH_TYPE_GD32:
         case FLASH_TYPE_BOYA:
         case FLASH_TYPE_XMC:
         case FLASH_TYPE_PUYA:
         case FLASH_TYPE_ZBIT:
+        case FLASH_TYPE_GTEC:
             status_value = hal_flash_get_status(phal_spic_adaptor, cmd->rdsr2);
             hal_flash_set_status(phal_spic_adaptor, cmd->wrsr2, ~0x2 & status_value);
             break;
@@ -547,6 +555,7 @@ void hal_flash_unset_quad_enable (phal_spic_adaptor_t phal_spic_adaptor)
             
         case FLASH_TYPE_EON:
         case FLASH_TYPE_MICRON:
+        case FLASH_TYPE_WINBOND:         
             break;
 
         default:
@@ -586,7 +595,7 @@ void hal_flash_return_spi (phal_spic_adaptor_t phal_spic_adaptor)
 {
     pflash_cmd_t cmd = phal_spic_adaptor->cmd;
     spic_valid_cmd_t valid_cmd;
-    spic_init_para_t spic_init_data = {0};
+    spic_init_para_t spic_init_data;
     pspic_init_para_t pspic_init_data = &spic_init_data;
     SPIC_Type *spic_dev  = phal_spic_adaptor->spic_dev;
     u8 spic_send_cmd_mode = phal_spic_adaptor->spic_send_cmd_mode;
@@ -743,9 +752,6 @@ void hal_flash_burst_write (phal_spic_adaptor_t phal_spic_adaptor, u32 length, u
     }
 
     if (((u32)data >> 24) == 0x98) {       
-        DBG_SPIF_ERR("Source data should be stored in ram!\r\n");
-        return;
-#if 0
         data = (u8*)((u32)data & 0xFFFFFF);
         page_size = 256;
         existed_data_size = addr & 0xFF;
@@ -778,7 +784,6 @@ void hal_flash_burst_write (phal_spic_adaptor_t phal_spic_adaptor, u32 length, u
                 }
             }
         }
-#endif
     } else {       
         hal_flash_stubs.hal_flash_burst_write(phal_spic_adaptor, length, addr, data);
     }
@@ -803,7 +808,6 @@ void hal_flash_page_program (phal_spic_adaptor_t phal_spic_adaptor, u32 length, 
     hal_flash_stubs.hal_flash_page_program(phal_spic_adaptor, length, addr, data);
 }
 
-#if 0
 /** \brief Description of hal_flash_read_write_flash
  *
  *    hal_flash_read_write_flash is used to program sequential data with user mode.
@@ -829,7 +833,7 @@ void hal_flash_read_write_flash (phal_spic_adaptor_t phal_spic_adaptor, u32 leng
     u8 index;
     u8 spic_send_cmd_mode;
     u8 addr_byte_num;
-    u8 buffer[256] = {0};
+    u8 buffer[256];
     u8* ptr = &buffer[0];
 
     hal_flash_stream_read(phal_spic_adaptor, length, (u32)data, buffer);
@@ -951,7 +955,7 @@ void hal_flash_read_write_flash (phal_spic_adaptor_t phal_spic_adaptor, u32 leng
 
     spic_dev->valid_cmd_b.prm_en = ENABLE;
 }
-#endif
+
 
 /** \brief Description of hal_flash_reset_to_spi
  *
@@ -1027,6 +1031,11 @@ void hal_flash_support_new_type (phal_spic_adaptor_t phal_spic_adaptor)
             phal_spic_adaptor->flash_type = FLASH_TYPE_PUYA;
             break;
 
+        case 0xC4:
+            phal_spic_adaptor->cmd = &new_flash_cmd;
+            phal_spic_adaptor->flash_type = FLASH_TYPE_GTEC;
+            break;
+            
         default:
             break;
     }
@@ -1042,7 +1051,7 @@ void hal_flash_support_new_type (phal_spic_adaptor_t phal_spic_adaptor)
  */
 u8 hal_flash_get_size (phal_spic_adaptor_t phal_spic_adaptor)
 {
-    u8 efuse_value = 0;
+    u8 efuse_value;
     u8 size_id = phal_spic_adaptor->flash_id[2];
     u32 size = 0;
 

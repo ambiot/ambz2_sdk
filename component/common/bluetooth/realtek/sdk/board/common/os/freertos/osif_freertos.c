@@ -438,8 +438,10 @@ uint32_t osif_lock(void)
     }
     else
     {
-        printf("warn: unexpected isr mode\r\n");
-        //flags = taskENTER_CRITICAL_FROM_ISR();
+#if CONFIG_OSIF_DEBUG
+        printf("%s warn: unexpected isr mode\r\n", __func__);
+#endif
+
     }
 
     return flags;
@@ -457,8 +459,10 @@ void osif_unlock(uint32_t flags)
     }
     else
     {
-        printf("warn: unexpected isr mode\r\n");
-        //taskEXIT_CRITICAL_FROM_ISR(flags);
+#if CONFIG_OSIF_DEBUG
+        printf("%s warn: unexpected isr mode\r\n", __func__);
+#endif
+
     }
 
 }
@@ -1112,7 +1116,7 @@ bool osif_timer_start(void **pp_handle)
     }
     else
     {
-        printf("%s fail!\r\n", __FUNCTION__, ret);
+        printf("%s fail!\r\n", __FUNCTION__);
         return false;
     }
 }

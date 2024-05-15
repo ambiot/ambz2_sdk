@@ -178,6 +178,7 @@ void spic_config_auto_mode(phal_spic_adaptor_t phal_spic_adaptor)
                 || (flash_type == FLASH_TYPE_GD32)
                 || (flash_type == FLASH_TYPE_ZBIT)
                 || (flash_type == FLASH_TYPE_XTX)
+                || (flash_type == FLASH_TYPE_GTEC)
                 || (flash_type == FLASH_TYPE_TSTE)) {
                 hal_flash_set_quad_enable(phal_spic_adaptor);
             }

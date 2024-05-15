@@ -74,6 +74,7 @@ typedef struct Network Network;
 struct Network
 {
 	int my_socket;
+	int my_port;
 	int (*mqttread) (Network*, unsigned char*, int, int);
 	int (*mqttwrite) (Network*, unsigned char*, int, int);
 	void (*disconnect) (Network*);

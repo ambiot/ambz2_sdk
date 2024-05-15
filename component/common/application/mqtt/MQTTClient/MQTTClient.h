@@ -40,7 +40,7 @@
 #if defined(MQTTV5)
 #include "MQTTProperties.h"
 #endif
-//#define MQTT_TASK
+#define MQTT_TASK
 #if !defined(MQTT_TASK)
 #define WAIT_FOR_ACK
 #endif

@@ -22,33 +22,35 @@
 
 pwmout_t pwm_led[1];
 PinName  pwm_led_pin[1] = {PWM_5};
-float period[8] = {1.0/523, 1.0/587, 1.0/659, 1.0/698, 1.0/784, 1.0/880, 1.0/988, 1.0/1047};
+float period[8] = {1.0 / 523, 1.0 / 587, 1.0 / 659, 1.0 / 698, 1.0 / 784, 1.0 / 880, 1.0 / 988, 1.0 / 1047};
 
-void pwm_delay (void)
+void pwm_delay(void)
 {
-    int i;
-    for(i = 0; i < 1000000; i++) {
-        asm(" nop");
-    }
+	int i;
+	for (i = 0; i < 1000000; i++) {
+		asm(" nop");
+	}
 }
 
 //int main_app(IN u16 argc, IN u8 *argv[])
-int main (void)
+int main(void)
 {
-    int i;
+	int i;
 
-    dbg_printf("\r\n   PWM-buzzer DEMO   \r\n");
+	dbg_printf("\r\n   PWM-buzzer DEMO   \r\n");
 
-    pwmout_init(&pwm_led[0], pwm_led_pin[0]);
+	pwmout_init(&pwm_led[0], pwm_led_pin[0]);
 
-    while (1) {
-        for (i = 0; i < 8; i++) {
-            pwmout_period(&pwm_led[0], period[i]);
-            pwmout_pulsewidth(&pwm_led[0], (period[i]/2));
-            hal_delay_ms(1000);
-        }
+	while (1) {
+		for (i = 0; i < 8; i++) {
+			pwmout_period(&pwm_led[0], period[i]);
+			pwmout_pulsewidth(&pwm_led[0], (period[i] / 2));
+			pwmout_start(&pwm_led[0]);
+			hal_delay_ms(1000);
+			
+		}
 //        wait_ms(20);
 //        RtlMsleepOS(25);
-        pwm_delay();
-    }
+		pwm_delay();
+	}
 }

@@ -235,7 +235,7 @@ int ble_central_app_init(void)
 	le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state);
 	if (new_state.gap_init_state == GAP_INIT_STATE_STACK_READY) {
 		//bt_stack_already_on = 1;
-		printf("[BLE Central]BT Stack already on\n\r");
+		printf("[BLE Central]BT Stack already on\r\n");
 		return 0;
 	}
 	else
@@ -261,14 +261,14 @@ void ble_central_app_deinit(void)
 	T_GAP_DEV_STATE state;
 	le_get_gap_param(GAP_PARAM_DEV_STATE , &state);
 	if (state.gap_init_state != GAP_INIT_STATE_STACK_READY) {
-		printf("[BLE Central]BT Stack is not running\n\r");
+		printf("[BLE Central]BT Stack is not running\r\n");
 	}
 #if F_BT_DEINIT
 	else {
 		gcs_delete_client();
 		bte_deinit();
 		bt_trace_uninit();
-		printf("[BLE Central]BT Stack deinitalized\n\r");
+		printf("[BLE Central]BT Stack deinitalized\r\n");
 	}
 #endif
 }

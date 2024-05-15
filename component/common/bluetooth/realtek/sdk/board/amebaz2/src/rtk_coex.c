@@ -34,7 +34,7 @@ unsigned int send_coex_mailbox_to_wifi_from_BtAPP(uint8_t state)
     rltk_coex_mailbox_to_wifi(para, 8);
     return 1;
 }
-
+#if 0
 static void rtk_notify_info_to_wifi(uint8_t length, uint8_t *report_info)
 {
 
@@ -51,6 +51,7 @@ static void rtk_notify_info_to_wifi(uint8_t length, uint8_t *report_info)
     rltk_coex_mailbox_to_wifi(report_info, report->len + 2);
     /* send BT INFO to Wi-Fi driver */
 }
+#endif
 
 void bt_coex_handle_cmd_complete_evt(uint16_t opcode, uint16_t cause, uint8_t total_len, uint8_t *p)
 {
@@ -81,10 +82,12 @@ void bt_coex_handle_specific_evt(uint8_t *p, uint8_t len)
 	rltk_coex_mailbox_to_wifi(p, len);
 }
 
+#if 0
 typedef struct bt_sw_mailbox_info_s {
     uint8_t data[8];
 }bt_sw_mailbox_info_t;
 static bt_sw_mailbox_info_t scan_enable;
+#endif
 
 unsigned int bt_coex_sw_mailbox_set(unsigned int mailbox_control)
 {
