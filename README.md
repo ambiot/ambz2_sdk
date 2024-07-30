@@ -1,3 +1,6 @@
+:bulb::bulb::bulb: **Note: This repository has been moved to https://github.com/Ameba-AIoT/ameba-rtos-z2.**
+
+
 [![Realtek-logo](https://logos-download.com/wp-content/uploads/2016/05/Realtek_logo_logotype.png)][amebaZ2-guide-link]
 
 For any questions, please visit our [website](https://www.amebaiot.com/en/) and [forum](https://www.amebaiot.com/en/questions/category/sdk-forum/) to get more information.
